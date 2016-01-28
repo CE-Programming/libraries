@@ -1,4 +1,4 @@
-#include "..\\include\\relocation.inc"
+#include "..\\..\\include\\relocation.inc"
  
 ; stack locations
 #define arg0 6
