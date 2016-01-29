@@ -16,8 +16,6 @@ OBJECTS = $(SOURCES:.c=.obj)
 OBJECTSLD = $(SOURCES:.c=.obj,)
 OBJECTSLD += $(ASMSOURCES:.asm=.obj,)
 
-ROOTDIR = $(CEDEV)/lib/ce/include/
-IDIRS := $(sort $(dir $(wildcard $(ROOTDIR)/* $(ROOTDIR)/*/*)))
 HEADERS = ".;.\include;.\include\asm;$(CEDEV)\include\ce;$(CEDEV)\include\ce\asm;$(CEDEV)\include\;$(CEDEV)\include\std;$(CEDEV)\lib\ce;$(CEDEV)\lib\ce\asm;"
 LIBRARIES = "$(CEDEV)\lib\std\chelp.lib,$(CEDEV)\lib\std\crt.lib,$(CEDEV)\lib\std\crtS.lib,$(CEDEV)\lib\std\nokernel.lib,$(CEDEV)\lib\std\fplib.lib,$(CEDEV)\lib\std\fplibS.lib"
 STARTUPMODULE = "$(CEDEV)\include\startup\cstartup.obj,"
