@@ -1,7 +1,7 @@
 LIB = GRAPHC
 SOURCES = template.asm
 
-CC = @"..\include\spasm64"
+CC = @"..\..\include\spasm"
  
 CFLAGS =  -E
  

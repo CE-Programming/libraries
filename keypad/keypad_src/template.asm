@@ -1,3 +1,4 @@
+#include "ti84pce.inc"
 #include "..\\..\\include\\relocation.inc"
  
 ; stack locations

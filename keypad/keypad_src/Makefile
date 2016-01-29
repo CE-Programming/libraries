@@ -1,8 +1,8 @@
 LIB = KEYPADC
 SOURCES = template.asm
 
-AS = @"..\include\spasm64"
- 
+AS = @"..\..\include\spasm"
+
 ASMFLAGS =  -E
  
 $(LIB) :

@@ -1,7 +1,7 @@
-LIB = TEMPLATE
+LIB = TMPLTE
 SOURCES = template.asm
 
-AS = @"..\include\spasm64"
+AS = @"..\include\spasm"
  
 ASMFLAGS =  -E
  
