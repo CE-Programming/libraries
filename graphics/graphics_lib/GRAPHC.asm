@@ -56,3 +56,10 @@ _gc_SetTextColor equ $
  jp 78
 _gc_SetTransparentColor equ $
  jp 81
+_gc_NoClipDrawSprite equ $
+ jp 84
+_gc_NoClipDrawTransparentSprite equ $
+ jp 87
+_gc_NoClipGetSprite equ $
+ jp 90
+

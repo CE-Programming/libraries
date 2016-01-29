@@ -44,8 +44,8 @@
  * Quickly set and get pixels.
  * No clipping is performed.
  */
-#define gc_FastSetPixel(x, y, c)        *((uint8_t*)(0xD40000 + x + y*320)) = c
-#define gc_FastGetPixel(x, y, c)        *((uint8_t*)(0xD40000 + x + y*320))
+#define gc_FastSetPixel(x, y, c)     *((uint8_t*)(0xD40000 + x + y*320)) = c
+#define gc_FastGetPixel(x, y)        *((uint8_t*)(0xD40000 + x + y*320))
 
 /**
  * Initializes the graphics setup.
@@ -206,8 +206,33 @@ void gc_SetTextXY(unsigned short x, unsigned char y);
 void gc_SetTextColor(unsigned short color);
 
 /**
- * Sets the transparent color used in text and other functions
+ * Sets the transparent color used in text and sprite functions
+ * Default index transparency color is 0xFF
+ * Returns the previous transparent color
  */
 unsigned char gc_SetTransparentColor(unsigned char color);
+
+/**
+ * Draws a given sprite to the screen as fast as possible; no transparency, clipping, or anything of the sort.
+ * Basically just a direct rectangular data dump onto vram.
+ * Note: This routine disables interrupts.
+ */
+void gc_NoClipDrawSprite(unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+
+/**
+ * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
+ * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well.
+ * Note: This routine disables interrupts.
+ */
+void gc_NoClipDrawTransparentSprite(unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+
+/**
+ * Quickly grab the background behind a sprite (useful for transparency)
+ * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
+ * spriteBuffer is updated with the screen coordinates given.
+ * A pointer to spriteBuffer is also returned for ease of use.
+ * Note: This routine disables interrupts.
+ */
+unsigned char *gc_NoClipGetSprite(unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
 
 #endif

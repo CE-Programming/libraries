@@ -43,6 +43,9 @@ currentDrawingBuffer	equ silentLinkHookPtr		; since it isn't used anyway, may as
  .function "void","gc_SetTextXY","unsigned short x, unsigned char y",_settextxy
  .function "void","gc_SetTextColor","unsigned short color",_textcolor
  .function "unsigned char","gc_SetTransparentColor","unsigned char color",_transparentcolor
+ .function "void","gc_NoClipDrawSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawsprite
+ .function "void","gc_NoClipDrawTransparentSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawTransparentSprite
+ .function "void","gc_NoClipGetSprite","unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_getsprite
  
  .beginDependencies
  .endDependencies
@@ -51,7 +54,6 @@ currentDrawingBuffer	equ silentLinkHookPtr		; since it isn't used anyway, may as
 ;Sets the LCD to 8bpp mode for sweet graphics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _initgraph:
- di
  call $000374			    ; clears screen
  ld a,lcdbpp8
 setLCDcontrol:
@@ -74,6 +76,7 @@ _closegraph:
 ; Fills the screen with a specified color
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _fillscrn:
+ di
  pop hl
   pop bc
   push bc
@@ -125,6 +128,7 @@ _setPal:
 _getcolor:
  push ix
   ld ix,0
+  add ix,sp
   ld l,(ix+arg0)
   ld a,(ix+arg1)
  pop ix
@@ -146,6 +150,7 @@ _getcolor:
 _setcolor:
  push ix
   ld ix,0
+  add ix,sp
   ld l,(ix+arg0)
   ld a,(ix+arg1)
   ld h,2
@@ -170,14 +175,10 @@ _getpixel:
   ld de,(ix+arg0)		; DE=X
   ld l,(ix+arg1)		; L=Y
  pop ix
- bit 7,l
- ret z				; return if negative
  ld a,l
- cp lcdHeight
+ cp a,lcdHeight
  ret nc				; return if offscreen
  ex de,hl
-  or a,a \ adc hl,bc
-  ret m				; return if negative
   ld bc,lcdWidth
   or a,a \ sbc hl,bc
   add hl,bc
@@ -208,7 +209,7 @@ _setpixel:
 setPixel_ASM:
  or a,a \ sbc hl,hl
  ld l,a			    ; Y->L
- cp lcdHeight
+ cp a,lcdHeight
  ret nc				; return if y>lcdHeight
  or a,a \ adc hl,bc
  ret m				; return if negative
@@ -423,13 +424,13 @@ _transparentcolor:
  push ix
   ld ix,0
   add ix,sp
-  ld a,(ix+arg0)
+  .r ld a,(transpcolor)
+  push af
+   ld a,(ix+arg0)
+   .r ld (transpcolor),a
+   .r ld (transpcolorspr),a
+  pop af
  pop ix
- .r ld a,(transpcolor)
- push af
-  .r ld (transpcolor),a
-  .r ld (transpcolorspr),a
- pop af
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -466,6 +467,7 @@ _settextxy:
 ; Also modifies the current text cursor posisition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _outtextxy:
+ di
  push ix
   ld ix,0
   add ix,sp
@@ -580,17 +582,18 @@ _:
  ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a sprite to the screen as NoClip as possible
+; Draw a sprite to the screen as fast as possible
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_drawSprite:
+_drawsprite:
+ di
  push ix
   ld ix,0
   add ix,sp
-  ld hl,vram
+  ld hl,(currentDrawingBuffer)
   ld de,(ix+arg1)               ; X
   ld c,(ix+arg2)                ; Y
   add hl,de
-  ld b,160 
+  ld b,160
   mlt bc
   add hl,bc
   add hl,bc
@@ -618,50 +621,94 @@ moveAmount: =$+1
  djnz InLoop
  ret
  
-_drawTransparentSprite:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Grabs the background really quick for transparency
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_getsprite:
+ di
  push ix
   ld ix,0
   add ix,sp
-  ld hl,vram
+  ld hl,(currentDrawingBuffer)
   ld de,(ix+arg1)               ; X
   ld c,(ix+arg2)                ; Y
   add hl,de
-  ld b,160 
+  ld b,lcdWidth/2
   mlt bc
   add hl,bc
   add hl,bc
   ex de,hl
-  ld hl,320
+  ld hl,lcdWidth
   ld bc,(ix+arg3)              ; width
   ld a,c
   sbc hl,bc
-  .r ld (moveAmountTrans),hl
-  .r ld (nextLineTrans),a
+  .r ld (grab_moveAmount),hl
+  .r ld (grab_nextLine),a
+  ld b,(ix+arg4)              ; height
+  ld hl,(ix+arg0)
+  ex de,hl
+grab_InLoop: 
+  push bc
+grab_nextLine: =$+1
+   ld bc,0
+   ldir
+grab_moveAmount: =$+1
+   ld bc,0
+   add hl,bc
+  pop bc
+  djnz grab_InLoop
+  ld hl,(ix+arg0)
+ pop ix
+ ret
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Draws a transparent sprite
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_drawTransparentSprite:
+ di
+ push ix
+  ld ix,0
+  add ix,sp
+  ld hl,(currentDrawingBuffer)
+  ld de,(ix+arg1)               ; X
+  ld c,(ix+arg2)                ; Y
+  add hl,de
+  ld b,lcdWidth/2
+  mlt bc
+  add hl,bc
+  add hl,bc
+  ex de,hl
+  ld hl,lcdWidth
+  ld bc,(ix+arg3)              ; width
+  ld a,c
+  sbc hl,bc
+  .r ld (trans_moveAmount),hl
+  .r ld (trans_nextLine),a
   ld b,(ix+arg4)              ; height
   ld hl,(ix+arg0)
  pop ix
-InLoopTrans: 
+trans_InLoop: 
  push bc
-nextLineTrans: =$+1
-  ld bc,0
+trans_nextLine: =$+1
+  ld b,0
 _:
-  ld a,(de)
-transpcolorspr: =$+1
-  cp $FF
-  jr z,+_
   ld a,(hl)
+transpcolorspr: =$+1
+  cp a,$FF
+  jr nz,+_
+  ld a,(de)
 _:
   ld (de),a
   inc de
   inc hl
   djnz --_
   ex de,hl
-moveAmountTrans: =$+1
+trans_moveAmount: =$+1
   ld bc,0
   add hl,bc
   ex de,hl
  pop bc
- djnz InLoopTrans
+ djnz trans_InLoop
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1014,6 +1061,7 @@ drawFilledCirclePoints:
     
 ;de=x, hl=x, b=y, c=y, a=indexed color
 _line:
+ di                             ; Freaking TI-OS
  push ix
   ld ix,0
   add ix,sp
@@ -1110,16 +1158,16 @@ dy1: =$+1
   or a,a 
   adc hl,de
   .r jp m,+_
-dx: =$+1 
-  ld de,0 
-  or a,a 
+dx: =$+1
+  ld de,0
+  or a,a
   sbc hl,de 
   add hl,de 
   jr c,+_
 yStep: 
   nop
 dx1: =$+1 
-  ld de,0 
+  ld de,0
   sbc hl,de 
 _:
  pop de
@@ -1162,7 +1210,7 @@ dy12: =$+1
   sbc hl,de
 _:
  pop de
- .r jp changeYLoop
+ jr changeYLoop
     
 ;#######################################################
 ; Inner library routines                               #
