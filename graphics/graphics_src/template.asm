@@ -203,7 +203,7 @@ _setpixel:
   add ix,sp
   ld de,(ix+arg0)   ; DE=X
   ld a,(ix+arg2)    ; color
-  .r ld (set_color),a
+  ld (set_color),a \.r
   ld a,(ix+arg1)    ; A=Y
  pop ix
 setPixel_ASM:
@@ -243,7 +243,7 @@ _rectangle:
   ld bc,(ix+arg2)		; width
   ld h,(ix+arg3)		; height
   ld a,(ix+arg4)		; color
-  .r ld (FillRect_Color),a
+  ld (FillRect_Color),a \.r
   ld a,h
   ld h,lcdWidth/2
   mlt hl
@@ -283,15 +283,15 @@ _rectangleoutline:
   ld a,(ix+arg4)		; color
   push de
    push hl
-    .r call HorizLine_ASM		    ; top
+    call HorizLine_ASM \.r	 	    ; top
     ld b,(ix+arg3)
     dec b
     push bc
-     .r call RectOutlineVert_ASM	; right
+     call RectOutlineVert_ASM \.r	; right
     pop bc
    pop hl
   pop de
-  .r call RectOutlineVert_ASM_2	    ; left
+  call RectOutlineVert_ASM_2 \.r	    ; left
   ld bc,(ix+arg2)
   call _memset			            ; bottom
  pop ix
@@ -410,10 +410,10 @@ _getbufferstatus:
 ; Returns the current (x,y) coordinates for text
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _textx:
- .r ld a,(textX)
+ ld a,(textX) \.r
  ret
 _texty:
- .r ld hl,(textY)
+ ld hl,(textY) \.r
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -424,11 +424,11 @@ _transparentcolor:
  push ix
   ld ix,0
   add ix,sp
-  .r ld a,(transpcolor)
+  ld a,(transpcolor) \.r
   push af
    ld a,(ix+arg0)
-   .r ld (transpcolor),a
-   .r ld (transpcolorspr),a
+   ld (transpcolor),a \.r
+   ld (transpcolorspr),a \.r
   pop af
  pop ix
  ret
@@ -444,8 +444,8 @@ _textcolor:
   add ix,sp
   ld de,(ix+arg0)
  pop ix
- .r  ld hl,(textcolor)
- .r2 ld (textcolor),de
+ ld hl,(textcolor) \.r
+ ld (textcolor),de \.r
  ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -458,8 +458,8 @@ _settextxy:
   ld hl,(ix+arg0)
   ld a,(ix+arg1)
  pop ix
- .r ld (textX),hl
- .r ld (textY),a
+ ld (textX),hl \.r
+ ld (textY),a \.r
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -475,8 +475,8 @@ _outtextxy:
   ld de,(ix+arg1)
   ld a,(ix+arg2)
  pop ix
- .r2 ld (textX),de
- .r  ld (textY),a
+ ld (textX),de \.r
+ ld (textY),a \.r
  jr textloop
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -492,7 +492,7 @@ textloop:
  or a,a
  ret z
  push hl
-  .r call ASM_outchar
+  call ASM_outchar \.r
  pop hl
  inc hl
  jr textloop
@@ -517,14 +517,14 @@ textX: = $+1
     xor a
 _:
     or a,a \ sbc hl,hl \ ld l,a
-    .r ld de,CharSpacing
+    ld de,CharSpacing \.r
     add hl,de
     ld a,(hl)			; amount to increment per character
     inc a
-    .r ld (charwidth),a
+    ld (charwidth),a \.r
     sbc hl,hl \ ld l,a
     add hl,bc
-    .r ld (textX),hl
+    ld (textX),hl \.r
 textY: = $+1
     ld l,0
     ld h,lcdWidth/2
@@ -539,7 +539,7 @@ textY: = $+1
    sbc hl,hl \ ld l,a
    add hl,hl \ add hl,hl \ add hl,hl
    ex de,hl
-   .r ld hl,char000
+   ld hl,char000 \.r
    add hl,de			; hl -> Correct Character
   pop de			; de -> correct place to draw
   ld b,8
@@ -568,7 +568,7 @@ _:
     djnz cloop
     ld bc,lcdWidth
     ld de,$FFFFFF               ; sign extend
-    .r ld a,(charwidth)		    ; bc+hl-charwidth
+    ld a,(charwidth) \.r		    ; bc+hl-charwidth
     neg
     ld e,a
     add hl,bc
@@ -602,8 +602,8 @@ _drawsprite:
   ld bc,(ix+arg3)              ; width
   ld a,c
   sbc hl,bc
-  .r ld (moveAmount),hl
-  .r ld (nextLine),a
+  ld (moveAmount),hl \.r
+  ld (nextLine),a \.r
   ld b,(ix+arg4)              ; height
   ld hl,(ix+arg0)
  pop ix
@@ -642,8 +642,8 @@ _getsprite:
   ld bc,(ix+arg3)              ; width
   ld a,c
   sbc hl,bc
-  .r ld (grab_moveAmount),hl
-  .r ld (grab_nextLine),a
+  ld (grab_moveAmount),hl \.r
+  ld (grab_nextLine),a \.r
   ld b,(ix+arg4)              ; height
   ld hl,(ix+arg0)
   ex de,hl
@@ -682,8 +682,8 @@ _drawTransparentSprite:
   ld bc,(ix+arg3)              ; width
   ld a,c
   sbc hl,bc
-  .r ld (trans_moveAmount),hl
-  .r ld (trans_nextLine),a
+  ld (trans_moveAmount),hl \.r
+  ld (trans_nextLine),a \.r
   ld b,(ix+arg4)              ; height
   ld hl,(ix+arg0)
  pop ix
@@ -775,7 +775,7 @@ _dc_else:
   pop hl 
   dec de 
 _dc_end: 
-  .r call drawCircleSection 
+  call drawCircleSection \.r
   inc hl 
   jr drawCircle_Loop 
   
@@ -784,9 +784,9 @@ _exit_loop:
  ret
 
 drawCircleSection: 
-  .r call drawCirclePoints 
+  call drawCirclePoints \.r
   ex de,hl 
-  .r call drawCirclePoints 
+  call drawCirclePoints \.r
   ex de,hl 
   ret 
 
@@ -804,7 +804,7 @@ drawCirclePoints:
    push hl 
     add hl,bc 
     ex de,hl 
-    .r call drawPixel
+    call drawPixel \.r
    pop de 
   pop hl 
   exx 
@@ -822,7 +822,7 @@ drawCirclePoints:
    push hl 
     add hl,bc 
     ex de,hl 
-    .r call drawPixel
+    call drawPixel \.r
    pop de 
   pop hl 
   exx 
@@ -840,7 +840,7 @@ drawCirclePoints:
     or a,a 
     sbc hl,bc 
     ex de,hl 
-    .r call drawPixel
+    call drawPixel \.r
    pop de 
   pop hl 
   exx 
@@ -859,7 +859,7 @@ drawCirclePoints:
     or a,a 
     sbc hl,bc 
     ex de,hl 
-    .r call drawPixel
+    call drawPixel \.r
    pop de 
   pop hl 
   exx 
@@ -906,8 +906,8 @@ _circle:
   ld de,(ix+arg1)
   ld bc,(ix+arg2)
   ld a,(ix+arg3)
-  .r ld (color),a
-  .r ld (color2),a
+  ld (color),a \.r
+  ld (color2),a \.r
   push hl
    push de
     exx
@@ -960,7 +960,7 @@ _dfc_else:
   pop hl
   dec de
 _dfc_end:
-  .r call drawFilledCircleSection
+  call drawFilledCircleSection \.r
   inc hl
   jr drawFilledCircle_Loop
 
@@ -969,9 +969,9 @@ _exit_loop_filled:
  ret
 
 drawFilledCircleSection:
-  .r call drawFilledCirclePoints
+  call drawFilledCirclePoints \.r
   ex de,hl
-  .r call drawFilledCirclePoints
+  call drawFilledCirclePoints \.r
   ex de,hl
   ret
   
@@ -1008,7 +1008,7 @@ drawFilledCirclePoints:
        pop ix
        push bc
         ld b,ixl
-        .r call drawLine
+        call drawLine \.r
        pop bc
       pop de
      pop hl
@@ -1049,7 +1049,7 @@ drawFilledCirclePoints:
        pop ix
        push bc
         ld b,ixl
-        .r call drawLine
+        call drawLine \.r
        pop bc
       pop de
      pop hl
@@ -1071,11 +1071,11 @@ _line:
   ld c,(ix+arg3)
   ld a,(ix+arg4)
  pop ix
- .r ld (color),a
- .r ld (color2),a
+ ld (color),a \.r
+ ld (color2),a \.r
 drawLine:
  ld a,c
- .r ld (y1),a
+ ld (y1),a \.r
  push de
   push hl
    push bc    
@@ -1084,19 +1084,19 @@ drawLine:
     ld a,$03 
     jr nc,+_ 
     ld a,$0B
-_:  .r ld (xStep),a 
-    .r ld (xStep2),a 
+_:  ld (xStep),a \.r
+    ld (xStep2),a \.r
     ex de,hl 
     or a,a 
     sbc hl,hl 
     sbc hl,de 
-    .r jp p,+_ 
+    jp p,+_ \.r
     ex de,hl 
-_:  .r ld (dx),hl 
+_:  ld (dx),hl \.r
     push hl 
      add hl,hl 
-     .r ld (dx1),hl 
-     .r ld (dx12),hl
+     ld (dx1),hl \.r
+     ld (dx12),hl \.r
      or a,a
      sbc hl,hl
      ex de,hl
@@ -1108,21 +1108,21 @@ _:  .r ld (dx),hl
      ld a,$3C
      jr nc,+_
      inc a
-_:   .r ld (yStep),a
-     .r ld (yStep2),a
+_:   ld (yStep),a \.r
+     ld (yStep2),a \.r
      ex de,hl 
      or a,a 
      sbc hl,hl 
      sbc hl,de 
-     .r jp p,+_
+     jp p,+_ \.r
      ex de,hl
-_:   .r ld (dy),hl
+_:   ld (dy),hl \.r
      add hl,hl
-     .r ld (dy1),hl
-     .r ld (dy12),hl 
+     ld (dy1),hl \.r
+     ld (dy12),hl \.r
     pop de
    pop af
-   .r ld hl,(dy) 
+   ld hl,(dy) \.r
    or a,a 
    sbc hl,de 
   pop de
@@ -1157,7 +1157,7 @@ dy1: =$+1
   ld de,0 
   or a,a 
   adc hl,de
-  .r jp m,+_
+  jp m,+_ \.r
 dx: =$+1
   ld de,0
   or a,a
@@ -1196,7 +1196,7 @@ dx12: =$+1
   ld de,0
   or a,a
   adc hl,de
-  .r jp m,+_
+  jp m,+_ \.r
 dy: =$+1
   ld de,0
   or a,a

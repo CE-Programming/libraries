@@ -91,20 +91,10 @@
 #macro relocate()
  #define numrelocations eval(numrelocations+1)
  
- #define offset eval($+1)
+ #define offset eval($-3)
  .echo >> relocation_table " .dl ",offset,"\n"
 #endmacro
-#define .r relocate() \
-
-;---------------------------------------------
-
-#macro relocate2()
- #define numrelocations eval(numrelocations+1)
- 
- #define offset eval($+2)
- .echo >> relocation_table " .dl ",offset,"\n"
-#endmacro
-#define .r2 relocate2() \
+#define .r relocate()
 
 ;--------------------------------------------
 
