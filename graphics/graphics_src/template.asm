@@ -92,7 +92,7 @@ _fillscrn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setdefaultpal:
  ld de,mpLcdPalette
- ld b,l
+ ld b,e
 _1555loop:
  ld a,b
  rrca
