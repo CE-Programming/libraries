@@ -113,12 +113,12 @@ _1555loop:
 ; Set the palette (ptr, size)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setPal:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(ix+arg0)
-  ld bc,(ix+arg1)
- pop ix
+ pop de
+  pop hl
+   pop bc
+   push bc
+  push hl
+ push de
  ld de,mpLcdPalette
  ldir
  ret
