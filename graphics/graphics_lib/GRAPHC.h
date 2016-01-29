@@ -177,6 +177,20 @@ unsigned char gc_DrawState(void);
 void gc_PrintChar(char c);
 
 /**
+ * Outputs a signed integer at the current cursor position.
+ * No text clipping is performed.
+ * Values range from: (-8388608-8388607)
+ */
+void gc_PrintInt(int n);
+
+/**
+ * Outputs an unsigned integer at the current cursor position.
+ * No text clipping is performed.
+ * Values range from: (0-16777215)
+ */
+void gc_PrintUnsignedInt(unsigned int n);
+
+/**
  * Outputs a string at the current cursor position
  * No text clipping is performed.
  */

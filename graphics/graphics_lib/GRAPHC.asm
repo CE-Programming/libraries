@@ -44,23 +44,27 @@ _gc_DrawState equ $
  jp 60
 _gc_PrintChar equ $
  jp 63
-_gc_PrintString equ $
+_gc_PrintInt equ $
  jp 66
-_gc_PrintStringXY equ $
+_gc_PrintUnsignedInt equ $
  jp 69
-_gc_TextX equ $
+_gc_PrintString equ $
  jp 72
-_gc_TextY equ $
+_gc_PrintStringXY equ $
  jp 75
-_gc_SetTextXY equ $
+_gc_TextX equ $
  jp 78
-_gc_SetTextColor equ $
+_gc_TextY equ $
  jp 81
-_gc_SetTransparentColor equ $
+_gc_SetTextXY equ $
  jp 84
-_gc_NoClipDrawSprite equ $
+_gc_SetTextColor equ $
  jp 87
-_gc_NoClipDrawTransparentSprite equ $
+_gc_SetTransparentColor equ $
  jp 90
-_gc_NoClipGetSprite equ $
+_gc_NoClipDrawSprite equ $
  jp 93
+_gc_NoClipDrawTransparentSprite equ $
+ jp 96
+_gc_NoClipGetSprite equ $
+ jp 99

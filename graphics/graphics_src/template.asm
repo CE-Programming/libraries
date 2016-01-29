@@ -37,6 +37,8 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .function "void","gc_SwapDraw","void",_swapbuffer
  .function "unsigned char","gc_DrawState","void",_getbufferstatus
  .function "void","gc_PrintChar","char c",_outchar
+ .function "void","gc_PrintInt","int n",_outint
+ .function "void","gc_PrintUnsignedInt","unsigned int n",_outuint
  .function "void","gc_PrintString","char *string",_outtext
  .function "void","gc_PrintStringXY","char *string, unsigned short x, unsigned char y",_outtextxy
  .function "unsigned short","gc_TextX","void",_textx
@@ -55,7 +57,7 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
 ;Sets the LCD to 8bpp mode for sweet graphics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _initgraph:
- call $000374			    ; clears screen
+ call $000374		    ; clears screen
  ld a,lcdbpp8
 setLCDcontrol:
  ld (mpLcdCtrl),a
@@ -67,7 +69,7 @@ setLCDcontrol:
 ;Sets the LCD to the default 16bpp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _closegraph:
- call $000374	    ; clears screen
+ call $000374	        ; clears screen
  ld hl,vram
  ld (mpLcdBase),hl
  ld a,lcdbpp16
@@ -339,10 +341,11 @@ VLoop:
 _drawbuffer:
  ld hl,vram
  ld de,(mpLcdBase)
- or a,a \ sbc hl,de
- add hl,de			; cp hl,de
+ or a,a 
+ sbc hl,de
+ add hl,de
  jr nz,SetBackBufferLocation
- ld hl,vram+(320*240)
+ ld hl,vram+lcdSize
 SetBackBufferLocation:
  ld (currentDrawingBuffer),hl
  ret
@@ -353,10 +356,11 @@ SetBackBufferLocation:
 _drawscreen:
  ld hl,vram
  ld de,(mpLcdBase)
- or a,a \ sbc hl,de
- add hl,de			; cp hl,de
+ or a,a
+ sbc hl,de
+ add hl,de
  jr z,SetBackBufferLocation
- ld hl,vram+(320*240)
+ ld hl,vram+lcdSize
  jr SetBackBufferLocation
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -388,7 +392,8 @@ WaitForLCDReady:
 _getbufferstatus:
  ld hl,(currentDrawingBuffer)
  ld de,(mpLcdBase)
- xor a,a \ sbc hl,de
+ xor a,a
+ sbc hl,de
  add hl,de
  ret z
  inc a
@@ -398,10 +403,10 @@ _getbufferstatus:
 ; Returns the current (x,y) coordinates for text
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _textx:
- ld a,(textX) \.r
+ ld hl,(textX) \.r
  ret
 _texty:
- ld hl,(textY) \.r
+ ld a,(textY) \.r
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -409,16 +414,16 @@ _texty:
 ; Returns previous transparency color
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _transparentcolor:
- push ix
-  ld ix,0
-  add ix,sp
-  ld a,(transpcolor) \.r
-  push af
-   ld a,(ix+arg0)
-   ld (transpcolor),a \.r
-   ld (transpcolorspr),a \.r
-  pop af
- pop ix
+ pop hl
+  pop de
+  push de
+ push hl
+ ld a,(transpcolor) \.r
+ push af
+  ld a,d
+  ld (transpcolor),a \.r
+  ld (transpcolorspr),a \.r
+ pop af
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -427,11 +432,10 @@ _transparentcolor:
 ; Returns previous text color
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _textcolor:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)
- pop ix
+ pop hl
+  pop de
+  push de
+ push hl
  ld hl,(textcolor) \.r
  ld (textcolor),de \.r
  ret
@@ -480,7 +484,7 @@ textloop:
  or a,a
  ret z
  push hl
-  call ASM_outchar \.r
+  call _outchar_ASM \.r
  pop hl
  inc hl
  jr textloop
@@ -494,15 +498,15 @@ _outchar:
   push bc
  push hl
  ld a,c
-ASM_outchar:
+_outchar_ASM:
 textX: = $+1
  ld bc,0
  push af
   push af
    push bc
-    cp 128
+    cp a,128
     jr c,+_
-    xor a
+    xor a,a
 _:
     or a,a \ sbc hl,hl \ ld l,a
     ld de,CharSpacing \.r
@@ -529,7 +533,7 @@ textY: = $+1
    ex de,hl
    ld hl,char000 \.r
    add hl,de			; hl -> Correct Character
-  pop de			; de -> correct place to draw
+  pop de			    ; de -> correct place to draw
   ld b,8
 iloop:
   push bc
@@ -556,7 +560,7 @@ _:
     djnz cloop
     ld bc,lcdWidth
     ld de,$FFFFFF               ; sign extend
-    ld a,(charwidth) \.r		    ; bc+hl-charwidth
+    ld a,(charwidth) \.r	    ; bc+hl-charwidth
     neg
     ld e,a
     add hl,bc
@@ -568,6 +572,100 @@ _:
   djnz iloop
  pop af
  ret
+
+string_buffer:
+ .db 0,0,0,0,0,0,0,0,0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Outputs a signed 24 bit int to the current cursor
+; Optionally pad with number of 0s
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_outuint:
+ pop de
+  pop hl
+  push hl
+ push de
+ xor a,a
+ ld (dispFlag),a \.r
+ ld de,string_buffer \.r
+_outuint_ASM:
+ push ix
+  ld ix,-1
+  push de
+   ld bc,-10000000
+   call Num1 \.r
+   ld bc,-1000000
+   call Num1 \.r
+   ld bc,-100000
+   call Num1 \.r
+   ld bc,-10000
+   call Num1 \.r
+   ld bc,-1000
+   call Num1 \.r
+   ld bc,-100
+   call Num1 \.r
+   ld c,-10
+   call Num1 \.r
+   ld c,-1
+Num1:
+   ld a,'0'-1
+Num2:
+   inc a
+   add hl,bc
+   jr c,Num2
+   sbc hl,bc
+   cp a,'0'
+   jr nz,+_
+   inc ix
+_:
+   ld (de),a
+   inc de
+   ld a,c
+   cp a,-1
+   jr z,+_
+   ret
+_:
+  pop hl
+  xor a,a
+  ld (de),a
+  push ix
+  pop de
+  add hl,de
+ pop ix
+dispFlag: =$+1
+ ld a,0
+ and a,1
+ jr z,+_
+ dec hl
+ ld (hl),'-'
+_:
+ jp textloop \.r
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Outputs a signed 24 bit int to the current cursor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_outint:
+ pop de
+  pop hl
+  push hl
+ push de
+ ld de,string_buffer \.r
+ dec sp
+ push hl
+  inc sp
+ pop bc
+ xor a,a
+ bit 7,b
+ jr z,IsntNegative
+ push hl
+ pop bc
+ or a,a
+ sbc hl,hl
+ sbc hl,bc
+ ld a,1
+IsntNegative:
+ ld (dispFlag),a \.r
+ jp _outuint_ASM \.r
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Draw a sprite to the screen as fast as possible
@@ -634,6 +732,8 @@ _getsprite:
   ld (grab_nextLine),a \.r
   ld b,(ix+arg4)              ; height
   ld hl,(ix+arg0)
+ pop ix
+ push hl
   ex de,hl
 grab_InLoop: 
   push bc
@@ -645,8 +745,7 @@ grab_moveAmount: =$+1
    add hl,bc
   pop bc
   djnz grab_InLoop
-  ld hl,(ix+arg0)
- pop ix
+ pop hl
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1352,132 +1451,5 @@ Char125: .db $E0,$30,$30,$1C,$30,$30,$E0,$00	; }
 Char126: .db $76,$DC,$00,$00,$00,$00,$00,$00	; ~
 Char127: .db $00,$10,$38,$6C,$C6,$C6,$FE,$00	; .
 Char128: .db $7C,$C6,$C0,$C0,$C0,$D6,$7C,$30	; .
-Char129: .db $C6,$00,$C6,$C6,$C6,$C6,$7E,$00	; .
-Char130: .db $0E,$00,$7C,$C6,$FE,$C0,$7C,$00	; .
-Char131: .db $7E,$81,$3C,$06,$7E,$C6,$7E,$00	; .
-Char132: .db $66,$00,$7C,$06,$7E,$C6,$7E,$00	; .
-Char133: .db $E0,$00,$7C,$06,$7E,$C6,$7E,$00	; .
-Char134: .db $18,$18,$7C,$06,$7E,$C6,$7E,$00	; .
-Char135: .db $00,$00,$7C,$C6,$C0,$D6,$7C,$30	; .
-Char136: .db $7E,$81,$7C,$C6,$FE,$C0,$7C,$00	; .
-Char137: .db $66,$00,$7C,$C6,$FE,$C0,$7C,$00	; .
-Char138: .db $E0,$00,$7C,$C6,$FE,$C0,$7C,$00	; .
-Char139: .db $66,$00,$38,$18,$18,$18,$3C,$00	; .
-Char140: .db $7C,$82,$38,$18,$18,$18,$3C,$00	; .
-Char141: .db $70,$00,$38,$18,$18,$18,$3C,$00	; .
-Char142: .db $C6,$10,$7C,$C6,$FE,$C6,$C6,$00	; .
-Char143: .db $38,$38,$00,$7C,$C6,$FE,$C6,$00	; .
-Char144: .db $0E,$00,$FE,$C0,$F8,$C0,$FE,$00	; .
-Char145: .db $00,$00,$7F,$0C,$7F,$CC,$7F,$00	; .
-Char146: .db $3F,$6C,$CC,$FF,$CC,$CC,$CF,$00	; .
-Char147: .db $7C,$82,$7C,$C6,$C6,$C6,$7C,$00	; .
-Char148: .db $66,$00,$7C,$C6,$C6,$C6,$7C,$00	; .
-Char149: .db $E0,$00,$7C,$C6,$C6,$C6,$7C,$00	; .
-Char150: .db $7C,$82,$00,$C6,$C6,$C6,$7E,$00	; .
-Char151: .db $E0,$00,$C6,$C6,$C6,$C6,$7E,$00	; .
-Char152: .db $66,$00,$66,$66,$66,$3E,$06,$7C	; .
-Char153: .db $C6,$7C,$C6,$C6,$C6,$C6,$7C,$00	; .
-Char154: .db $C6,$00,$C6,$C6,$C6,$C6,$FE,$00	; .
-Char155: .db $18,$18,$7E,$D8,$D8,$D8,$7E,$18	; .
-Char156: .db $38,$6C,$60,$F0,$60,$66,$FC,$00	; .
-Char157: .db $66,$66,$3C,$18,$7E,$18,$7E,$18	; .
-Char158: .db $F8,$CC,$CC,$FA,$C6,$CF,$C6,$C3	; .
-Char159: .db $0E,$1B,$18,$3C,$18,$18,$D8,$70	; .
-Char160: .db $0E,$00,$7C,$06,$7E,$C6,$7E,$00	; .
-Char161: .db $1C,$00,$38,$18,$18,$18,$3C,$00	; .
-Char162: .db $0E,$00,$7C,$C6,$C6,$C6,$7C,$00	; .
-Char163: .db $0E,$00,$C6,$C6,$C6,$C6,$7E,$00	; .
-Char164: .db $00,$FE,$00,$FC,$C6,$C6,$C6,$00	; .
-Char165: .db $FE,$00,$C6,$E6,$F6,$DE,$CE,$00	; .
-Char166: .db $3C,$6C,$6C,$3E,$00,$7E,$00,$00	; .
-Char167: .db $3C,$66,$66,$3C,$00,$7E,$00,$00	; .
-Char168: .db $18,$00,$18,$18,$30,$66,$3C,$00	; .
-Char169: .db $00,$00,$00,$FC,$C0,$C0,$00,$00	; .
-Char170: .db $00,$00,$00,$FC,$0C,$0C,$00,$00	; .
-Char171: .db $C6,$CC,$D8,$3F,$63,$CF,$8C,$0F	; .
-Char172: .db $C3,$C6,$CC,$DB,$37,$6D,$CF,$03	; .
-Char173: .db $18,$00,$18,$18,$18,$18,$18,$00	; .
-Char174: .db $00,$33,$66,$CC,$66,$33,$00,$00	; .
-Char175: .db $00,$CC,$66,$33,$66,$CC,$00,$00	; .
-Char176: .db $22,$88,$22,$88,$22,$88,$22,$88	; .
-Char177: .db $55,$AA,$55,$AA,$55,$AA,$55,$AA	; .
-Char178: .db $DD,$77,$DD,$77,$DD,$77,$DD,$77	; .
-Char179: .db $18,$18,$18,$18,$18,$18,$18,$18	; .
-Char180: .db $18,$18,$18,$18,$F8,$18,$18,$18	; .
-Char181: .db $18,$18,$F8,$18,$F8,$18,$18,$18	; .
-Char182: .db $36,$36,$36,$36,$F6,$36,$36,$36	; .
-Char183: .db $00,$00,$00,$00,$FE,$36,$36,$36	; .
-Char184: .db $00,$00,$F8,$18,$F8,$18,$18,$18	; .
-Char185: .db $36,$36,$F6,$06,$F6,$36,$36,$36	; .
-Char186: .db $36,$36,$36,$36,$36,$36,$36,$36	; .
-Char187: .db $00,$00,$FE,$06,$F6,$36,$36,$36	; .
-Char188: .db $36,$36,$F6,$06,$FE,$00,$00,$00	; .
-Char189: .db $36,$36,$36,$36,$FE,$00,$00,$00	; .
-Char190: .db $18,$18,$F8,$18,$F8,$00,$00,$00	; .
-Char191: .db $00,$00,$00,$00,$F8,$18,$18,$18	; .
-Char192: .db $18,$18,$18,$18,$1F,$00,$00,$00	; .
-Char193: .db $18,$18,$18,$18,$FF,$00,$00,$00	; .
-Char194: .db $00,$00,$00,$00,$FF,$18,$18,$18	; .
-Char195: .db $18,$18,$18,$18,$1F,$18,$18,$18	; .
-Char196: .db $00,$00,$00,$00,$FF,$00,$00,$00	; .
-Char197: .db $18,$18,$18,$18,$FF,$18,$18,$18	; .
-Char198: .db $18,$18,$1F,$18,$1F,$18,$18,$18	; .
-Char199: .db $36,$36,$36,$36,$37,$36,$36,$36	; .
-Char200: .db $36,$36,$37,$30,$3F,$00,$00,$00	; .
-Char201: .db $00,$00,$3F,$30,$37,$36,$36,$36	; .
-Char202: .db $36,$36,$F7,$00,$FF,$00,$00,$00	; .
-Char203: .db $00,$00,$FF,$00,$F7,$36,$36,$36	; .
-Char204: .db $36,$36,$37,$30,$37,$36,$36,$36	; .
-Char205: .db $00,$00,$FF,$00,$FF,$00,$00,$00	; .
-Char206: .db $36,$36,$F7,$00,$F7,$36,$36,$36	; .
-Char207: .db $18,$18,$FF,$00,$FF,$00,$00,$00	; .
-Char208: .db $36,$36,$36,$36,$FF,$00,$00,$00	; .
-Char209: .db $00,$00,$FF,$00,$FF,$18,$18,$18	; .
-Char210: .db $00,$00,$00,$00,$FF,$36,$36,$36	; .
-Char211: .db $36,$36,$36,$36,$3F,$00,$00,$00	; .
-Char212: .db $18,$18,$1F,$18,$1F,$00,$00,$00	; .
-Char213: .db $00,$00,$1F,$18,$1F,$18,$18,$18	; .
-Char214: .db $00,$00,$00,$00,$3F,$36,$36,$36	; .
-Char215: .db $36,$36,$36,$36,$FF,$36,$36,$36	; .
-Char216: .db $18,$18,$FF,$18,$FF,$18,$18,$18	; .
-Char217: .db $18,$18,$18,$18,$F8,$00,$00,$00	; .
-Char218: .db $00,$00,$00,$00,$1F,$18,$18,$18	; .
-Char219: .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF	; .
-Char220: .db $00,$00,$00,$00,$FF,$FF,$FF,$FF	; .
-Char221: .db $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0	; .
-Char222: .db $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F	; .
-Char223: .db $FF,$FF,$FF,$FF,$00,$00,$00,$00	; .
-Char224: .db $00,$00,$76,$DC,$C8,$DC,$76,$00	; .
-Char225: .db $38,$6C,$6C,$78,$6C,$66,$6C,$60	; .
-Char226: .db $00,$FE,$C6,$C0,$C0,$C0,$C0,$00	; .
-Char227: .db $00,$00,$FE,$6C,$6C,$6C,$6C,$00	; .
-Char228: .db $FE,$60,$30,$18,$30,$60,$FE,$00	; .
-Char229: .db $00,$00,$7E,$D8,$D8,$D8,$70,$00	; .
-Char230: .db $00,$66,$66,$66,$66,$7C,$60,$C0	; .
-Char231: .db $00,$76,$DC,$18,$18,$18,$18,$00	; .
-Char232: .db $7E,$18,$3C,$66,$66,$3C,$18,$7E	; .
-Char233: .db $3C,$66,$C3,$FF,$C3,$66,$3C,$00	; .
-Char234: .db $3C,$66,$C3,$C3,$66,$66,$E7,$00	; .
-Char235: .db $0E,$18,$0C,$7E,$C6,$C6,$7C,$00	; .
-Char236: .db $00,$00,$7E,$DB,$DB,$7E,$00,$00	; .
-Char237: .db $06,$0C,$7E,$DB,$DB,$7E,$60,$C0	; .
-Char238: .db $38,$60,$C0,$F8,$C0,$60,$38,$00	; .
-Char239: .db $78,$CC,$CC,$CC,$CC,$CC,$CC,$00	; .
-Char240: .db $00,$7E,$00,$7E,$00,$7E,$00,$00	; .
-Char241: .db $18,$18,$7E,$18,$18,$00,$7E,$00	; .
-Char242: .db $60,$30,$18,$30,$60,$00,$FC,$00	; .
-Char243: .db $18,$30,$60,$30,$18,$00,$FC,$00	; .
-Char244: .db $0E,$1B,$1B,$18,$18,$18,$18,$18	; .
-Char245: .db $18,$18,$18,$18,$18,$D8,$D8,$70	; .
-Char246: .db $18,$18,$00,$7E,$00,$18,$18,$00	; .
-Char247: .db $00,$76,$DC,$00,$76,$DC,$00,$00	; .
-Char248: .db $38,$6C,$6C,$38,$00,$00,$00,$00	; .
-Char249: .db $00,$00,$00,$18,$18,$00,$00,$00	; .
-Char250: .db $00,$00,$00,$00,$18,$00,$00,$00	; .
-Char251: .db $0F,$0C,$0C,$0C,$EC,$6C,$3C,$1C	; .
-Char252: .db $78,$6C,$6C,$6C,$6C,$00,$00,$00	; .
-Char253: .db $7C,$0C,$7C,$60,$7C,$00,$00,$00	; .
-Char254: .db $00,$00,$3C,$3C,$3C,$3C,$00,$00	; .
-Char255: .db $00,$10,$00,$00,$00,$00,$00,$00	; NULL
 
  .endLibrary
