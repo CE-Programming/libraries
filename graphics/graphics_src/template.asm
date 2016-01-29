@@ -127,42 +127,35 @@ _setPal:
 ; Gets the color of a given pallete entry
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _getcolor:
- push ix
-  ld ix,0
-  add ix,sp
-  ld l,(ix+arg0)
-  ld a,(ix+arg1)
- pop ix
- ld h,2
- mlt hl
- ld de,mpLcdPalette
- add hl,de
+ ld hl,arg0
+ add hl,sp
+ ld de,mpLcdPalette/2
  ld e,(hl)
- inc hl
+ sbc hl,hl
+ ex de,hl
+ add hl,hl
+ ld e,(hl)
+ inc l
  ld d,(hl)
- or a,a \ sbc hl,hl	; clear the upper byte HLU
- ld h,d
- ld l,e
+ ex de,hl
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; sets the color of a given pallete entry (unsigned char, unsigned short)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setcolor:
- push ix
-  ld ix,0
-  add ix,sp
-  ld l,(ix+arg0)
-  ld a,(ix+arg1)
-  ld h,2
-  mlt hl
-  ld de,mpLcdPalette
-  add hl,de
-  ld (hl),a
-  inc hl
-  ld a,(ix+arg1+1)
-  ld (hl),a
- pop ix
+ ld hl,arg0
+ add hl,sp
+ ld de,mpLcdPalette/2
+ ld e,(hl)
+ inc hl
+ inc hl
+ inc hl
+ ex de,hl
+ add hl,hl
+ ex de,hl
+ ldi
+ ldi
  ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
