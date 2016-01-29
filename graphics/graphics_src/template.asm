@@ -20,8 +20,9 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .function "void","gc_SetDefaultPalette","void",_setdefaultpal
  .function "void","gc_SetPalette","unsigned short *palette, unsigned short size",_setPal
  .function "void","gc_FillScrn","unsigned char color",_fillscrn
- .function "void","gc_SetPixel","unsigned short x, unsigned char y, unsigned char color",_setpixel
- .function "unsigned char","gc_GetPixel","unsigned short x, unsigned char y",_getpixel
+ .function "unsigned char *","gc_PixelPtr","int x, int y",_pixelptr
+ .function "void","gc_SetPixel","int x, int y, unsigned char color",_setpixel
+ .function "unsigned char","gc_GetPixel","int x, int y",_getpixel
  .function "unsigned short","gc_GetColor","unsigned char index",_getcolor
  .function "void","gc_SetColor","unsigned char index, unsigned short color",_setcolor
  .function "void","gc_NoClipLine","unsigned short x0, unsigned char y0, unsigned short x1, unsigned char y1, unsigned char color",_line
@@ -163,33 +164,46 @@ _setcolor:
   ld (hl),a
  pop ix
  ret
- 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Gets the address of a pixel
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_pixelptr:
+ pop hl					; ret addr
+  pop bc				; x
+   pop de				; y
+   push de
+  push bc
+ push hl
+pixelPtr_ASM:
+ ld hl,-lcdWidth
+ add hl,bc
+ ret c
+ ld hl,-lcdHeight
+ add hl,de
+ ret c
+ ld hl,(currentDrawingBuffer)
+ add hl,bc
+ ld d,lcdWidth/2
+ mlt de
+ add hl,de
+ add hl,de
+ ret
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Gets the color index of a pixel
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _getpixel:
- push ix
-  ld bc,0
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)		; DE=X
-  ld l,(ix+arg1)		; L=Y
- pop ix
- ld a,l
- cp a,lcdHeight
- ret nc				; return if offscreen
- ex de,hl
-  ld bc,lcdWidth
-  or a,a \ sbc hl,bc
-  add hl,bc
-  ret nc			; return if offscreen
- ex de,hl
- ld h,lcdWidth/2
- mlt hl
- add hl,hl
- add hl,de
- ld de,(currentDrawingBuffer)
- add hl,de
+ pop hl					; ret addr
+  pop de				; x
+   pop bc				; y
+   push bc
+  push de
+ push hl
+ xor a,a
+getPixel_ASM:
+ call _pixelPtr_ASM \.r
+ ret c
  ld a,(hl)
  ret
  
@@ -197,38 +211,19 @@ _getpixel:
 ; Sets a pixel to a color (x,y,color)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setpixel:
- push ix
-  ld bc,0
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)   ; DE=X
-  ld a,(ix+arg2)    ; color
-  ld (set_color),a \.r
-  ld a,(ix+arg1)    ; A=Y
- pop ix
+ pop hl					; ret addr
+  pop de				; x
+   pop bc				; y
+    ex (sp),hl
+     ld a,l				; color
+    ex (sp),hl
+   push bc
+  push de
+ push hl
 setPixel_ASM:
- or a,a \ sbc hl,hl
- ld l,a			    ; Y->L
- cp a,lcdHeight
- ret nc				; return if y>lcdHeight
- or a,a \ adc hl,bc
- ret m				; return if negative
- ex de,hl
- or a,a \ adc hl,bc
- ret m				; return if negative
- ld bc,lcdWidth
- or a,a \ sbc hl,bc
- add hl,bc
- ret nc				; return if offscreen
- ex de,hl
- ld h,lcdWidth/2
- mlt hl
- add hl,hl
- add hl,de
- ld de,(currentDrawingBuffer)
- add hl,de
-set_color: = $+1
- ld (hl),0
+ call _pixelPtr_ASM \.r
+ ret c
+ ld (hl),a
  ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
