@@ -10,56 +10,57 @@ _gc_SetPalette equ $
  jp 9
 _gc_FillScrn equ $
  jp 12
-_gc_SetPixel equ $
+_gc_PixelPtr equ $
  jp 15
-_gc_GetPixel equ $
+_gc_SetPixel equ $
  jp 18
-_gc_GetColor equ $
+_gc_GetPixel equ $
  jp 21
-_gc_SetColor equ $
+_gc_GetColor equ $
  jp 24
-_gc_NoClipLine equ $
+_gc_SetColor equ $
  jp 27
-_gc_NoClipRectangle equ $
+_gc_NoClipLine equ $
  jp 30
-_gc_NoClipRectangleOutline equ $
+_gc_NoClipRectangle equ $
  jp 33
-_gc_NoClipHorizLine equ $
+_gc_NoClipRectangleOutline equ $
  jp 36
-_gc_NoClipVertLine equ $
+_gc_NoClipHorizLine equ $
  jp 39
-_gc_NoClipCircle equ $
+_gc_NoClipVertLine equ $
  jp 42
-_gc_ClipCircleOutline equ $
+_gc_NoClipCircle equ $
  jp 45
-_gc_DrawBuffer equ $
+_gc_ClipCircleOutline equ $
  jp 48
-_gc_DrawScreen equ $
+_gc_DrawBuffer equ $
  jp 51
-_gc_SwapDraw equ $
+_gc_DrawScreen equ $
  jp 54
-_gc_DrawState equ $
+_gc_SwapDraw equ $
  jp 57
-_gc_PrintChar equ $
+_gc_DrawState equ $
  jp 60
-_gc_PrintString equ $
+_gc_PrintChar equ $
  jp 63
-_gc_PrintStringXY equ $
+_gc_PrintString equ $
  jp 66
-_gc_TextX equ $
+_gc_PrintStringXY equ $
  jp 69
-_gc_TextY equ $
+_gc_TextX equ $
  jp 72
-_gc_SetTextXY equ $
+_gc_TextY equ $
  jp 75
-_gc_SetTextColor equ $
+_gc_SetTextXY equ $
  jp 78
-_gc_SetTransparentColor equ $
+_gc_SetTextColor equ $
  jp 81
-_gc_NoClipDrawSprite equ $
+_gc_SetTransparentColor equ $
  jp 84
-_gc_NoClipDrawTransparentSprite equ $
+_gc_NoClipDrawSprite equ $
  jp 87
-_gc_NoClipGetSprite equ $
+_gc_NoClipDrawTransparentSprite equ $
  jp 90
-
+_gc_NoClipGetSprite equ $
+ jp 93

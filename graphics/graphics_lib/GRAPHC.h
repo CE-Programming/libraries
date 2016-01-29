@@ -77,16 +77,22 @@ void gc_SetPalette(unsigned short *palette, unsigned short size);
 void gc_FillScrn(unsigned char color);
 
 /**
+ * Gets a pointer to the XY pixel measured from the top left origin of the screen
+ * Useful for fast access.
+ */
+unsigned char *gc_PixelPtr(int x, int y);
+
+/**
  * Sets the XY pixel measured from the top left origin of the screen to the
  * given palette index color. This routine performs clipping.
  */
-void gc_SetPixel(unsigned short x, unsigned char y, unsigned char color);
+void gc_SetPixel(int x, int y, unsigned char color);
 
 /**
  * Gets the palette index color of the XY pixel measured from the top
  * left origin of the screen. This routine performs clipping.
  */
-unsigned char gc_GetPixel(unsigned short x, unsigned char y);
+unsigned char gc_GetPixel(int x, int y);
 
 /**
  * Gets the 1555 color located at the given palette index.

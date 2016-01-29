@@ -168,7 +168,7 @@ _pixelptr:
    push de
   push bc
  push hl
-pixelPtr_ASM:
+_pixelPtr_ASM:
  ld hl,-lcdWidth
  add hl,bc
  ret c
