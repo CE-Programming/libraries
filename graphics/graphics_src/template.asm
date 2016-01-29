@@ -10,7 +10,7 @@
 #define arg5 21
 
 lcdsize			        equ lcdwidth*lcdhheight*2
-currentDrawingBuffer	equ silentLinkHookPtr		; since it isn't used anyway, may as well
+currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
 
  .libraryName		"GRAPHC"	                    ; Name of library
  .libraryVersion	1		                        ; Version information (1-255)
