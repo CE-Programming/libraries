@@ -44,8 +44,10 @@
  * Quickly set and get pixels.
  * No clipping is performed.
  */
-#define gc_FastSetPixel(x, y, c)     *((uint8_t*)(0xD40000 + x + y*320)) = c
-#define gc_FastGetPixel(x, y)        *((uint8_t*)(0xD40000 + x + y*320))
+#define currentDrawingBuffer         *(uint8_t**)(0xE30014)
+#define gc_FastPixelPtr(x, y)         (uint8_t*)(currentDrawingBuffer + x + y*320)
+#define gc_FastSetPixel(x, y, c)     *(gc_FastPixelPtr(x,y)) = c
+#define gc_FastGetPixel(x, y)        *(gc_FastPixelPtr(x,y))
 
 /**
  * Initializes the graphics setup.
@@ -75,12 +77,6 @@ void gc_SetPalette(unsigned short *palette, unsigned short size);
  * Fills the screen with the given palette index
  */
 void gc_FillScrn(unsigned char color);
-
-/**
- * Gets a pointer to the XY pixel measured from the top left origin of the screen
- * Useful for fast access.
- */
-unsigned char *gc_PixelPtr(int x, int y);
 
 /**
  * Sets the XY pixel measured from the top left origin of the screen to the

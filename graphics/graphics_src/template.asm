@@ -20,7 +20,6 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .function "void","gc_SetDefaultPalette","void",_setdefaultpal
  .function "void","gc_SetPalette","unsigned short *palette, unsigned short size",_setPal
  .function "void","gc_FillScrn","unsigned char color",_fillscrn
- .function "unsigned char *","gc_PixelPtr","int x, int y",_pixelptr
  .function "void","gc_SetPixel","int x, int y, unsigned char color",_setpixel
  .function "unsigned char","gc_GetPixel","int x, int y",_getpixel
  .function "unsigned short","gc_GetColor","unsigned char index",_getcolor
