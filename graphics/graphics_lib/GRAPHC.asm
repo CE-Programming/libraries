@@ -66,3 +66,9 @@ _gc_NoClipDrawTransparentSprite equ $
  jp 93
 _gc_NoClipGetSprite equ $
  jp 96
+_gc_SetCustomFontData equ $
+ jp 99
+_gc_SetCustomFontSpacing equ $
+ jp 102
+_gc_SetFontMonospace equ $
+ jp 105

@@ -44,10 +44,10 @@
  * Quickly set and get pixels.
  * No clipping is performed.
  */
-#define currentDrawingBuffer         *(uint8_t**)(0xE30014)
-#define gc_FastPixelPtr(x, y)         (uint8_t*)(currentDrawingBuffer + x + y*320)
-#define gc_FastSetPixel(x, y, c)     *(gc_FastPixelPtr(x,y)) = c
-#define gc_FastGetPixel(x, y)        *(gc_FastPixelPtr(x,y))
+#define currentDrawingBuffer         (*(uint8_t**)(0xE30014))
+#define gc_FastPixelPtr(x, y)        ((uint8_t*)(currentDrawingBuffer + x + y*320))
+#define gc_FastSetPixel(x, y, c)     (*(gc_FastPixelPtr(x,y)) = c)
+#define gc_FastGetPixel(x, y)        (*(gc_FastPixelPtr(x,y)))
 
 /**
  * Initializes the graphics setup.
@@ -250,5 +250,20 @@ void gc_NoClipDrawTransparentSprite(unsigned char *sprite, unsigned short x, uns
  * Note: This routine disables interrupts.
  */
 unsigned char *gc_NoClipGetSprite(unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+
+/**
+ * Set the font routines to use the provided font, formated 8x8
+ */
+void gc_SetCustomFontData(unsigned char *fontdata);
+
+/**
+ * Set the font routines to use the provided font spacing
+ */
+void gc_SetCustomFontSpacing(unsigned char *fontspacing);
+
+/**
+ * Call gc_SetFontMonospace(0) to set the font routine to not use monospace font
+ */
+void gc_SetFontMonospace(unsigned char monospace);
 
 #endif

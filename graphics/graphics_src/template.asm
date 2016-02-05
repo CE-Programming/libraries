@@ -48,6 +48,9 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .function "void","gc_NoClipDrawSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawsprite
  .function "void","gc_NoClipDrawTransparentSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawTransparentSprite
  .function "void","gc_NoClipGetSprite","unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_getsprite
+ .function "void","gc_SetCustomFontData","unsigned char *fontdata",_setfontdata
+ .function "void","gc_SetCustomFontSpacing","unsigned char *fontspacing",_setfontspacing
+ .function "void","gc_SetFontMonospace","unsigned char monospace",_setfontmonospace
  
  .beginDependencies
  .endDependencies
@@ -507,11 +510,18 @@ textX: = $+1
     jr c,+_
     xor a,a
 _:
-    or a,a \ sbc hl,hl \ ld l,a
-    ld de,CharSpacing \.r
+    push af
+     ld a,(monoFlag) \.r
+     or a,a
+     ld a,8
+    pop de
+    jr z,monospacedfont
+    or a,a \ sbc hl,hl \ ld l,d
+    ld de,(CharSpacingPTR) \.r
     add hl,de
     ld a,(hl)			; amount to increment per character
     inc a
+monospacedfont:
     ld (charwidth),a \.r
     sbc hl,hl \ ld l,a
     add hl,bc
@@ -530,7 +540,7 @@ textY: = $+1
    sbc hl,hl \ ld l,a
    add hl,hl \ add hl,hl \ add hl,hl
    ex de,hl
-   ld hl,char000 \.r
+   ld hl,(TextDataPTR) \.r
    add hl,de			; hl -> Correct Character
   pop de			    ; de -> correct place to draw
   ld b,8
@@ -1302,12 +1312,63 @@ _:
 ; Inner library routines                               #
 ;#######################################################
  
+_setfontdata:
+ pop de
+  pop hl
+  push hl
+ push de
+ add hl,de
+ or a,a
+ sbc hl,de
+ jr nz,+_
+ ld hl,Char000 \.r
+_:
+ ld (TextDataPTR),hl \.r
+ ret
+
+_setfontspacing:
+ pop de
+  pop hl
+  push hl
+ push de
+ add hl,de
+ or a,a
+ sbc hl,de
+ jr nz,+_
+ ld hl,CharSpacing \.r
+_:
+ ld (CharSpacingPTR),hl \.r
+ ret
+
+_setfontmonospace:
+ push ix
+  ld ix,0
+  add ix,sp
+  ld a,(ix+arg0)
+ pop ix
+ or a,a
+ jr z,notmono
+ xor a,a
+ jr +_
+notmono:
+ xor a,a
+ dec a
+_:
+ ld (monoFlag),a \.r
+ ret
+ 
 ;#######################################################
 ; Inner library data                                   #
 ;#######################################################
+ 
+monoFlag:
+ .db $FF
 
-textBits:
- .db 0
+CharSpacingPTR:
+ .dl CharSpacing \.r
+ 
+TextDataPTR:
+ .dl Char000 \.r
  
 CharSpacing:
  ;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F

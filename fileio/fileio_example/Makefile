@@ -3,7 +3,7 @@ CEDEV ?= $(call REALWINPATH,..\..)
 BIN = $(CEDEV)\bin
 INCLUDE = $(CEDEV)\include
 
-TARGET ?= keypad
+TARGET ?= fileio
 
 CC = @ "$(BIN)\eZ80cc"
 LD = @ "$(BIN)\eZ80link"
