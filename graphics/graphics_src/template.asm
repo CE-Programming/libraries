@@ -165,13 +165,6 @@ _setcolor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Gets the address of a pixel
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_pixelptr:
- pop hl					; ret addr
-  pop bc				; x
-   pop de				; y
-   push de
-  push bc
- push hl
 _pixelPtr_ASM:
  ld hl,-lcdWidth
  add hl,bc
@@ -192,10 +185,10 @@ _pixelPtr_ASM:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _getpixel:
  pop hl					; ret addr
-  pop de				; x
-   pop bc				; y
-   push bc
-  push de
+  pop bc				; x
+   pop de				; y
+   push de
+  push bc
  push hl
  xor a,a
 getPixel_ASM:
@@ -209,13 +202,13 @@ getPixel_ASM:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setpixel:
  pop hl					; ret addr
-  pop de				; x
-   pop bc				; y
+  pop bc				; x
+   pop de				; y
     ex (sp),hl
      ld a,l				; color
     ex (sp),hl
-   push bc
-  push de
+   push de
+  push bc
  push hl
 setPixel_ASM:
  call _pixelPtr_ASM \.r
