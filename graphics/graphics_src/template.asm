@@ -131,7 +131,7 @@ _setPal:
 ; Gets the color of a given pallete entry
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _getcolor:
- ld hl,arg0
+ ld hl,3
  add hl,sp
  ld de,mpLcdPalette/2
  ld e,(hl)
@@ -148,7 +148,7 @@ _getcolor:
 ; sets the color of a given pallete entry (unsigned char, unsigned short)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setcolor:
- ld hl,arg0
+ ld hl,3
  add hl,sp
  ld de,mpLcdPalette/2
  ld e,(hl)
