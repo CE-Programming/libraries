@@ -1,4 +1,4 @@
-#include "..\\..\\include\\relocation.inc"
+#include "..\..\..\include\relocation.inc"
 #include "ti84pce.inc"
 
  .libraryName		"GRAPHC"	                    ; Name of library

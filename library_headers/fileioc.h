@@ -37,7 +37,7 @@
 #define H_FILEIOC
 
 #pragma asm "include "libheader.asm""
-#pragma asm "include "FILEIOC.asm""
+#pragma asm "include "fileioc.asm""
 #pragma asm "segment code"
 
 /**

@@ -1,7 +1,7 @@
 LIB = GRAPHC
 SOURCES = graphics_lib.asm
 
-CC = @"..\..\include\spasm"
+CC = @"..\..\..\include\spasm"
  
 CFLAGS =  -E
  
