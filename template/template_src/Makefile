@@ -1,8 +1,8 @@
-LIB = TMPLTE
-SOURCES = template.asm
+LIB = TEMPLATE
+SOURCES = template_lib.asm
 
-AS = @"..\include\spasm"
- 
+AS = @"..\..\include\spasm"
+
 ASMFLAGS =  -E
  
 $(LIB) :
