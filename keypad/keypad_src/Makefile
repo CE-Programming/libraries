@@ -1,5 +1,5 @@
 LIB = KEYPADC
-SOURCES = template.asm
+SOURCES = keypad_lib.asm
 
 AS = @"..\..\include\spasm"
 

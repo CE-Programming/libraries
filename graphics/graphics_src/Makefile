@@ -1,5 +1,5 @@
 LIB = GRAPHC
-SOURCES = template.asm
+SOURCES = graphics_lib.asm
 
 CC = @"..\..\include\spasm"
  

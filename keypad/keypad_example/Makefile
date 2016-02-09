@@ -20,10 +20,10 @@ STARTUPMODULE = $(CEDEV)\include\startup\cstartup.obj
 
 ASM_FLAGS = \
 	-name -define:_EZ80=1 -define:_SIMULATE=1 -include:$(HEADERS) -NOlist -NOlistmac \
-	-pagelen:250 -pagewidth:132 -quiet -sdiopt -warn -NOdebug -NOigcase -cpu:eZ80190
+	-pagelen:250 -pagewidth:132 -quiet -sdiopt -warn -NOdebug -NOigcase -cpu:eZ80F91
 
 CFLAGS =  \
-	-quiet -define:NDEBUG -define:_EZ80190 -define:_EZ80 -define:_SIMULATE -NOlistinc -NOmodsect -cpu:eZ80190 -keepasm \
+	-quiet -define:NDEBUG -define:_EZ80F91 -define:_EZ80 -define:_SIMULATE -NOlistinc -NOmodsect -cpu:eZ80F91 -keepasm \
 	-optspeed -NOreduceopt -stdinc:"$(HEADERS)" -usrinc:"." -NOdebug \
 	-asmsw:"$(ASM_FLAGS)" -asm $(ASMSOURCES)
 

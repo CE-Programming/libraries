@@ -1,5 +1,5 @@
 LIB = FILEIOC
-SOURCES = template.asm
+SOURCES = fileio_lib.asm
 
 AS = @"..\..\include\spasm"
 

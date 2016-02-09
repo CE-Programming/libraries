@@ -23,13 +23,14 @@ void main(void)
     unsigned int x,y,r;
     unsigned char color = 0;
     unsigned char *mushroombuffer = malloc(sizeof mushroomsprite);
-    
+
     gc_InitGraph();
     
     /* Draw an 8x8 palette */
     for(y=0;y<128;y+=16) {
         for(x=0;x<128;x+=16) {
-            gc_NoClipRectangle(x,y,16,16, color);
+            gc_SetColorIndex(color);
+            gc_NoClipRectangle(x,y,16,16);
             color++;
         }
         color+=24;
@@ -40,35 +41,18 @@ void main(void)
     
     /* This is a really bad function to use. Don't use it in actual things */
     _OS( GetKey() );
-    
-    /* Fill the screen with blackness */
-    gc_FillScrn(0x00);
-    
-    /* Draw a whole bunch of circles */
-    for(r=0;r<120;r+=2) {
-        gc_ClipCircleOutline(160,120,r,r);
-        gc_ClipCircleOutline(160,0,r,r);
-        gc_ClipCircleOutline(319,120,r,r);
-        gc_ClipCircleOutline(0,120,r,r);
-        gc_ClipCircleOutline(160,239,r,r);
-    }
-    
-    /* This is a really bad function to use. Don't use it in actual things */
-    _OS( GetKey() );
-    
+
     /* Fill the screen with lightness */
     gc_FillScrn(0xFF);
     
     for(x=0;x<320;x++) {
-        gc_NoClipLine(160,0,x,120,x);
-        gc_NoClipLine(160,239,x,120,x);
+        gc_SetColorIndex(x);
+        gc_NoClipLine(160,0,x,120);
+        gc_NoClipLine(160,239,x,120);
     }
     
     /* This is a really bad function to use. Don't use it in actual things */
     _OS( GetKey() );
-    
-    /* Fill the screen with darkness */
-    gc_FillScrn(0xFF);
     
     /* Set only the palette we need of mushroomsprite */
     gc_SetPalette(mushroomsprite_pal, sizeof mushroomsprite_pal);

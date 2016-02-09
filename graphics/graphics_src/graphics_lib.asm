@@ -17,20 +17,21 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  
  .function "void","gc_InitGraph","void",_initgraph
  .function "void","gc_CloseGraph","void",_closegraph
+ .function "unsigned char","gc_SetColorIndex","unsigned char index",_setglobalcolor
  .function "void","gc_SetDefaultPalette","void",_setdefaultpal
  .function "void","gc_SetPalette","unsigned short *palette, unsigned short size",_setPal
  .function "void","gc_FillScrn","unsigned char color",_fillscrn
- .function "void","gc_SetPixel","int x, int y, unsigned char color",_setpixel
+ .function "void","gc_SetPixel","int x, int y",_setpixel
  .function "unsigned char","gc_GetPixel","int x, int y",_getpixel
  .function "unsigned short","gc_GetColor","unsigned char index",_getcolor
  .function "void","gc_SetColor","unsigned char index, unsigned short color",_setcolor
- .function "void","gc_NoClipLine","unsigned short x0, unsigned char y0, unsigned short x1, unsigned char y1, unsigned char color",_line
- .function "void","gc_NoClipRectangle","unsigned short x, unsigned char y, unsigned short width, unsigned char height, unsigned char color",_rectangle
- .function "void","gc_NoClipRectangleOutline","unsigned short x, unsigned char y, unsigned short width, unsigned char height, unsigned char color",_rectangleoutline
- .function "void","gc_NoClipHorizLine","unsigned short x, unsigned char y, unsigned short length, unsigned char color",_horizline
- .function "void","gc_NoClipVertLine","unsigned short x, unsigned char y, unsigned char length, unsigned char color",_vertline
- .function "void","gc_NoClipCircle","unsigned short x, unsigned char y, unsigned short radius, unsigned char color",_circle
- .function "void","gc_ClipCircleOutline","unsigned short x, unsigned char y, unsigned short radius, unsigned char color",_circleoutline
+ .function "void","gc_NoClipLine","unsigned short x0, unsigned char y0, unsigned short x1, unsigned char y1",_line
+ .function "void","gc_NoClipRectangle","unsigned short x, unsigned char y, unsigned short width, unsigned char height",_rectangle
+ .function "void","gc_NoClipRectangleOutline","unsigned short x, unsigned char y, unsigned short width, unsigned char height",_rectangleoutline
+ .function "void","gc_NoClipHorizLine","unsigned short x, unsigned char y, unsigned short length",_horizline
+ .function "void","gc_NoClipVertLine","unsigned short x, unsigned char y, unsigned char length",_vertline
+ .function "void","gc_NoClipCircle","unsigned short x, unsigned char y, unsigned short radius",_circle
+ .function "void","gc_ClipCircleOutline","unsigned short x, unsigned char y, unsigned short radius",_circleoutline
  .function "void","gc_DrawBuffer","void",_drawbuffer
  .function "void","gc_DrawScreen","void",_drawscreen
  .function "void","gc_SwapDraw","void",_swapbuffer
@@ -40,10 +41,12 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .function "void","gc_PrintUnsignedInt","unsigned int n",_outuint
  .function "void","gc_PrintString","char *string",_outtext
  .function "void","gc_PrintStringXY","char *string, unsigned short x, unsigned char y",_outtextxy
+ .function "unsigned int","gc_StringWidth","char *string",_strngwidth
+ .function "unsigned int","gc_CharWidth","char c",_charwidth
  .function "unsigned short","gc_TextX","void",_textx
  .function "unsigned char","gc_TextY","void",_texty
  .function "void","gc_SetTextXY","unsigned short x, unsigned char y",_settextxy
- .function "void","gc_SetTextColor","unsigned short color",_textcolor
+ .function "unsigned short","gc_SetTextColor","unsigned short color",_textcolor
  .function "unsigned char","gc_SetTransparentColor","unsigned char color",_transparentcolor
  .function "void","gc_NoClipDrawSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawsprite
  .function "void","gc_NoClipDrawTransparentSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawTransparentSprite
@@ -56,10 +59,31 @@ currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
  .endDependencies
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;Sets the LCD to 8bpp mode for sweet graphics
+; Sets the global color index for all routines
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+_setglobalcolor:
+ pop hl
+  pop de
+  push de
+ push hl
+ ld a,(color1) \.r
+ push af
+  ld a,e
+  ld (color1),a \.r
+  ld (color2),a \.r
+  ld (color3),a \.r
+  ld (color4),a \.r
+  ld (color5),a \.r
+  ld (color6),a \.r
+  ld (color7),a \.r
+ pop af
+ ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Sets the LCD to 8bpp mode for sweet graphics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _initgraph:
- call $000374		    ; clears screen
+ call $000374		            ; clears screen
  ld a,lcdbpp8
 setLCDcontrol:
  ld (mpLcdCtrl),a
@@ -198,22 +222,20 @@ getPixel_ASM:
  ret
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets a pixel to a color (x,y,color)
+; Sets a pixel to a color (x,y)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _setpixel:
  pop hl					; ret addr
   pop bc				; x
    pop de				; y
-    ex (sp),hl
-     ld a,l				; color
-    ex (sp),hl
    push de
   push bc
  push hl
 setPixel_ASM:
  call _pixelPtr_ASM \.r
  ret c
- ld (hl),a
+color1: =$+1
+ ld (hl),0
  ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -226,10 +248,7 @@ _rectangle:
   ld de,(ix+arg0)		; x
   ld l,(ix+arg1)		; y
   ld bc,(ix+arg2)		; width
-  ld h,(ix+arg3)		; height
-  ld a,(ix+arg4)		; color
-  ld (FillRect_Color),a \.r
-  ld a,h
+  ld a,(ix+arg3)		; height
   ld h,lcdWidth/2
   mlt hl
   add hl,hl
@@ -238,7 +257,7 @@ _rectangle:
   add hl,de
   dec bc
 FillRect_Loop:
-FillRect_Color = $+1
+color2: =$+1
   ld (hl),0
   push hl
   pop de
@@ -265,7 +284,6 @@ _rectangleoutline:
   ld h,(ix+arg1)		; y
   ld bc,(ix+arg2)		; width
   ld l,(ix+arg3)		; height
-  ld a,(ix+arg4)		; color
   push de
    push hl
     call HorizLine_ASM \.r	 	    ; top
@@ -292,9 +310,10 @@ _horizline:
   ld de,(ix+arg0)		; x
   ld h,(ix+arg1)		; y
   ld bc,(ix+arg2)		; length
-  ld a,(ix+arg3)
  pop ix
 HorizLine_ASM:
+color3: =$+1
+ ld a,0
  ld l,lcdWidth/2
  mlt hl
  add hl,hl
@@ -313,7 +332,6 @@ _vertline:
   ld de,(ix+arg0)		; x
   ld h,(ix+arg1)		; y
   ld b,(ix+arg2)		; length
-  ld a,(ix+arg3)
  pop ix
 RectOutlineVert_ASM_2:
  ld l,lcdWidth/2
@@ -325,7 +343,8 @@ RectOutlineVert_ASM_2:
 RectOutlineVert_ASM:
  ld de,lcdWidth
 VLoop:
- ld (hl),a
+color4: =$+1
+ ld (hl),0
  add hl,de
  djnz VLoop
  ret
@@ -415,7 +434,7 @@ _transparentcolor:
  push hl
  ld a,(transpcolor) \.r
  push af
-  ld a,d
+  ld a,e
   ld (transpcolor),a \.r
   ld (transpcolorspr),a \.r
  pop af
@@ -454,7 +473,6 @@ _settextxy:
 ; Also modifies the current text cursor posisition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _outtextxy:
- di
  push ix
   ld ix,0
   add ix,sp
@@ -478,9 +496,7 @@ textloop:
  ld a,(hl)
  or a,a
  ret z
- push hl
-  call _outchar_ASM \.r
- pop hl
+ call _outchar_ASM \.r
  inc hl
  jr textloop
 
@@ -494,15 +510,12 @@ _outchar:
  push hl
  ld a,c
 _outchar_ASM:
+ push hl
 textX: = $+1
  ld bc,0
  push af
   push af
    push bc
-    cp a,128
-    jr c,+_
-    xor a,a
-_:
     push af
      ld a,(monoFlag) \.r
      or a,a
@@ -517,8 +530,15 @@ _:
 monospacedfont:
     ld (charwidth),a \.r
     sbc hl,hl \ ld l,a
+    neg
+    ld (charwidth_change),a \.r
     add hl,bc
     ld (textX),hl \.r
+charwidth_change: =$+1
+    ld de,$FFFFFF
+    ld hl,lcdWidth
+    add hl,de
+    ld (line_change),hl \.r
 textY: = $+1
     ld l,0
     ld h,lcdWidth/2
@@ -529,13 +549,11 @@ textY: = $+1
    pop de			    ; de = X
    add hl,de			; Add X
   pop af
-  push hl
-   sbc hl,hl \ ld l,a
-   add hl,hl \ add hl,hl \ add hl,hl
-   ex de,hl
-   ld hl,(TextDataPTR) \.r
-   add hl,de			; hl -> Correct Character
-  pop de			    ; de -> correct place to draw
+  ex de,hl              ; de -> correct place to draw
+  or a,a \ sbc hl,hl \ ld l,a
+  add hl,hl \ add hl,hl \ add hl,hl
+  ld bc,(TextDataPTR) \.r
+  add hl,bc			    ; hl -> Correct Character
   ld b,8
 iloop:
   push bc
@@ -553,30 +571,24 @@ cloop:
     ld a,e
 _:
 transpcolor: =$+1
-    cp $FF
+    cp a,$FF
     jr nz,+_
     ld a,(hl)
 _:
     ld (hl),a
     inc hl
     djnz cloop
-    ld bc,lcdWidth
-    ld de,$FFFFFF               ; sign extend
-    ld a,(charwidth) \.r	    ; bc+hl-charwidth
-    neg
-    ld e,a
+line_change: =$+1
+    ld bc,0
     add hl,bc
-    add hl,de
    pop de
    ex de,hl
    inc hl
   pop bc
   djnz iloop
  pop af
+ pop hl
  ret
-
-string_buffer:
- .db 0,0,0,0,0,0,0,0,0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Outputs a signed 24 bit int to the current cursor
@@ -585,63 +597,44 @@ string_buffer:
 _outuint:
  pop de
   pop hl
+   pop bc
+   push bc
   push hl
  push de
- xor a,a
- ld (dispFlag),a \.r
- ld de,string_buffer \.r
 _outuint_ASM:
- push ix
-  ld ix,-1
-  push de
-   ld bc,-10000000
-   call Num1 \.r
-   ld bc,-1000000
-   call Num1 \.r
-   ld bc,-100000
-   call Num1 \.r
-   ld bc,-10000
-   call Num1 \.r
-   ld bc,-1000
-   call Num1 \.r
-   ld bc,-100
-   call Num1 \.r
-   ld c,-10
-   call Num1 \.r
-   ld c,-1
+ ld a,8
+ sub a,c
+ ret c
+ ld c,a
+ ld b,8
+ mlt bc
+ ld a,c
+ ld (offset0),a \.r
+offset0: =$+1
+ jr $
+ ld bc,-10000000
+ call Num1 \.r
+ ld bc,-1000000
+ call Num1 \.r
+ ld bc,-100000
+ call Num1 \.r
+ ld bc,-10000
+ call Num1 \.r
+ ld bc,-1000
+ call Num1 \.r
+ ld bc,-100
+ call Num1 \.r
+ ld bc,-10
+ call Num1 \.r
+ ld bc,-1
 Num1:
-   ld a,'0'-1
+ ld a,'0'-1
 Num2:
-   inc a
-   add hl,bc
-   jr c,Num2
-   sbc hl,bc
-   cp a,'0'
-   jr nz,+_
-   inc ix
-_:
-   ld (de),a
-   inc de
-   ld a,c
-   cp a,-1
-   jr z,+_
-   ret
-_:
-  pop hl
-  xor a,a
-  ld (de),a
-  push ix
-  pop de
-  add hl,de
- pop ix
-dispFlag: =$+1
- ld a,0
- and a,1
- jr z,+_
- dec hl
- ld (hl),'-'
-_:
- jp textloop \.r
+ inc a
+ add hl,bc
+ jr c,Num2
+ sbc hl,bc
+ jp _outchar_ASM \.r
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Outputs a signed 24 bit int to the current cursor
@@ -649,31 +642,29 @@ _:
 _outint:
  pop de
   pop hl
+   pop bc
+   push bc
   push hl
  push de
- ld de,string_buffer \.r
- dec sp
- push hl
-  inc sp
- pop bc
- xor a,a
- bit 7,b
+ call _SetAtoHLU
+ bit 7,a
  jr z,IsntNegative
- push hl
+ push bc
+  push hl
+  pop bc
+  or a,a
+  sbc hl,hl
+  sbc hl,bc
+  ld a,'-'
+  call _outchar_ASM \.r
  pop bc
- or a,a
- sbc hl,hl
- sbc hl,bc
- ld a,1
 IsntNegative:
- ld (dispFlag),a \.r
  jp _outuint_ASM \.r
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Draw a sprite to the screen as fast as possible
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _drawsprite:
- di
  push ix
   ld ix,0
   add ix,sp
@@ -713,7 +704,6 @@ moveAmount: =$+1
 ; Grabs the background really quick for transparency
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _getsprite:
- di
  push ix
   ld ix,0
   add ix,sp
@@ -754,7 +744,6 @@ grab_moveAmount: =$+1
 ; Draws a transparent sprite
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _drawTransparentSprite:
- di
  push ix
   ld ix,0
   add ix,sp
@@ -805,13 +794,15 @@ trans_moveAmount: =$+1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 _circleoutline: 
  di
+ pop ix
+  pop hl
+   pop de
+    pop bc
+    push bc
+   push de
+  push hl
  push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(ix+arg0)
-  ld de,(ix+arg1)
-  ld bc,(ix+arg2)
-  ld a,(ix+arg3)
+ push ix
   push hl
    push de 
     exx 
@@ -980,7 +971,8 @@ drawPixel:
  add hl,de 
  ld de,(currentDrawingBuffer)
  add hl,de
- ld (hl),a
+color5: =$+1
+ ld (hl),0
  ret 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -994,9 +986,6 @@ _circle:
   ld hl,(ix+arg0)
   ld de,(ix+arg1)
   ld bc,(ix+arg2)
-  ld a,(ix+arg3)
-  ld (color),a \.r
-  ld (color2),a \.r
   push hl
    push de
     exx
@@ -1148,9 +1137,8 @@ drawFilledCirclePoints:
   pop ix
   ret
     
-;de=x, hl=x, b=y, c=y, a=indexed color
+;de=x, hl=x, b=y, c=y
 _line:
- di                             ; Freaking TI-OS
  push ix
   ld ix,0
   add ix,sp
@@ -1158,10 +1146,7 @@ _line:
   ld hl,(ix+arg2)
   ld b,(ix+arg1)
   ld c,(ix+arg3)
-  ld a,(ix+arg4)
  pop ix
- ld (color),a \.r
- ld (color2),a \.r
 drawLine:
  ld a,c
  ld (y1),a \.r
@@ -1177,12 +1162,12 @@ _:  ld (xStep),a \.r
     ld (xStep2),a \.r
     ex de,hl 
     or a,a 
-    sbc hl,hl 
-    sbc hl,de 
+    sbc hl,hl
+    sbc hl,de
     jp p,+_ \.r
-    ex de,hl 
+    ex de,hl
 _:  ld (dx),hl \.r
-    push hl 
+    push hl
      add hl,hl 
      ld (dx1),hl \.r
      ld (dx12),hl \.r
@@ -1206,45 +1191,44 @@ _:   ld (yStep),a \.r
      jp p,+_ \.r
      ex de,hl
 _:   ld (dy),hl \.r
-     add hl,hl
-     ld (dy1),hl \.r
-     ld (dy12),hl \.r
+     push hl
+      add hl,hl
+      ld (dy1),hl \.r
+      ld (dy12),hl \.r
+     pop hl
     pop de
    pop af
-   ld hl,(dy) \.r
-   or a,a 
-   sbc hl,de 
+   or a,a
+   sbc hl,de
   pop de
  pop bc
- ld hl,0 
+ ld hl,0
  jr nc,changeYLoop 
 changeXLoop:
  push hl 
   ld l,a 
   ld h,lcdWidth/2 
-  mlt hl 
-  add hl,hl 
-  add hl,bc 
-  push bc 
+  mlt hl
+  add hl,hl
+  add hl,bc
+  push bc
    ld bc,(currentDrawingBuffer)
    add hl,bc 
-color: =$+1 
-   ld (hl),0 
-   pop bc 
-   dec sp 
-   dec sp 
-   dec sp 
-  pop hl 
+color6: =$+1
+   ld (hl),0
+  pop bc
+  push bc
+  pop hl
   or a,a 
   sbc hl,de 
  pop hl 
  ret z 
-xStep:    
+xStep:
  nop
  push de
 dy1: =$+1 
   ld de,0 
-  or a,a 
+  or a,a
   adc hl,de
   jp m,+_ \.r
 dx: =$+1
@@ -1260,18 +1244,18 @@ dx1: =$+1
   sbc hl,de 
 _:
  pop de
- jr changeXLoop 
+ jr changeXLoop
 changeYLoop:
  push bc 
   push hl
    ld l,a 
    ld h,lcdWidth/2 
-   mlt hl 
+   mlt hl
    add hl,hl 
    add hl,bc 
    ld bc,(currentDrawingBuffer)
    add hl,bc 
-color2: =$+1 
+color7: =$+1
    ld (hl),0 
   pop hl
  pop bc
@@ -1304,6 +1288,57 @@ _:
 ;#######################################################
 ; Inner library routines                               #
 ;#######################################################
+ 
+_strngwidth:
+ pop de
+  pop hl
+  push hl
+ push de
+ ld bc,0
+textwloop:
+ ld a,(hl)
+ or a,a
+ jr z,returnWidth
+ push hl
+  call _char_width_ASM \.r
+ pop hl
+ inc hl
+ jr textwloop
+ 
+_charwidth:
+ pop de
+  pop hl
+  push hl
+ push de
+ ld bc,0
+ ld a,l
+_char_width_ASM:
+ ld l,a
+ ld a,(monoFlag)
+ or a,a
+ jr z,monofont
+ ld a,l
+ or a,a
+ sbc hl,hl
+ ld l,a
+ ld de,(CharSpacingPTR) \.r
+ add hl,de
+ ld a,(hl)
+ or a,a
+ sbc hl,hl
+ ld l,a
+ add hl,bc
+ push hl
+ pop bc
+ ret
+monofont:
+ ld hl,8
+ add hl,bc
+ ret
+returnWidth:
+ push bc
+ pop hl
+ ret
  
 _setfontdata:
  pop de
@@ -1373,6 +1408,7 @@ CharSpacing:
  .db 7,7,7,7,8,7,7,7,7,7,7,4,7,4,7,8
  .db 3,7,7,7,7,7,7,7,7,4,7,7,4,7,7,7
  .db 7,7,7,7,6,7,7,7,7,7,7,6,2,6,7,7
+ .db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
  .db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
  
 Char000: .db $00,$00,$00,$00,$00,$00,$00,$00	; .
