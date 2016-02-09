@@ -483,10 +483,10 @@ _SetTransparentColor:
 	pop	de
 	push	de
 	push	hl
-	ld	a,(transpcolor) \.r
+	ld	a,(TransparentTextColor) \.r
 	push	af
 	ld	a,e
-	ld	(transpcolor),a \.r
+	ld	(TransparentTextColor),a \.r
 	ld	(TransparentSpriteColor),a \.r
 	pop	af
 	ret
@@ -535,15 +535,18 @@ _PrintStringXY:
 ;  __frame_arg2 : Text Y Pos
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg1)
-	ld	a,(ix+__frame_arg2)
-	pop	ix
-	ld	(TextXPos_ASM),de \.r
+	ld	hl,9
+	add	hl,sp
+	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
+	dec	hl
+	dec	hl
+	ld	de,TextXPos_ASM+1 \.r
+	ldd
+	ldd
+	dec	hl
+	dec	hl
+	ld	hl,(hl)
 	jr	+_
  
 ;-------------------------------------------------------------------------------
@@ -578,7 +581,7 @@ _PrintChar:
 	push	hl
 _PrintChar_ASM:
 	push hl
-TextXPos_ASM: = $+1
+TextXPos_ASM = $+1
 	ld	bc,0
 	push	af
 	push	af
@@ -601,15 +604,15 @@ _:	ld	(charwidth),a \.r
 	sbc	hl,hl
 	ld	l,a
 	neg
-	ld	(charwidth_change),a \.r
+	ld	(CharWidthDelta_ASM),a \.r
 	add	hl,bc
 	ld	(TextXPos_ASM),hl \.r
-charwidth_change: =$+1
+CharWidthDelta_ASM =$+1
 	ld	de,$FFFFFF
 	ld	hl,lcdWidth
 	add	hl,de
 	ld	(line_change),hl \.r
-TextYPos_ASM: = $+1
+TextYPos_ASM = $+1
 	ld	l,0
 	ld	h,lcdWidth/2
 	mlt	hl
@@ -641,7 +644,7 @@ cloop:	ld	a,d
 	rlc	c
 	jr	nc,+_
 	ld	a,e
-transpcolor =$+1
+TransparentTextColor =$+1
 _:	cp	a,$FF
 	jr	nz,+_
 	ld	a,(hl)
