@@ -7,13 +7,9 @@
  
  clr()
  wr("#define asmname ",name,".asm")
- wr("#define headername ",name,".h")
  run()
  
  #define noextname eval(name)
- 
- .echo > headername "/***************************************************\n"
- .echo >> headername "  ",noextname," library header file\n"
  
  .echo > relocation_table ""
  .echo > asmname " db 0C0h,\"",noextname,"\",0\n"
@@ -26,44 +22,20 @@
 #macro libraryVersion(version)
  #define libversion eval(version)
  .echo >> asmname " db ",libversion,"\n"
- 
- .echo >> headername "  version ",libversion,"\n"
- .echo >> headername "***************************************************/\n\n"
- .echo >> headername "#ifndef H_",noextname,"\n"
- .echo >> headername "#define H_",noextname,"\n\n"
- .echo >> headername "#pragma asm \"include \"libheader.asm\"\"\n"
- .echo >> headername "#pragma asm \"include \"",noextname,".asm\"\"\n"
- .echo >> headername "#pragma asm \"segment code\"\n\n"
- 
  .db libversion
 #endmacro
 #define .libraryVersion libraryVersion(
 
 ;---------------------------------------------
 
-#macro function(funcret, funcname, funcargs, funclabel)
+#macro function(funcname, funclabel)
  .echo >> asmname "_",funcname," equ $\n"
  .echo >> asmname " jp ",numfunctions*3,"\n"
  .dl funclabel
- 
- .echo >> headername "/***************************************************\n"
- .echo >> headername "  function: ",funcname,"\n"
- .echo >> headername "***************************************************/\n"
- .echo >> headername funcret," ",funcname,"(",funcargs,");\n\n"
- 
+
  #define numfunctions eval(numfunctions+1)
 #endmacro
 #define .function function(
-
-;---------------------------------------------
-
-#macro asmfunction(asmfuncname, funclabel)
- .echo >> asmname "_",funcname," equ $\n"
- .echo >> asmname " jp ",numfunctions*3,"\n"
- .dl funclabel
- #define numfunctions eval(numfunctions+1)
-#endmacro
-#define .asmfunc asmfunction(
 
 ;---------------------------------------------
 
@@ -75,8 +47,6 @@
  #include "relocation_table"
  .dl _depend_start			; ptr
  .dl _libendaddr			; size
- 
- .echo >> headername "#endif\n"
 
  .echo "Total library size:\t",6+numrelocations*3+numfunctions*3+_libendaddr
  .echo "Extracted library size:\t",_libendaddr
@@ -118,12 +88,23 @@
 #macro comment()
  ;
 #endmacro
-#define segment comment()
 #define .c comment()
 ;--------------------------------------------
 
+; ZDS sillyness
 #define db .db
 #define dl .dl
 #define dw .dw
+
+; stack frame locations
+#define __frame_arg0 6
+#define __frame_arg1 9
+#define __frame_arg2 12
+#define __frame_arg3 15
+#define __frame_arg4 18
+#define __frame_arg6 21
+#define __frame_arg7 24
+#define __frame_arg8 27
+#define __frame_arg9 30
 
 .list

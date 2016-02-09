@@ -1,1416 +1,1562 @@
-#include "ti84pce.inc"
 #include "..\\..\\include\\relocation.inc"
- 
-; stack locations
-#define arg0 6
-#define arg1 9
-#define arg2 12
-#define arg3 15
-#define arg4 18
-#define arg5 21
-
-lcdsize			        equ lcdwidth*lcdhheight*2
-currentDrawingBuffer	equ mpLcdBase+4		; since it isn't used anyway, may as well
+#include "ti84pce.inc"
 
  .libraryName		"GRAPHC"	                    ; Name of library
- .libraryVersion	1		                        ; Version information (1-255)
+ .libraryVersion	1		                    ; Version information (1-255)
  
- .function "void","gc_InitGraph","void",_initgraph
- .function "void","gc_CloseGraph","void",_closegraph
- .function "unsigned char","gc_SetColorIndex","unsigned char index",_setglobalcolor
- .function "void","gc_SetDefaultPalette","void",_setdefaultpal
- .function "void","gc_SetPalette","unsigned short *palette, unsigned short size",_setPal
- .function "void","gc_FillScrn","unsigned char color",_fillscrn
- .function "void","gc_SetPixel","int x, int y",_setpixel
- .function "unsigned char","gc_GetPixel","int x, int y",_getpixel
- .function "unsigned short","gc_GetColor","unsigned char index",_getcolor
- .function "void","gc_SetColor","unsigned char index, unsigned short color",_setcolor
- .function "void","gc_NoClipLine","unsigned short x0, unsigned char y0, unsigned short x1, unsigned char y1",_line
- .function "void","gc_NoClipRectangle","unsigned short x, unsigned char y, unsigned short width, unsigned char height",_rectangle
- .function "void","gc_NoClipRectangleOutline","unsigned short x, unsigned char y, unsigned short width, unsigned char height",_rectangleoutline
- .function "void","gc_NoClipHorizLine","unsigned short x, unsigned char y, unsigned short length",_horizline
- .function "void","gc_NoClipVertLine","unsigned short x, unsigned char y, unsigned char length",_vertline
- .function "void","gc_NoClipCircle","unsigned short x, unsigned char y, unsigned short radius",_circle
- .function "void","gc_ClipCircleOutline","unsigned short x, unsigned char y, unsigned short radius",_circleoutline
- .function "void","gc_DrawBuffer","void",_drawbuffer
- .function "void","gc_DrawScreen","void",_drawscreen
- .function "void","gc_SwapDraw","void",_swapbuffer
- .function "unsigned char","gc_DrawState","void",_getbufferstatus
- .function "void","gc_PrintChar","char c",_outchar
- .function "void","gc_PrintInt","int n",_outint
- .function "void","gc_PrintUnsignedInt","unsigned int n",_outuint
- .function "void","gc_PrintString","char *string",_outtext
- .function "void","gc_PrintStringXY","char *string, unsigned short x, unsigned char y",_outtextxy
- .function "unsigned int","gc_StringWidth","char *string",_strngwidth
- .function "unsigned int","gc_CharWidth","char c",_charwidth
- .function "unsigned short","gc_TextX","void",_textx
- .function "unsigned char","gc_TextY","void",_texty
- .function "void","gc_SetTextXY","unsigned short x, unsigned char y",_settextxy
- .function "unsigned short","gc_SetTextColor","unsigned short color",_textcolor
- .function "unsigned char","gc_SetTransparentColor","unsigned char color",_transparentcolor
- .function "void","gc_NoClipDrawSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawsprite
- .function "void","gc_NoClipDrawTransparentSprite","unsigned char *sprite, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_drawTransparentSprite
- .function "void","gc_NoClipGetSprite","unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height",_getsprite
- .function "void","gc_SetCustomFontData","unsigned char *fontdata",_setfontdata
- .function "void","gc_SetCustomFontSpacing","unsigned char *fontspacing",_setfontspacing
- .function "void","gc_SetFontMonospace","unsigned char monospace",_setfontmonospace
+ .function "gc_InitGraph",_InitGraph
+ .function "gc_CloseGraph",_CloseGraph
+ .function "gc_SetColorIndex",_SetColorIndex
+ .function "gc_SetDefaultPalette",_SetDefaultPalette
+ .function "gc_SetPalette",_SetPalette
+ .function "gc_FillScrn",_FillScrn
+ .function "gc_SetPixel",_SetPixel
+ .function "gc_GetPixel",_GetPixel
+ .function "gc_GetColor",_GetColor
+ .function "gc_SetColor",_SetColor
+ .function "gc_NoClipLine",_NoClipLine
+ .function "gc_NoClipRectangle",_NoClipRectangle
+ .function "gc_NoClipRectangleOutline",_NoClipRectangleOutline
+ .function "gc_NoClipHorizLine",_NoClipHorizLine
+ .function "gc_NoClipVertLine",_NoClipVertLine
+ .function "gc_NoClipCircle",_NoClipCircle
+ .function "gc_ClipCircleOutline",_ClipCircleOutline
+ .function "gc_DrawBuffer",_DrawBuffer
+ .function "gc_DrawScreen",_DrawScreen
+ .function "gc_SwapDraw",_SwapDraw
+ .function "gc_DrawState",_DrawState
+ .function "gc_PrintChar",_PrintChar
+ .function "gc_PrintInt",_PrintInt
+ .function "gc_PrintUnsignedInt",_PrintUnsignedInt
+ .function "gc_PrintString",_PrintString
+ .function "gc_PrintStringXY",_PrintStringXY
+ .function "gc_StringWidth",_StringWidthC
+ .function "gc_CharWidth",_CharWidth
+ .function "gc_TextX",_TextX
+ .function "gc_TextY",_TextY
+ .function "gc_SetTextXY",_SetTextXY
+ .function "gc_SetTextColor",_SetTextColor
+ .function "gc_SetTransparentColor",_SetTransparentColor
+ .function "gc_NoClipDrawSprite",_NoClipDrawSprite
+ .function "gc_NoClipDrawTransparentSprite",_NoClipDrawTransparentSprite
+ .function "gc_NoClipGetSprite",_NoClipGetSprite
+ .function "gc_SetCustomFontData",_SetCustomFontData
+ .function "gc_SetCustomFontSpacing",_SetCustomFontSpacing
+ .function "gc_SetFontMonospace",_SetFontMonospace
  
  .beginDependencies
  .endDependencies
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;-------------------------------------------------------------------------------
+; used throughout the library
+lcdsize			        equ lcdwidth*lcdhheight*2
+currentDrawingBuffer	equ mpLcdBase+4
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+_SetColorIndex:
 ; Sets the global color index for all routines
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_setglobalcolor:
- pop hl
-  pop de
-  push de
- push hl
- ld a,(color1) \.r
- push af
-  ld a,e
-  ld (color1),a \.r
-  ld (color2),a \.r
-  ld (color3),a \.r
-  ld (color4),a \.r
-  ld (color5),a \.r
-  ld (color6),a \.r
-  ld (color7),a \.r
- pop af
- ret
+; Arguments:
+;  __frame_arg0 : Color Index
+; Returns:
+;  None
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	a,(color1) \.r
+	push	af
+	ld	a,e
+	ld	(color1),a \.r
+	ld	(color2),a \.r
+	ld	(color3),a \.r
+	ld	(color4),a \.r
+	ld	(color5),a \.r
+	ld	(color6),a \.r
+	ld	(color7),a \.r
+	pop	af
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets the LCD to 8bpp mode for sweet graphics
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_initgraph:
- call $000374		            ; clears screen
- ld a,lcdbpp8
-setLCDcontrol:
- ld (mpLcdCtrl),a
- ld hl,vram
- ld (currentDrawingBuffer),hl	; set the draw
- jr _setdefaultpal
+;-------------------------------------------------------------------------------
+_InitGraph:
+; Sets up the graphics canvas (8bpp, default palette)
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	$000374
+	ld	a,lcdbpp8
+_:	ld	(mpLcdCtrl),a
+	ld	hl,vRAM
+	ld	(currentDrawingBuffer),hl
+	jr	_SetDefaultPalette
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;Sets the LCD to the default 16bpp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_closegraph:
- call $000374	        ; clears screen
- ld hl,vram
- ld (mpLcdBase),hl
- ld a,lcdbpp16
- jr setLCDcontrol		; save some bytes
+;-------------------------------------------------------------------------------
+_CloseGraph:
+; Closes the graphics library and sets up for the TI-OS
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	$000374
+	ld	hl,vRAM
+	ld	(mpLcdBase),hl
+	ld	a,lcdbpp16
+	jr	-_
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Fills the screen with a specified color
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_fillscrn:
- di
- pop hl
-  pop bc
-  push bc
- push hl
- ld a,c
- ld bc,lcdWidth*lcdHeight
- ld hl,(currentDrawingBuffer)
- jp _memset
+;-------------------------------------------------------------------------------
+_FillScrn:
+; Fills the screen with the specified color index
+; Arguments:
+;  __frame_arg0 : Color Index
+; Returns:
+;  None
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	ld	a,c
+	ld	bc,lcdWidth*lcdHeight
+	ld	hl,(currentDrawingBuffer)
+	jp	_memset
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Set the default pallete of LOW==HIGH
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_setdefaultpal:
- ld de,mpLcdPalette
- ld b,e
-_1555loop:
- ld a,b
- rrca
- xor a,b
- and a,%11100000
- xor a,b
- ld (de),a
- inc de
- ld a,b
- rra
- ld (de),a
- inc de
- inc b
- jr nz,_1555loop
- ret
+;-------------------------------------------------------------------------------
+_SetDefaultPalette:
+; Sets up the default palette where H=L
+; Arguments:
+;  None
+; Returns:
+;  None
+	ld	de,mpLcdPalette
+	ld	b,e
+_:	ld	a,b
+	rrca
+	xor	a,b
+	and	a,%11100000
+	xor	a,b
+	ld	(de),a
+	inc	de
+	ld	a,b
+	rra
+	ld	(de),a
+	inc	de
+	inc	b
+	jr	nz,-_
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Set the palette (ptr, size)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_setPal:
- pop de
-  pop hl
-   pop bc
-   push bc
-  push hl
- push de
- ld de,mpLcdPalette
- ldir
- ret
+;-------------------------------------------------------------------------------
+_SetPalette:
+; Sets the palette starting at 0x00 index and onward
+; Arguments:
+;  __frame_arg0 : Pointer to palette
+;  __frame_arg1 : Size of palette in bytes
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	push	de
+	ld	de,mpLcdPalette
+	ldir
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;-------------------------------------------------------------------------------
+_GetColor:
 ; Gets the color of a given pallete entry
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_getcolor:
- ld hl,3
- add hl,sp
- ld de,mpLcdPalette/2
- ld e,(hl)
- sbc hl,hl
- ex de,hl
- add hl,hl
- ld e,(hl)
- inc l
- ld d,(hl)
- ex de,hl
- ret
+; Arguments:
+;  None
+; Returns:
+;  16 bit color palette entry
+	ld	hl,3
+	add	hl,sp
+	ld	de,mpLcdPalette/2
+	ld	e,(hl)
+	sbc	hl,hl
+	ex	de,hl
+	add	hl,hl
+	ld	e,(hl)
+	inc	l
+	ld	d,(hl)
+	ex	de,hl
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; sets the color of a given pallete entry (unsigned char, unsigned short)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_setcolor:
- ld hl,3
- add hl,sp
- ld de,mpLcdPalette/2
- ld e,(hl)
- inc hl
- inc hl
- inc hl
- ex de,hl
- add hl,hl
- ex de,hl
- ldi
- ldi
- ret
+;-------------------------------------------------------------------------------
+_SetColor:
+; Sets the color of a given pallete entry
+; Arguments:
+;  __frame_arg0 : Palette index
+;  __frame_arg1 : 1555 color entry
+; Returns:
+;  None
+	ld	hl,3
+	add	hl,sp
+	ld	de,mpLcdPalette/2
+	ld	e,(hl)
+	inc	hl
+	inc	hl
+	inc	hl
+	ex	de,hl
+	add	hl,hl
+	ex	de,hl
+	ldi
+	ldi
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Gets the address of a pixel
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_pixelPtr_ASM:
- ld hl,-lcdWidth
- add hl,bc
- ret c
- ld hl,-lcdHeight
- add hl,de
- ret c
- ld hl,(currentDrawingBuffer)
- add hl,bc
- ld d,lcdWidth/2
- mlt de
- add hl,de
- add hl,de
- ret
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;-------------------------------------------------------------------------------
+_GetPixel:
 ; Gets the color index of a pixel
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_getpixel:
- pop hl					; ret addr
-  pop bc				; x
-   pop de				; y
-   push de
-  push bc
- push hl
- xor a,a
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+; Returns:
+;  Color index of X,Y Coord
+	pop	hl
+	pop	bc
+	pop	de
+	push	de
+	push	bc
+	push	hl
+	xor	a,a
 getPixel_ASM:
- call _pixelPtr_ASM \.r
- ret c
- ld a,(hl)
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets a pixel to a color (x,y)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_setpixel:
- pop hl					; ret addr
-  pop bc				; x
-   pop de				; y
-   push de
-  push bc
- push hl
-setPixel_ASM:
- call _pixelPtr_ASM \.r
- ret c
-color1: =$+1
- ld (hl),0
- ret
+	call	_PixelPtr_ASM \.r
+	ret	c
+	ld	a,(hl)
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;Draw a colored filled rectangle (X,Y,W,H)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_rectangle:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)		; x
-  ld l,(ix+arg1)		; y
-  ld bc,(ix+arg2)		; width
-  ld a,(ix+arg3)		; height
-  ld h,lcdWidth/2
-  mlt hl
-  add hl,hl
-  add hl,de
-  ld de,(currentDrawingBuffer)
-  add hl,de
-  dec bc
-FillRect_Loop:
-color2: =$+1
-  ld (hl),0
-  push hl
-  pop de
-  inc de
-  push bc
-  ldir
-  pop bc
-  ld de,lcdWidth
-  add hl,de
-  sbc hl,bc
-  dec a
-  jr nz,FillRect_Loop
- pop ix
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a colored rectangle outline (X,Y,W,H)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_rectangleoutline:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)		; x
-  ld h,(ix+arg1)		; y
-  ld bc,(ix+arg2)		; width
-  ld l,(ix+arg3)		; height
-  push de
-   push hl
-    call HorizLine_ASM \.r	 	    ; top
-    ld b,(ix+arg3)
-    dec b
-    push bc
-     call RectOutlineVert_ASM \.r	; right
-    pop bc
-   pop hl
-  pop de
-  call RectOutlineVert_ASM_2 \.r	    ; left
-  ld bc,(ix+arg2)
-  call _memset			            ; bottom
- pop ix
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;Draw a colored horizontal line (X,Y,length,color)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_horizline:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)		; x
-  ld h,(ix+arg1)		; y
-  ld bc,(ix+arg2)		; length
- pop ix
-HorizLine_ASM:
-color3: =$+1
- ld a,0
- ld l,lcdWidth/2
- mlt hl
- add hl,hl
- add hl,de
- ld de,(currentDrawingBuffer)
- add hl,de
- jp _memset
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a colored vertical line (X,Y,length,color)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_vertline:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)		; x
-  ld h,(ix+arg1)		; y
-  ld b,(ix+arg2)		; length
- pop ix
-RectOutlineVert_ASM_2:
- ld l,lcdWidth/2
- mlt hl
- add hl,hl
- add hl,de
- ld de,(currentDrawingBuffer)
- add hl,de
-RectOutlineVert_ASM:
- ld de,lcdWidth
-VLoop:
-color4: =$+1
- ld (hl),0
- add hl,de
- djnz VLoop
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; routine to draw to back buffer if needed
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_drawbuffer:
- ld hl,vram
- ld de,(mpLcdBase)
- or a,a 
- sbc hl,de
- add hl,de
- jr nz,SetBackBufferLocation
- ld hl,vram+lcdSize
-SetBackBufferLocation:
- ld (currentDrawingBuffer),hl
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; routine to draw to screen if needed
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_drawscreen:
- ld hl,vram
- ld de,(mpLcdBase)
- or a,a
- sbc hl,de
- add hl,de
- jr z,SetBackBufferLocation
- ld hl,vram+lcdSize
- jr SetBackBufferLocation
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Swaps the GRAM pointers in the LCD safely
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_swapbuffer:
- ld hl,vram
- ld de,(mpLcdBase)
- or a,a \ sbc hl,de
- add hl,de
- jr nz,SetToVRAM
- ld hl,vram+(lcdWidth*lcdHeight)
-SetToVRAM:
- ld (currentDrawingBuffer),de
- ld de,mpLcdIcr
- ld a,(de)
- or a,%00000100 
- ld (de),a
- ld (mpLcdBase),hl
-WaitForLCDReady:
- ld a,(mpLcdRis)
- and a,%00000100
- jr z,WaitForLCDReady
- ret
- 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Returns true if drawing on the buffer
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_getbufferstatus:
- ld hl,(currentDrawingBuffer)
- ld de,(mpLcdBase)
- xor a,a
- sbc hl,de
- add hl,de
- ret z
- inc a
- ret
+;-------------------------------------------------------------------------------
+; Sets the color pixel to the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+; Returns:
+;  None
+_SetPixel:
+	pop	hl
+	pop	bc
+	pop	de
+	push	de
+	push	bc
+	push	hl
+_SetPixel_ASM:
+	call	_PixelPtr_ASM \.r
+	ret	c
+color1 =$+1
+	ld	(hl),0
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Returns the current (x,y) coordinates for text
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_textx:
- ld hl,(textX) \.r
- ret
-_texty:
- ld a,(textY) \.r
- ret
+;-------------------------------------------------------------------------------
+_NoClipRectangle:
+; Draws an unclipped rectangle with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)
+	ld	l,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg2)
+	ld	a,(ix+__frame_arg3)
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	dec	bc
+FillRectangle_Loop:
+color2 =$+1
+	ld	(hl),0
+	push	hl
+	pop	de
+	inc	de
+	push	bc
+	ldir
+	pop	bc
+	ld	de,lcdWidth
+	add	hl,de
+	sbc	hl,bc
+	dec	a
+	jr	nz,FillRectangle_Loop
+	pop	ix
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets the transparent color for drawing
-; Returns previous transparency color
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_transparentcolor:
- pop hl
-  pop de
-  push de
- push hl
- ld a,(transpcolor) \.r
- push af
-  ld a,e
-  ld (transpcolor),a \.r
-  ld (transpcolorspr),a \.r
- pop af
- ret
+;-------------------------------------------------------------------------------
+_NoClipRectangleOutline:
+; Draws an unclipped rectangle outline with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)
+	ld	h,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg2)
+	ld	l,(ix+__frame_arg3)
+	push	de
+	push	hl
+	call	_HorizLine_ASM \.r
+	ld	b,(ix+__frame_arg3)
+	dec	b
+	push	bc
+	call	_RectOutlineVert_ASM \.r
+	pop	bc
+	pop	hl
+	pop	de
+	call	_RectOutlineVert_ASM_2 \.r
+	ld	bc,(ix+__frame_arg2)
+	call	_memset
+	pop	ix
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets the text color (both foreground and background)
-; high 8 is background, low 8 is foreground
-; Returns previous text color
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_textcolor:
- pop hl
-  pop de
-  push de
- push hl
- ld hl,(textcolor) \.r
- ld (textcolor),de \.r
- ret
+;-------------------------------------------------------------------------------
+_NoClipHorizLine:
+; Draws an unclipped horizontal line with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Length
+; Returns:
+;  None
+	pop	ix
+	pop	de
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	push	de
+	push	ix
+_HorizLine_ASM:
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+color3 =$+1
+	ld	a,0
+	jp	_memset
+ 
+;-------------------------------------------------------------------------------
+_NoClipVertLine:
+; Draws an unclipped vertical line with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Length
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)		; x
+	ld	h,(ix+__frame_arg1)		; y
+	ld	b,(ix+__frame_arg2)		; length
+	pop	ix
+_RectOutlineVert_ASM_2:
+	ld	l,lcdWidth/2
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+_RectOutlineVert_ASM:
+	ld	de,lcdWidth
+color4 =$+1
+_:	ld	(hl),0
+	add	hl,de
+	djnz	-_
+	ret
+ 
+;-------------------------------------------------------------------------------
+_DrawBuffer:
+; Forces drawing routines to operate on the offscreen buffer
+; Arguments:
+;  None
+; Returns:
+;  None
+	ld	hl,vRAM
+	ld	de,(mpLcdBase)
+	or	a,a 
+	sbc	hl,de
+	add	hl,de
+	jr	nz,+_
+	ld	hl,vram+lcdSize
+_:	ld	(currentDrawingBuffer),hl
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Sets up the (x,y) corrdinates of the cursor
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_settextxy:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(ix+arg0)
-  ld a,(ix+arg1)
- pop ix
- ld (textX),hl \.r
- ld (textY),a \.r
- ret
+;-------------------------------------------------------------------------------
+_DrawScreen:
+; Forces drawing routines to operate on the visible screen
+; Arguments:
+;  None
+; Returns:
+;  None
+	ld	hl,vRAM
+	ld	de,(mpLcdBase)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	z,-_
+	ld	hl,vRAM+lcdSize
+	jr	-_
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a string of characters at (x,y).
-; Also modifies the current text cursor posisition
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_outtextxy:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(ix+arg0)
-  ld de,(ix+arg1)
-  ld a,(ix+arg2)
- pop ix
- ld (textX),de \.r
- ld (textY),a \.r
- jr textloop
+;-------------------------------------------------------------------------------
+_SwapDraw:
+; Safely swap the vRAM buffer pointers for double buffered output
+; Arguments:
+;  None
+; Returns:
+;  None
+	ld	hl,vRAM
+	ld	de,(mpLcdBase)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	nz,+_
+	ld	hl,vRAM+lcdSize
+_:	ld	(currentDrawingBuffer),de
+	ld	de,mpLcdIcr
+	ld	a,(de)
+	or	a,%00000100 
+	ld	(de),a
+	ld	(mpLcdBase),hl
+_:	ld	a,(mpLcdRis)
+	and	a,%00000100
+	jr	z,-_
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a string of characters
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_outtext:
- pop de
-  pop hl
-  push hl
- push de
-textloop:
- ld a,(hl)
- or a,a
- ret z
- call _outchar_ASM \.r
- inc hl
- jr textloop
+;-------------------------------------------------------------------------------
+_DrawState:
+; Gets the current drawing state
+; Arguments:
+;  None
+; Returns:
+;  Returns 0 if drawing on the visible screen
+	ld	hl,(currentDrawingBuffer)
+	ld	de,(mpLcdBase)
+	xor	a,a
+	sbc	hl,de
+	ret	z
+	inc	a
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a single character
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_outchar:
- pop hl
-  pop bc
-  push bc
- push hl
- ld a,c
-_outchar_ASM:
- push hl
-textX: = $+1
- ld bc,0
- push af
-  push af
-   push bc
-    push af
-     ld a,(monoFlag) \.r
-     or a,a
-     ld a,8
-    pop de
-    jr z,monospacedfont
-    or a,a \ sbc hl,hl \ ld l,d
-    ld de,(CharSpacingPTR) \.r
-    add hl,de
-    ld a,(hl)			; amount to increment per character
-    inc a
-monospacedfont:
-    ld (charwidth),a \.r
-    sbc hl,hl \ ld l,a
-    neg
-    ld (charwidth_change),a \.r
-    add hl,bc
-    ld (textX),hl \.r
+;-------------------------------------------------------------------------------
+_TextX:
+; Gets the X position of the text cursor
+; Arguments:
+;  None
+; Returns:
+;  X Text cursor posistion
+	ld	hl,(TextXPos_ASM) \.r
+	ret
+	
+;-------------------------------------------------------------------------------
+_TextY:
+; Gets the Y position of the text cursor
+; Arguments:
+;  None
+; Returns:
+;  Y Text cursor posistion
+	ld	a,(TextYPos_ASM) \.r
+	ret
+ 
+;-------------------------------------------------------------------------------
+_SetTransparentColor:
+; Sets the transparency color for routines
+; Arguments:
+;  __frame_arg0 : Transparent color index
+; Returns:
+;  Previous transparent color index
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	a,(transpcolor) \.r
+	push	af
+	ld	a,e
+	ld	(transpcolor),a \.r
+	ld	(TransparentSpriteColor),a \.r
+	pop	af
+	ret
+ 
+;-------------------------------------------------------------------------------
+_SetTextColor:
+; Sets the transparency text color for text routines
+; Arguments:
+;  __frame_arg0 : High 8 bits is background, Low 8 bits is foreground
+;  These refer to color palette indexes
+; Returns:
+;  Previous text color palette indexes
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	hl,(TextColor_ASM) \.r
+	ld	(TextColor_ASM),de \.r
+	ret
+
+;-------------------------------------------------------------------------------
+_SetTextXY:
+; Sets the transparency text color for text routines
+; Arguments:
+;  __frame_arg0 : Text X Pos
+;  __frame_arg1 : Text Y Pos
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	pop	bc
+	ld	a,c
+	push	bc
+	push	hl
+	push	de
+	ld	(TextXPos_ASM),hl \.r
+	ld	(TextYPos_ASM),a \.r
+	ret
+ 
+;-------------------------------------------------------------------------------
+_PrintStringXY:
+; Places a string at the given coordinates
+; Arguments:
+;  __frame_arg0 : Pointer to string
+;  __frame_arg1 : Text X Pos
+;  __frame_arg2 : Text Y Pos
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg1)
+	ld	a,(ix+__frame_arg2)
+	pop	ix
+	ld	(TextXPos_ASM),de \.r
+	ld	(TextYPos_ASM),a \.r
+	jr	+_
+ 
+;-------------------------------------------------------------------------------
+_PrintString:
+; Places a string at the current cursor position
+; Arguments:
+;  __frame_arg0 : Pointer to string
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+_:	ld	a,(hl)
+	or	a,a
+	ret	z
+	call	_PrintChar_ASM \.r
+	inc	hl
+	jr	-_
+
+;-------------------------------------------------------------------------------
+_PrintChar:
+; Places a character at the current cursor position
+; Arguments:
+;  __frame_arg0 : Character to draw
+; Returns:
+;  None
+	pop	hl
+	pop	bc
+	ld	a,c
+	push	bc
+	push	hl
+_PrintChar_ASM:
+	push hl
+TextXPos_ASM: = $+1
+	ld	bc,0
+	push	af
+	push	af
+	push	bc
+	push	af
+	ld	a,(MonoFlag_ASM) \.r
+	or	a,a
+	ld	a,8
+	pop	de
+	jr	z,+_
+	or	a,a
+	sbc	hl,hl
+	ld	l,d
+	ld	de,(CharSpacing_ASM) \.r
+	add	hl,de
+	ld	a,(hl)
+	inc	a
+_:	ld	(charwidth),a \.r
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	neg
+	ld	(charwidth_change),a \.r
+	add	hl,bc
+	ld	(TextXPos_ASM),hl \.r
 charwidth_change: =$+1
-    ld de,$FFFFFF
-    ld hl,lcdWidth
-    add hl,de
-    ld (line_change),hl \.r
-textY: = $+1
-    ld l,0
-    ld h,lcdWidth/2
-    mlt hl
-    add hl,hl
-    ld de,(currentDrawingBuffer)
-    add hl,de
-   pop de			    ; de = X
-   add hl,de			; Add X
-  pop af
-  ex de,hl              ; de -> correct place to draw
-  or a,a \ sbc hl,hl \ ld l,a
-  add hl,hl \ add hl,hl \ add hl,hl
-  ld bc,(TextDataPTR) \.r
-  add hl,bc			    ; hl -> Correct Character
-  ld b,8
-iloop:
-  push bc
-   ld c,(hl)
-charwidth: =$+1
-   ld b,0
-   ex de,hl
-   push de
-textcolor: equ $+1
-    ld de,$FF00
-cloop:
-    ld a,d
-    rlc c
-    jr nc,+_
-    ld a,e
-_:
-transpcolor: =$+1
-    cp a,$FF
-    jr nz,+_
-    ld a,(hl)
-_:
-    ld (hl),a
-    inc hl
-    djnz cloop
-line_change: =$+1
-    ld bc,0
-    add hl,bc
-   pop de
-   ex de,hl
-   inc hl
-  pop bc
-  djnz iloop
- pop af
- pop hl
- ret
+	ld	de,$FFFFFF
+	ld	hl,lcdWidth
+	add	hl,de
+	ld	(line_change),hl \.r
+TextYPos_ASM: = $+1
+	ld	l,0
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	pop	de
+	add	hl,de
+	pop	af
+	ex	de,hl
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	ld	bc,(TextData_ASM) \.r
+	add	hl,bc
+	ld	b,8
+iloop:	push	bc
+	ld	c,(hl)
+charwidth =$+1
+	ld	b,0
+	ex	de,hl
+	push	de
+TextColor_ASM =$+1
+	ld	de,$FF00
+cloop:	ld	a,d
+	rlc	c
+	jr	nc,+_
+	ld	a,e
+transpcolor =$+1
+_:	cp	a,$FF
+	jr	nz,+_
+	ld	a,(hl)
+_:	ld	(hl),a
+	inc	hl
+	djnz	cloop
+line_change =$+1
+	ld	bc,0
+	add	hl,bc
+	pop	de
+	ex	de,hl
+	inc	hl
+	pop	bc
+	djnz	iloop
+	pop	af
+	pop	hl
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Outputs a signed 24 bit int to the current cursor
-; Optionally pad with number of 0s
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_outuint:
- pop de
-  pop hl
-   pop bc
-   push bc
-  push hl
- push de
+;-------------------------------------------------------------------------------
+_PrintUnsignedInt:
+; Places an unsigned int at the current cursor position
+; Arguments:
+;  __frame_arg0 : Number to print
+;  __frame_arg1 : Number of characters to print
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	push	de
 _outuint_ASM:
- ld a,8
- sub a,c
- ret c
- ld c,a
- ld b,8
- mlt bc
- ld a,c
- ld (offset0),a \.r
-offset0: =$+1
- jr $
- ld bc,-10000000
- call Num1 \.r
- ld bc,-1000000
- call Num1 \.r
- ld bc,-100000
- call Num1 \.r
- ld bc,-10000
- call Num1 \.r
- ld bc,-1000
- call Num1 \.r
- ld bc,-100
- call Num1 \.r
- ld bc,-10
- call Num1 \.r
- ld bc,-1
-Num1:
- ld a,'0'-1
-Num2:
- inc a
- add hl,bc
- jr c,Num2
- sbc hl,bc
- jp _outchar_ASM \.r
+	ld	a,8
+	sub	a,c
+	ret	c
+	ld	c,a
+	ld	b,8
+	mlt	bc
+	ld	a,c
+	ld	(offset0),a \.r
+offset0 =$+1
+	jr	$
+	ld	bc,-10000000
+	call	Num1 \.r
+	ld	bc,-1000000
+	call	Num1 \.r
+	ld	bc,-100000
+	call	Num1 \.r
+	ld	bc,-10000
+	call	Num1 \.r
+	ld	bc,-1000
+	call 	Num1 \.r
+	ld	bc,-100
+	call	Num1 \.r
+	ld	bc,-10
+	call	Num1 \.r
+	ld	bc,-1
+Num1:	ld	a,'0'-1
+Num2:	inc	a
+	add	hl,bc
+	jr	c,Num2
+	sbc	hl,bc
+	jp	_PrintChar_ASM \.r
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Outputs a signed 24 bit int to the current cursor
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_outint:
- pop de
-  pop hl
-   pop bc
-   push bc
-  push hl
- push de
- call _SetAtoHLU
- bit 7,a
- jr z,IsntNegative
- push bc
-  push hl
-  pop bc
-  or a,a
-  sbc hl,hl
-  sbc hl,bc
-  ld a,'-'
-  call _outchar_ASM \.r
- pop bc
+;-------------------------------------------------------------------------------
+_PrintInt:
+; Places an int at the current cursor position
+; Arguments:
+;  __frame_arg0 : Number to print
+;  __frame_arg1 : Number of characters to print
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	push	de
+	call	_SetAtoHLU
+	bit	7,a
+	jr	z,IsntNegative
+	push	bc
+	push	hl
+	pop	bc
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	ld	a,'-'
+	call	_PrintChar_ASM \.r
+	pop	bc
 IsntNegative:
- jp _outuint_ASM \.r
+	jp	_outuint_ASM \.r
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a sprite to the screen as fast as possible
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_drawsprite:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(currentDrawingBuffer)
-  ld de,(ix+arg1)               ; X
-  ld c,(ix+arg2)                ; Y
-  add hl,de
-  ld b,160
-  mlt bc
-  add hl,bc
-  add hl,bc
-  ex de,hl
-  ld hl,320
-  ld bc,(ix+arg3)              ; width
-  ld a,c
-  sbc hl,bc
-  ld (moveAmount),hl \.r
-  ld (nextLine),a \.r
-  ld b,(ix+arg4)              ; height
-  ld hl,(ix+arg0)
- pop ix
-InLoop: 
- push bc
-nextLine: =$+1
-  ld bc,0
-  ldir
-  ex de,hl
-moveAmount: =$+1
-  ld bc,0
-  add hl,bc
-  ex de,hl
- pop bc
- djnz InLoop
- ret
+;-------------------------------------------------------------------------------
+_NoClipDrawSprite:
+; Places an sprite on the screen as fast as possible
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width
+;  __frame_arg4 : Height
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg1)               ; X
+	ld	c,(ix+__frame_arg2)                ; Y
+	ld	hl,(currentDrawingBuffer)
+	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	bc,(ix+__frame_arg3)
+	ld	a,c
+	sbc	hl,bc
+	ld	(NoClipSprMoveAmt),hl \.r
+	ld	(NoClipSprLineNext),a \.r
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+	pop	ix
+_:	push	bc
+NoClipSprLineNext =$+1
+	ld	bc,0
+	ldir
+	ex	de,hl
+NoClipSprMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+	pop	bc
+	djnz	-_
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Grabs the background really quick for transparency
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_getsprite:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(currentDrawingBuffer)
-  ld de,(ix+arg1)               ; X
-  ld c,(ix+arg2)                ; Y
-  add hl,de
-  ld b,lcdWidth/2
-  mlt bc
-  add hl,bc
-  add hl,bc
-  ex de,hl
-  ld hl,lcdWidth
-  ld bc,(ix+arg3)              ; width
-  ld a,c
-  sbc hl,bc
-  ld (grab_moveAmount),hl \.r
-  ld (grab_nextLine),a \.r
-  ld b,(ix+arg4)              ; height
-  ld hl,(ix+arg0)
- pop ix
- push hl
-  ex de,hl
-grab_InLoop: 
-  push bc
-grab_nextLine: =$+1
-   ld bc,0
-   ldir
-grab_moveAmount: =$+1
-   ld bc,0
-   add hl,bc
-  pop bc
-  djnz grab_InLoop
- pop hl
- ret
+;-------------------------------------------------------------------------------
+_NoClipGetSprite:
+; Grabs the data from the current draw buffer and stores it in another buffer
+; Arguments:
+;  __frame_arg0 : Pointer to storage buffer
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width
+;  __frame_arg4 : Height
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(currentDrawingBuffer)
+	ld	de,(ix+__frame_arg1) 
+	ld	c,(ix+__frame_arg2)
+	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	bc,(ix+__frame_arg3)
+	ld	a,c
+	sbc	hl,bc
+	ld	(NoClipSprGrabMoveAmt),hl \.r
+	ld	(NoClipSprGrabNextLine),a \.r
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+	pop	ix
+	ex	de,hl
+_:	push	bc
+NoClipSprGrabNextLine =$+1
+	ld	bc,0
+	ldir
+NoClipSprGrabMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	pop	bc
+	djnz	-_
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draws a transparent sprite
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_drawTransparentSprite:
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(currentDrawingBuffer)
-  ld de,(ix+arg1)               ; X
-  ld c,(ix+arg2)                ; Y
-  add hl,de
-  ld b,lcdWidth/2
-  mlt bc
-  add hl,bc
-  add hl,bc
-  ex de,hl
-  ld hl,lcdWidth
-  ld bc,(ix+arg3)              ; width
-  ld a,c
-  sbc hl,bc
-  ld (trans_moveAmount),hl \.r
-  ld (trans_nextLine),a \.r
-  ld b,(ix+arg4)              ; height
-  ld hl,(ix+arg0)
- pop ix
-trans_InLoop: 
- push bc
-trans_nextLine: =$+1
-  ld b,0
-_:
-  ld a,(hl)
-transpcolorspr: =$+1
-  cp a,$FF
-  jr nz,+_
-  ld a,(de)
-_:
-  ld (de),a
-  inc de
-  inc hl
-  djnz --_
-  ex de,hl
-trans_moveAmount: =$+1
-  ld bc,0
-  add hl,bc
-  ex de,hl
- pop bc
- djnz trans_InLoop
- ret
+;-------------------------------------------------------------------------------
+_NoClipDrawTransparentSprite:
+; Draws a transparent sprite to the current buffer
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width
+;  __frame_arg4 : Height
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(currentDrawingBuffer)
+	ld	de,(ix+__frame_arg1)
+	ld	c,(ix+__frame_arg2)
+	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	bc,(ix+__frame_arg3)
+	ld	a,c
+	sbc	hl,bc
+	ld	(NoClipSprTransMoveAmt),hl \.r
+	ld	(NoClipSprTransNextLine),a \.r
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+	pop	ix
+_:	push bc
+NoClipSprTransNextLine: =$+1
+	ld	b,0
+_:	ld	a,(hl)
+TransparentSpriteColor =$+1
+	cp	a,$FF
+	jr	nz,+_
+	ld	a,(de)
+_:	ld	(de),a
+	inc	de
+	inc	hl
+	djnz	--_
+	ex	de,hl
+NoClipSprTransMoveAmt: =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+	pop	bc
+	djnz	---_
+	ret
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a circle outline
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_circleoutline: 
- di
- pop ix
-  pop hl
-   pop de
-    pop bc
-    push bc
-   push de
-  push hl
- push ix
- push ix
-  push hl
-   push de 
-    exx 
-   pop de 
-  pop hl 
-  exx 
-  push bc 
-   push bc 
-   pop de 
-  pop hl 
-  add hl,hl 
-  push hl 
-  pop bc 
-  ld hl,3 
-  or a,a 
-  sbc hl,bc 
-  push hl 
-  pop ix 
-  or a,a
-  sbc hl,hl
+;-------------------------------------------------------------------------------
+_ClipCircleOutline:
+; Draws a clipped circle outline
+; Note: Disables interrupts
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Radius
+; Returns:
+;  None
+	di
+	pop	ix
+	pop	hl
+	pop	de
+	pop	bc
+	push	bc
+	push	de
+	push	hl
+	push	ix
+	push	ix
+	push	hl
+	push	de
+	exx
+	pop	de
+	pop	hl
+	exx
+	push	bc
+	push	bc
+	pop	de
+	pop	hl
+	add	hl,hl
+	push	hl
+	pop	bc
+	ld	hl,3
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	ix
+	or	a,a
+	sbc	hl,hl
 drawCircle_Loop:
-  or a,a
-  sbc hl,de 
-  add hl,de 
-  jr nc,_exit_loop
-  ld c,ixh 
-  bit 7,c 
-  jr z,_dc_else 
-  push hl 
-   add hl,hl 
-   add hl,hl 
-   ld bc,6 
-   add hl,bc 
-   push hl 
-   pop bc 
-   add ix,bc 
-  pop hl 
-  jr _dc_end 
-_dc_else: 
-  push hl
-   or a,a 
-   sbc hl,de 
-   add hl,hl 
-   add hl,hl 
-   ld bc,10 
-   add hl,bc 
-   push hl 
-   pop bc 
-   add ix,bc 
-  pop hl 
-  dec de 
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	nc,_exit_loop
+	ld	c,ixh
+	bit	7,c
+	jr	z,_dc_else
+	push	hl
+	add	hl,hl
+	add 	hl,hl
+	ld	bc,6
+	add	hl,bc
+	push	hl 
+	pop	bc
+	add	ix,bc
+	pop	hl
+	jr	_dc_end
+_dc_else:
+	push	hl
+	or	a,a
+	sbc	hl,de
+	add	hl,hl
+	add	hl,hl
+	ld	bc,10
+	add	hl,bc
+	push	hl
+	pop	bc
+	add	ix,bc
+	pop	hl
+	dec	de
 _dc_end: 
-  call drawCircleSection \.r
-  inc hl 
-  jr drawCircle_Loop 
-  
+	call	drawCircleSection \.r
+	inc	hl
+	jr	drawCircle_Loop
 _exit_loop:
- pop ix
- ret
+	pop	ix
+	ret
 
 drawCircleSection: 
-  call drawCirclePoints \.r
-  ex de,hl 
-  call drawCirclePoints \.r
-  ex de,hl 
-  ret 
-
+	call	drawCirclePoints \.r
+	ex	de,hl
+	call	drawCirclePoints \.r
+	ex	de,hl
+	ret
 drawCirclePoints: 
-  push hl
-   exx
-  pop bc 
-  push hl 
-   add hl,bc
-   exx 
-   push de 
-    exx 
-   pop bc 
-   ex de,hl 
-   push hl 
-    add hl,bc 
-    ex de,hl 
-    call drawPixel \.r
-   pop de 
-  pop hl 
-  exx 
-  push hl 
-   exx 
-  pop bc 
-  push hl 
-   or a,a 
-   sbc hl,bc
-   exx 
-   push de 
-    exx 
-   pop bc 
-   ex de,hl 
-   push hl 
-    add hl,bc 
-    ex de,hl 
-    call drawPixel \.r
-   pop de 
-  pop hl 
-  exx 
-  push hl 
-   exx 
-  pop bc 
-  push hl 
-   add hl,bc
-   exx 
-   push de 
-    exx 
-   pop bc 
-   ex de,hl 
-   push hl 
-    or a,a 
-    sbc hl,bc 
-    ex de,hl 
-    call drawPixel \.r
-   pop de 
-  pop hl 
-  exx 
-  push hl 
-   exx 
-  pop bc 
-  push hl 
-   or a,a 
-   sbc hl,bc
-   exx 
-   push de 
-    exx 
-   pop bc 
-   ex de,hl 
-   push hl 
-    or a,a 
-    sbc hl,bc 
-    ex de,hl 
-    call drawPixel \.r
-   pop de 
-  pop hl 
-  exx 
-  ret 
-  
-drawPixel: 
- bit 7,h 
- ret nz                           ; return if negative 
- bit 7,d 
- ret nz                           ; return if negative 
- push bc 
- ld bc,320 
- or a 
- sbc hl,bc 
- add hl,bc 
- pop bc 
- ret nc                           ; return if offscreen 
- ex de,hl 
- push bc 
- ld bc,240 
- or a 
- sbc hl,bc 
- add hl,bc 
- pop bc 
- ret nc                           ; return if offscreen 
- ld h,160 
- mlt hl 
- add hl,hl 
- add hl,de 
- ld de,(currentDrawingBuffer)
- add hl,de
-color5: =$+1
- ld (hl),0
- ret 
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	add	hl,bc
+	exx
+	push	de
+	exx
+	pop	bc
+	ex	de,hl
+	push	hl
+	add	hl,bc
+	ex	de,hl
+	call	_DrawPixelCircle_ASM \.r
+	pop	de
+	pop	hl
+	exx
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	exx
+	push	de
+	exx
+	pop	bc
+	ex	de,hl
+	push	hl
+	add	hl,bc
+	ex	de,hl
+	call	_DrawPixelCircle_ASM \.r
+	pop	de
+	pop	hl
+	exx
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	add	hl,bc
+	exx
+	push	de
+	exx
+	pop	bc
+	ex	de,hl
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	ex	de,hl
+	call	_DrawPixelCircle_ASM \.r
+	pop	de
+	pop	hl
+	exx
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	exx
+	push	de
+	exx
+	pop	bc
+	ex 	de,hl
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	ex	de,hl
+	call	_DrawPixelCircle_ASM \.r
+	pop	de
+	pop	hl
+	exx
+	ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Draw a filled circle
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-_circle:
- di
- push ix
-  ld ix,0
-  add ix,sp
-  ld hl,(ix+arg0)
-  ld de,(ix+arg1)
-  ld bc,(ix+arg2)
-  push hl
-   push de
-    exx
-   pop de
-  pop hl
-  exx
-  ld e,c
-  ld d,b
-  ld l,c
-  ld h,b
-  add hl,hl
-  ld c,l
-  ld b,h
-  ld hl,3
-  or a,a
-  sbc hl,bc
-  push hl
-  pop ix
-  or a,a
-  sbc hl,hl
+_DrawPixelCircle_ASM:
+	bit	7,h
+	ret	nz
+	bit	7,d
+	ret	nz
+	push	bc
+	ld	bc,lcdWidth
+	or	a,a
+	sbc	hl,bc
+	add	hl,bc
+	pop	bc
+	ret	nc
+	ex	de,hl
+	push	bc
+	ld	bc,lcdHeight
+	or	a,a
+	sbc	hl,bc
+	add	hl,bc
+	pop	bc
+	ret	nc
+	ld	h,lcdWidth/2 
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+color5 =$+1
+	ld	(hl),0
+	ret
+
+;-------------------------------------------------------------------------------
+_NoClipCircle:
+; Draws an unclipped circle
+; Note: Disables interrupts
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Radius
+; Returns:
+;  None
+	di
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg2)
+	push	hl
+	push	de
+	exx
+	pop	de
+	pop	hl
+	exx
+	ld	e,c
+	ld	d,b
+	ld	l,c
+	ld	h,b
+	add	hl,hl
+	ld	c,l
+	ld	b,h
+	ld	hl,3
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	ix
+	or	a,a
+	sbc	hl,hl
 drawFilledCircle_Loop:
-  or a,a
-  sbc hl,de
-  add hl,de
-  jr nc,_exit_loop_filled
-  ld a,ixh
-  bit 7,a
-  jr z,_dfc_else
-  push hl
-   add hl,hl
-   add hl,hl
-   ld bc,6
-   add hl,bc
-   ld c,l
-   ld b,h
-   add ix,bc
-  pop hl
-  jr _dfc_end
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	nc,_exit_loop_filled
+	ld	a,ixh
+	bit	7,a
+	jr	z,_dfc_else
+	push	hl
+	add	hl,hl
+	add	hl,hl
+	ld	bc,6
+	add	hl,bc
+	ld	c,l
+	ld	b,h
+	add	ix,bc
+	pop	hl
+	jr	_dfc_end
 _dfc_else:
-  push hl
-   or a,a
-   sbc hl,de
-   add hl,hl
-   add hl,hl
-   ld bc,10
-   add hl,bc
-   ld c,l
-   ld b,h
-   add ix,bc
-  pop hl
-  dec de
+	push	hl
+	or	a,a
+	sbc	hl,de
+	add	hl,hl
+	add	hl,hl
+	ld	bc,10
+	add	hl,bc
+	ld	c,l
+	ld	b,h
+	add	ix,bc
+	pop	hl
+	dec	de
 _dfc_end:
-  call drawFilledCircleSection \.r
-  inc hl
-  jr drawFilledCircle_Loop
-
+	call	drawFilledCircleSection \.r
+	inc	hl
+	jr	drawFilledCircle_Loop
 _exit_loop_filled:
- pop ix
- ret
+	pop ix
+	ret
 
 drawFilledCircleSection:
-  call drawFilledCirclePoints \.r
-  ex de,hl
-  call drawFilledCirclePoints \.r
-  ex de,hl
-  ret
-  
+	call	drawFilledCirclePoints \.r
+	ex	de,hl
+	call	drawFilledCirclePoints \.r
+	ex	de,hl
+	ret
 drawFilledCirclePoints:
-  push ix
-   push hl
-    push de
-     push hl
-      exx
-     pop bc
-     push hl
-      or a,a
-      sbc hl,bc
-      push hl
-       add hl,bc
-       add hl,bc
-       push hl
-       pop ix
-      pop hl
-      exx
-      push de
-       exx
-      pop bc
-      push de
-       ex de,hl
-       add hl,bc
-       ex de,hl
-       push de
-        push de
-        pop bc
-        ex de,hl
-        push ix
-        pop hl
-       pop ix
-       push bc
-        ld b,ixl
-        call drawLine \.r
-       pop bc
-      pop de
-     pop hl
-     exx
-    pop de
-   pop hl
-  pop ix
-  push ix
-   push hl
-    push de
-     push hl
-      exx
-     pop bc
-     push hl
-      or a,a
-      sbc hl,bc
-      push hl
-       add hl,bc
-       add hl,bc
-       push hl
-       pop ix
-      pop hl
-      exx
-      push de
-       exx
-      pop bc
-      push de
-       ex de,hl
-       or a,a
-       sbc hl,bc
-       ex de,hl
-       push de
-        push de
-        pop bc
-        ex de,hl
-        push ix
-        pop hl
-       pop ix
-       push bc
-        ld b,ixl
-        call drawLine \.r
-       pop bc
-      pop de
-     pop hl
-     exx
-    pop de
-   pop hl
-  pop ix
-  ret
-    
-;de=x, hl=x, b=y, c=y
-_line:
- push ix
-  ld ix,0
-  add ix,sp
-  ld de,(ix+arg0)
-  ld hl,(ix+arg2)
-  ld b,(ix+arg1)
-  ld c,(ix+arg3)
- pop ix
-drawLine:
- ld a,c
- ld (y1),a \.r
- push de
-  push hl
-   push bc    
-    or a,a 
-    sbc hl,de 
-    ld a,$03 
-    jr nc,+_ 
-    ld a,$0B
-_:  ld (xStep),a \.r
-    ld (xStep2),a \.r
-    ex de,hl 
-    or a,a 
-    sbc hl,hl
-    sbc hl,de
-    jp p,+_ \.r
-    ex de,hl
-_:  ld (dx),hl \.r
-    push hl
-     add hl,hl 
-     ld (dx1),hl \.r
-     ld (dx12),hl \.r
-     or a,a
-     sbc hl,hl
-     ex de,hl
-     sbc hl,hl
-     ld e,b
-     ld l,c
-     or a,a 
-     sbc hl,de
-     ld a,$3C
-     jr nc,+_
-     inc a
-_:   ld (yStep),a \.r
-     ld (yStep2),a \.r
-     ex de,hl 
-     or a,a 
-     sbc hl,hl 
-     sbc hl,de 
-     jp p,+_ \.r
-     ex de,hl
-_:   ld (dy),hl \.r
-     push hl
-      add hl,hl
-      ld (dy1),hl \.r
-      ld (dy12),hl \.r
-     pop hl
-    pop de
-   pop af
-   or a,a
-   sbc hl,de
-  pop de
- pop bc
- ld hl,0
- jr nc,changeYLoop 
+	push	ix
+	push	hl
+	push	de
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	add	hl,bc
+	add	hl,bc
+	push	hl
+	pop	ix
+	pop	hl
+	exx
+	push	de
+	exx
+	pop	bc
+	push	de
+	ex	de,hl
+	add	hl,bc
+	ex	de,hl
+	push	de
+	push	de
+	pop	bc
+	ex	de,hl
+	push	ix
+	pop	hl
+	pop	ix
+	push	bc
+	ld	b,ixl
+	call	_NoClipLine_ASM \.r
+	pop	bc
+	pop	de
+	pop	hl
+	exx
+	pop	de
+	pop	hl
+	pop	ix
+	push	ix
+	push	hl
+	push	de
+	push	hl
+	exx
+	pop	bc
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	add	hl,bc
+	add	hl,bc
+	push	hl
+	pop	ix
+	pop	hl
+	exx
+	push	de
+	exx
+	pop	bc
+	push	de
+	ex	de,hl
+	or	a,a
+	sbc	hl,bc
+	ex	de,hl
+	push	de
+	push	de
+	pop	bc
+	ex	de,hl
+	push	ix
+	pop	hl
+	pop	ix
+	push	bc
+	ld	b,ixl
+	call	_NoClipLine_ASM \.r
+	pop	bc
+	pop	de
+	pop	hl
+	exx
+	pop	de
+	pop	hl
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_NoClipLine:
+; Draws an unclipped arbitrary line
+; Arguments:
+;  __frame_arg0 : X0 Coord
+;  __frame_arg1 : Y0 Coord
+;  __frame_arg2 : X1 Coord
+;  __frame_arg3 : Y1 Coord
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)
+	ld	hl,(ix+__frame_arg2)
+	ld	b,(ix+__frame_arg1)
+	ld	c,(ix+__frame_arg3)
+	pop	ix
+_NoClipLine_ASM:
+	ld	a,c
+	ld	(y1),a \.r
+	push	de
+	push	hl
+	push	bc    
+	or	a,a 
+	sbc	hl,de 
+	ld	a,$03 
+	jr	nc,+_ 
+	ld	a,$0B
+_:	ld	(xStep),a \.r
+	ld	(xStep2),a \.r
+	ex	de,hl 
+	or	a,a 
+	sbc	hl,hl
+	sbc	hl,de
+	jp	p,+_ \.r
+	ex	de,hl
+_:	ld	(dx),hl \.r
+	push	hl
+	add	hl,hl 
+	ld	(dx1),hl \.r
+	ld	(dx12),hl \.r
+	or	a,a
+	sbc	hl,hl
+	ex	de,hl
+	sbc	hl,hl
+	ld	e,b
+	ld	l,c
+	or	a,a 
+	sbc	hl,de
+	ld	a,$3C
+	jr	nc,+_
+	inc	a
+_:	ld	(yStep),a \.r
+	ld	(yStep2),a \.r
+	ex	de,hl 
+	or	a,a 
+	sbc	hl,hl 
+	sbc	hl,de 
+	jp	p,+_ \.r
+	ex	de,hl
+_:	ld	(dy),hl \.r
+	push	hl
+	add	hl,hl
+	ld	(dy1),hl \.r
+	ld	(dy12),hl \.r
+	pop	hl
+	pop	de
+	pop	af
+	or	a,a
+	sbc	hl,de
+	pop	de
+	pop	bc
+	ld	hl,0
+	jr	nc,changeYLoop 
 changeXLoop:
- push hl 
-  ld l,a 
-  ld h,lcdWidth/2 
-  mlt hl
-  add hl,hl
-  add hl,bc
-  push bc
-   ld bc,(currentDrawingBuffer)
-   add hl,bc 
-color6: =$+1
-   ld (hl),0
-  pop bc
-  push bc
-  pop hl
-  or a,a 
-  sbc hl,de 
- pop hl 
- ret z 
-xStep:
- nop
- push de
-dy1: =$+1 
-  ld de,0 
-  or a,a
-  adc hl,de
-  jp m,+_ \.r
-dx: =$+1
-  ld de,0
-  or a,a
-  sbc hl,de 
-  add hl,de 
-  jr c,+_
-yStep: 
-  nop
-dx1: =$+1 
-  ld de,0
-  sbc hl,de 
-_:
- pop de
- jr changeXLoop
+	push	hl 
+	ld	l,a 
+	ld	h,lcdWidth/2 
+	mlt	hl
+	add	hl,hl
+	add	hl,bc
+	push	bc
+	ld	bc,(currentDrawingBuffer)
+	add	hl,bc 
+color6 =$+1
+	ld	(hl),0
+	pop	bc
+	push	bc
+	pop	hl
+	or	a,a 
+	sbc	hl,de 
+	pop	hl 
+	ret	z 
+xStep:	nop
+	push	de
+dy1 =$+1 
+	ld	de,0 
+	or	a,a
+	adc	hl,de
+	jp	m,+_ \.r
+dx =$+1
+	ld	de,0
+	or	a,a
+	sbc	hl,de 
+	add	hl,de 
+	jr	c,+_
+yStep: 	nop
+dx1 =$+1 
+	ld	de,0
+	sbc	hl,de 
+_:	pop	de
+	jr	changeXLoop
+
 changeYLoop:
- push bc 
-  push hl
-   ld l,a 
-   ld h,lcdWidth/2 
-   mlt hl
-   add hl,hl 
-   add hl,bc 
-   ld bc,(currentDrawingBuffer)
-   add hl,bc 
-color7: =$+1
-   ld (hl),0 
-  pop hl
- pop bc
-y1: =$+1
- cp a,0
- ret z
-yStep2:
- nop
- push de
-dx12: =$+1
-  ld de,0
-  or a,a
-  adc hl,de
-  jp m,+_ \.r
-dy: =$+1
-  ld de,0
-  or a,a
-  sbc hl,de
-  add hl,de
-  jr c,+_
-xStep2:
-  nop
-dy12: =$+1
-  ld de,0
-  sbc hl,de
-_:
- pop de
- jr changeYLoop
-    
-;#######################################################
-; Inner library routines                               #
-;#######################################################
+	push	bc 
+	push	hl
+	ld	l,a 
+	ld	h,lcdWidth/2 
+	mlt	hl
+	add	hl,hl 
+	add	hl,bc 
+	ld	bc,(currentDrawingBuffer)
+	add	hl,bc 
+color7 =$+1
+	ld	(hl),0 
+	pop	hl
+	pop	bc
+y1 =$+1
+	cp	a,0
+	ret	z
+yStep2:	nop
+	push	de
+dx12 =$+1
+	ld	de,0
+	or	a,a
+	adc	hl,de
+	jp	m,+_ \.r
+dy =$+1
+	ld	de,0
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	c,+_
+xStep2:	nop
+dy12 =$+1
+	ld	de,0
+	sbc	hl,de
+_:	pop	de
+	jr	changeYLoop
  
-_strngwidth:
- pop de
-  pop hl
-  push hl
- push de
- ld bc,0
-textwloop:
- ld a,(hl)
- or a,a
- jr z,returnWidth
- push hl
-  call _char_width_ASM \.r
- pop hl
- inc hl
- jr textwloop
- 
-_charwidth:
- pop de
-  pop hl
-  push hl
- push de
- ld bc,0
- ld a,l
-_char_width_ASM:
- ld l,a
- ld a,(monoFlag)
- or a,a
- jr z,monofont
- ld a,l
- or a,a
- sbc hl,hl
- ld l,a
- ld de,(CharSpacingPTR) \.r
- add hl,de
- ld a,(hl)
- or a,a
- sbc hl,hl
- ld l,a
- add hl,bc
- push hl
- pop bc
- ret
-monofont:
- ld hl,8
- add hl,bc
- ret
-returnWidth:
- push bc
- pop hl
- ret
- 
-_setfontdata:
- pop de
-  pop hl
-  push hl
- push de
- add hl,de
- or a,a
- sbc hl,de
- jr nz,+_
- ld hl,Char000 \.r
-_:
- ld (TextDataPTR),hl \.r
- ret
+;-------------------------------------------------------------------------------
+_StringWidthC:
+; Gets the width of a string
+; Arguments:
+;  __frame_arg0 : Pointer to string
+; Returns:
+;  Width of string in pixels
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	ld	bc,0
+_:	ld	a,(hl)
+	or	a,a
+	jr	z,+_
+	push	hl
+	call	_CharWidth_ASM \.r
+	pop	hl
+	inc	hl
+	jr	-_
+_:	push	bc
+	pop	hl
+	ret
 
-_setfontspacing:
- pop de
-  pop hl
-  push hl
- push de
- add hl,de
- or a,a
- sbc hl,de
- jr nz,+_
- ld hl,CharSpacing \.r
-_:
- ld (CharSpacingPTR),hl \.r
- ret
+;-------------------------------------------------------------------------------	
+_CharWidth:
+; Gets the width of a character
+; Arguments:
+;  __frame_arg0 : Character
+; Returns:
+;  Width of character in pixels
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	ld	bc,0
+	ld	a,l
+_CharWidth_ASM:
+	ld	l,a
+	ld	a,(MonoFlag_ASM)
+	or	a,a
+	jr	z,+_
+	ld	a,l
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	de,(CharSpacing_ASM) \.r
+	add	hl,de
+	ld	a,(hl)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	add	hl,bc
+	push	hl
+	pop	bc
+	ret
+_:	ld	hl,8
+	add	hl,bc
+	ret
+ 
+;-------------------------------------------------------------------------------
+_SetCustomFontData:
+; Sets the font to be custom
+; Arguments:
+;  __frame_arg0 : Pointer to font data
+;  Set Pointer to NULL to use default font
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	add	hl,de
+	or	a,a
+	sbc	hl,de
+	jr	nz,+_
+	ld	hl,Char000 \.r
+_:	ld	(TextData_ASM),hl \.r
+	ret
 
-_setfontmonospace:
- push ix
-  ld ix,0
-  add ix,sp
-  ld a,(ix+arg0)
- pop ix
- or a,a
- jr z,notmono
- xor a,a
- jr +_
-notmono:
- xor a,a
- dec a
-_:
- ld (monoFlag),a \.r
- ret
- 
-;#######################################################
-; Inner library data                                   #
-;#######################################################
- 
-monoFlag:
- .db $FF
+;-------------------------------------------------------------------------------
+_SetCustomFontSpacing:
+; Sets the font to be custom spacing
+; Arguments:
+;  __frame_arg0 : Pointer to font spacing
+;  Set Pointer to NULL to use default font spacing
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	add	hl,de
+	or	a,a
+	sbc	hl,de
+	jr	nz,+_
+	ld	hl,DefaultCharSpacing_ASM \.r
+_:	ld	(CharSpacing_ASM),hl \.r
+	ret
 
-CharSpacingPTR:
- .dl CharSpacing \.r
+ ;-------------------------------------------------------------------------------
+_SetFontMonospace:
+; Sets the font to be monospace
+; Arguments:
+;  __frame_arg0 : Boolean monospace flag
+; Returns:
+;  None
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	a,e
+	or	a,a
+	jr	z,+_
+	xor	a,a
+	jr	++_
+_:	dec	a
+_:	ld	(MonoFlag_ASM),a \.r
+	ret
  
-TextDataPTR:
- .dl Char000 \.r
+;-------------------------------------------------------------------------------
+; Inner library routines
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+_PixelPtr_ASM:
+; Gets the address of a pixel
+; Inputs:
+;  BC=X
+;   E=Y
+; Outputs:
+;  HL->address of pixel
+	ld	hl,-lcdWidth
+	add	hl,bc
+	ret	c
+	ld	hl,-lcdHeight
+	add	hl,de
+	ret	c
+	ld	hl,(currentDrawingBuffer)
+	add	hl,bc
+	ld	d,lcdWidth/2
+	mlt	de
+	add	hl,de
+	add	hl,de
+	ret
  
-CharSpacing:
- ;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
- .db 8,8,8,7,7,7,8,8,8,8,8,8,8,1,8,8
- .db 7,7,8,8,8,8,8,8,8,8,8,8,8,8,8,8
- .db 2,3,5,7,7,7,7,4,4,4,8,6,3,6,2,7
- .db 7,6,7,7,7,7,7,7,7,7,2,3,5,6,5,6
- .db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
- .db 7,7,7,7,8,7,7,7,7,7,7,4,7,4,7,8
- .db 3,7,7,7,7,7,7,7,7,4,7,7,4,7,7,7
- .db 7,7,7,7,6,7,7,7,7,7,7,6,2,6,7,7
- .db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
- .db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+;-------------------------------------------------------------------------------
+; Inner library data
+;-------------------------------------------------------------------------------
  
+MonoFlag_ASM:
+	.db $FF
+CharSpacing_ASM:
+	.dl DefaultCharSpacing_ASM \.r
+TextData_ASM:
+	.dl DefaultTextData_ASM \.r
+ 
+DefaultCharSpacing_ASM:
+	;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
+	.db 8,8,8,7,7,7,8,8,8,8,8,8,8,1,8,8
+	.db 7,7,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+	.db 2,3,5,7,7,7,7,4,4,4,8,6,3,6,2,7
+	.db 7,6,7,7,7,7,7,7,7,7,2,3,5,6,5,6
+	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+	.db 7,7,7,7,8,7,7,7,7,7,7,4,7,4,7,8
+	.db 3,7,7,7,7,7,7,7,7,4,7,7,4,7,7,7
+	.db 7,7,7,7,6,7,7,7,7,7,7,6,2,6,7,7
+	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+ 
+;-------------------------------------------------------------------------------
+DefaultTextData_ASM:
 Char000: .db $00,$00,$00,$00,$00,$00,$00,$00	; .
 Char001: .db $7E,$81,$A5,$81,$BD,$BD,$81,$7E	; .
 Char002: .db $7E,$FF,$DB,$FF,$C3,$C3,$FF,$7E	; .
@@ -1539,6 +1685,5 @@ Char124: .db $C0,$C0,$C0,$00,$C0,$C0,$C0,$00	; |
 Char125: .db $E0,$30,$30,$1C,$30,$30,$E0,$00	; }
 Char126: .db $76,$DC,$00,$00,$00,$00,$00,$00	; ~
 Char127: .db $00,$10,$38,$6C,$C6,$C6,$FE,$00	; .
-Char128: .db $7C,$C6,$C0,$C0,$C0,$D6,$7C,$30	; .
 
  .endLibrary
