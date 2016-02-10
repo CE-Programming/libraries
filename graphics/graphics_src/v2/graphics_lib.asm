@@ -50,6 +50,13 @@
 ; v2 functions
 ;-------------------------------------------------------------------------------
  .function "gc_SetClipWindow",_SetClipWindow
+ .function "gc_ShiftWindowDown",_ShiftWindowDown
+ .function "gc_ShiftWindowUp",_ShiftWindowUp
+ .function "gc_ShiftWindowLeft",_ShiftWindowLeft
+ .function "gc_ShiftWindowRight",_ShiftWindowRight
+;-------------------------------------------------------------------------------
+; In progress for v2
+;-------------------------------------------------------------------------------
  .function "gc_ClipDrawSprite",_ClipDrawSprite
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
  .function "gc_ClipGetSprite",_ClipGetSprite
@@ -71,6 +78,7 @@ _SetClipWindow
 ;  __frame_arg1 : Ymin
 ;  __frame_arg2 : Xmax
 ;  __frame_arg3 : Ymax
+;  Must be within (0,0,319,239)
 ; Returns:
 ;  None
 	push	ix
@@ -1605,7 +1613,81 @@ _SetFontMonospace:
 	ld	a,e
 	ld	(MonoFlag_ASM),a \.r
 	ret
- 
+
+;-------------------------------------------------------------------------------
+_ShiftWindowDown:
+; Shifts whatever is in the clip window down by 1 pixel
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	_DownRightShiftCalculate_ASM
+	ex	de,hl
+	ld	hl,lcdWidth
+	add	hl,de
+	ex	de,hl
+	jr	+_
+;-------------------------------------------------------------------------------
+_ShiftWindowRight:
+; Shifts whatever is in the clip window right by 1 pixel
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	_DownRightShiftCalculate_ASM
+	push	hl
+	pop	de
+	dec	hl
+XDeltaDownRight_ASM =$+1
+_:	ld	bc,0
+	lddr
+PosOffsetDownRight_ASM =$+1
+	ld	bc,0
+	sbc	hl,bc
+	ex	de,hl
+	or	a,a
+	sbc	hl,bc
+	ex	de,hl
+	dec	a
+	jr	nz,-_
+	ret
+	
+;-------------------------------------------------------------------------------
+_ShiftWindowUp:
+; Shifts whatever is in the clip window up by 1 pixel
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	_UpLeftShiftCalculate_ASM
+	ex	de,hl
+	ld	hl,lcdWidth
+	add	hl,de
+	jr	+_
+;-------------------------------------------------------------------------------
+_ShiftWindowLeft:
+; Shifts whatever is in the clip window left by 1 pixel
+; Arguments:
+;  None
+; Returns:
+;  None
+	call	_UpLeftShiftCalculate_ASM
+	push	hl
+	pop	de
+	inc	hl
+XDeltaUpLeft_ASM =$+1
+_:	ld	bc,0
+	ldir
+PosOffsetUpLeft_ASM =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+	add	hl,bc
+	ex	de,hl
+	dec	a
+	jr	nz,-_
+	ret
+	
 ;-------------------------------------------------------------------------------
 ; Inner library routines
 ;-------------------------------------------------------------------------------
@@ -1633,6 +1715,61 @@ _PixelPtr_ASM:
 	ret
  
 ;-------------------------------------------------------------------------------
+_UpLeftShiftCalculate_ASM:
+; Calcualtes the position to shift the window for up/left
+; Inputs:
+;  None
+; Outputs:
+;  HL->Place to draw
+	ld	hl,(XmaxBound_ASM)
+	ld	de,(XminBound_ASM)
+	push	de
+	or	a,a
+	sbc	hl,de
+	ld	(XDeltaUpLeft_ASM),hl
+	ex	de,hl
+	ld	hl,lcdWidth
+	or	a,a
+	sbc	hl,de
+	ld	(PosOffsetUpLeft_ASM),hl
+	ld	a,(YminBound_ASM)
+	ld	c,a
+	ld	a,(YmaxBound_ASM)
+	ld	l,c
+_:	sub	a,c
+	ld	h,lcdwidth/2
+	mlt	hl
+	add	hl,hl
+	pop	de
+	add	hl,de
+	ld	de,vRAM
+	add	hl,de
+	ret
+;-------------------------------------------------------------------------------
+_DownRightShiftCalculate_ASM:
+; Calcualtes the position to shift the window for dowm/right
+; Inputs:
+;  None
+; Outputs:
+;  HL->Place to draw
+	ld	hl,(XmaxBound_ASM)
+	ld	de,(XminBound_ASM)
+	push	hl
+	or	a,a
+	sbc	hl,de
+	ld	(XDeltaDownRight_ASM),hl
+	ex	de,hl
+	ld	hl,lcdWidth
+	or	a,a
+	sbc	hl,de
+	ld	(PosOffsetDownRight_ASM),hl
+	ld	a,(YminBound_ASM)
+	ld	c,a
+	ld	a,(YmaxBound_ASM)
+	ld	l,a
+	jr	-_
+	
+;-------------------------------------------------------------------------------
 ; Inner library data
 ;-------------------------------------------------------------------------------
  
@@ -1641,9 +1778,9 @@ XminBound_ASM:
 YminBound_ASM:
 	.dl 0
 XmaxBound_ASM:
-	.dl lcdWidth
+	.dl lcdWidth-1
 YmaxBound_ASM:
-	.dl lcdHeight
+	.dl lcdHeight-1
 MonoFlag_ASM:
 	.db 0
 CharSpacing_ASM:
