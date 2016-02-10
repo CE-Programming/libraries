@@ -66,8 +66,8 @@
  
 ;-------------------------------------------------------------------------------
 ; used throughout the library
-lcdsize			        equ lcdwidth*lcdhheight*2
-currentDrawingBuffer	equ mpLcdBase+4
+lcdsize                 equ lcdwidth*lcdhheight*2
+currentDrawingBuffer    equ mpLcdBase+4
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -1603,7 +1603,7 @@ _:	ld	(CharSpacing_ASM),hl \.r
 _SetFontMonospace:
 ; Sets the font to be monospace
 ; Arguments:
-;  __frame_arg0 : Boolean monospace flag
+;  __frame_arg0 : Monospace spacing amount
 ; Returns:
 ;  None
 	pop	hl
@@ -1616,28 +1616,37 @@ _SetFontMonospace:
 
 ;-------------------------------------------------------------------------------
 _ShiftWindowDown:
-; Shifts whatever is in the clip window down by 1 pixel
+; Shifts whatever is in the clip window down by some pixels
 ; Arguments:
-;  None
+;  __frame_arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_DownRightShiftCalculate_ASM \.r
 	ex	de,hl
-	ld	hl,lcdWidth
+	ld	hl,3
+	add	hl,sp
+	ld	l,(hl)
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
 	add	hl,de
 	ex	de,hl
 	jr	+_
 ;-------------------------------------------------------------------------------
 _ShiftWindowRight:
-; Shifts whatever is in the clip window right by 1 pixel
+; Shifts whatever is in the clip window right by some pixels
 ; Arguments:
-;  None
+;  __frame_arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_DownRightShiftCalculate_ASM \.r
+	pop	de
+	pop	bc
+	push	bc
+	push	de
 	push	hl
 	pop	de
-	dec	hl
+	sbc	hl,bc
 XDeltaDownRight_ASM =$+1
 _:	ld	bc,0
 	lddr
@@ -1654,27 +1663,36 @@ PosOffsetDownRight_ASM =$+1
 	
 ;-------------------------------------------------------------------------------
 _ShiftWindowUp:
-; Shifts whatever is in the clip window up by 1 pixel
+; Shifts whatever is in the clip window up by some pixels
 ; Arguments:
-;  None
+;  __frame_arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_UpLeftShiftCalculate_ASM \.r
 	ex	de,hl
-	ld	hl,lcdWidth
+	ld	hl,3
+	add	hl,sp
+	ld	l,(hl)
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
 	add	hl,de
 	jr	+_
 ;-------------------------------------------------------------------------------
 _ShiftWindowLeft:
-; Shifts whatever is in the clip window left by 1 pixel
+; Shifts whatever is in the clip window left by some pixels
 ; Arguments:
-;  None
+;  __frame_arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_UpLeftShiftCalculate_ASM \.r
+	pop	de
+	pop	bc
+	push	bc
+	push	de
 	push	hl
 	pop	de
-	inc	hl
+	add	hl,bc
 XDeltaUpLeft_ASM =$+1
 _:	ld	bc,0
 	ldir
@@ -1744,6 +1762,9 @@ _:	sub	a,c
 	add	hl,de
 	ld	de,vRAM
 	add	hl,de
+	dec	hl
+	dec	de
+	inc	a
 	ret
 ;-------------------------------------------------------------------------------
 _DownRightShiftCalculate_ASM:

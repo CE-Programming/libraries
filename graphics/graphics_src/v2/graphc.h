@@ -1,6 +1,6 @@
 /**
  * @file    GRAPHC CE C Library
- * @version 1.0
+ * @version 2.0
  *
  * @section LICENSE
  *
@@ -309,5 +309,19 @@ void gc_ClipDrawTransparentSprite(unsigned char *data, int x, int y, unsigned ch
  * A pointer to spriteBuffer is also returned for ease of use.
  */
 void gc_ClipGetSprite(unsigned char *spriteBuffer, int x, int y, unsigned char width, unsigned char height);
+
+/**
+ * Sets the clipping window for clipped routines
+ */
+void gc_SetClipWindow(unsigned int xmin, unsigned char ymin, unsigned int xmax, unsigned char ymax);
+
+/**
+ * Screen shifting routines that operate within the clipping window
+ * Note that the data left over is undefined (Must be drawn over)
+ */
+void gc_ShiftWindowDown(unsigned int pixels);
+void gc_ShiftWindowUp(unsigned int pixels);
+void gc_ShiftWindowLeft(unsigned int pixels);
+void gc_ShiftWindowRight(unsigned int pixels);
 
 #endif
