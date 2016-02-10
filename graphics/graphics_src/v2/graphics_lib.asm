@@ -1621,7 +1621,7 @@ _ShiftWindowDown:
 ;  None
 ; Returns:
 ;  None
-	call	_DownRightShiftCalculate_ASM
+	call	_DownRightShiftCalculate_ASM \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	add	hl,de
@@ -1634,7 +1634,7 @@ _ShiftWindowRight:
 ;  None
 ; Returns:
 ;  None
-	call	_DownRightShiftCalculate_ASM
+	call	_DownRightShiftCalculate_ASM \.r
 	push	hl
 	pop	de
 	dec	hl
@@ -1659,7 +1659,7 @@ _ShiftWindowUp:
 ;  None
 ; Returns:
 ;  None
-	call	_UpLeftShiftCalculate_ASM
+	call	_UpLeftShiftCalculate_ASM \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	add	hl,de
@@ -1671,7 +1671,7 @@ _ShiftWindowLeft:
 ;  None
 ; Returns:
 ;  None
-	call	_UpLeftShiftCalculate_ASM
+	call	_UpLeftShiftCalculate_ASM \.r
 	push	hl
 	pop	de
 	inc	hl
@@ -1721,20 +1721,20 @@ _UpLeftShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(XmaxBound_ASM)
-	ld	de,(XminBound_ASM)
+	ld	hl,(XmaxBound_ASM) \.r
+	ld	de,(XminBound_ASM) \.r
 	push	de
 	or	a,a
 	sbc	hl,de
-	ld	(XDeltaUpLeft_ASM),hl
+	ld	(XDeltaUpLeft_ASM),hl \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
-	ld	(PosOffsetUpLeft_ASM),hl
-	ld	a,(YminBound_ASM)
+	ld	(PosOffsetUpLeft_ASM),hl \.r
+	ld	a,(YminBound_ASM) \.r
 	ld	c,a
-	ld	a,(YmaxBound_ASM)
+	ld	a,(YmaxBound_ASM) \.r
 	ld	l,c
 _:	sub	a,c
 	ld	h,lcdwidth/2
@@ -1752,20 +1752,20 @@ _DownRightShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(XmaxBound_ASM)
-	ld	de,(XminBound_ASM)
+	ld	hl,(XmaxBound_ASM) \.r
+	ld	de,(XminBound_ASM) \.r
 	push	hl
 	or	a,a
 	sbc	hl,de
-	ld	(XDeltaDownRight_ASM),hl
+	ld	(XDeltaDownRight_ASM),hl \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
-	ld	(PosOffsetDownRight_ASM),hl
-	ld	a,(YminBound_ASM)
+	ld	(PosOffsetDownRight_ASM),hl \.r
+	ld	a,(YminBound_ASM) \.r
 	ld	c,a
-	ld	a,(YmaxBound_ASM)
+	ld	a,(YmaxBound_ASM) \.r
 	ld	l,a
 	jr	-_
 	
