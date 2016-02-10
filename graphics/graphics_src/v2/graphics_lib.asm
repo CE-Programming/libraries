@@ -2,8 +2,11 @@
 #include "ti84pce.inc"
 
  .libraryName		"GRAPHC"	                    ; Name of library
- .libraryVersion	1		                    ; Version information (1-255)
+ .libraryVersion	2		                    ; Version information (1-255)
  
+;-------------------------------------------------------------------------------
+; v1 functions -- No longer able to insert or move (Can optimize/fix though)
+;-------------------------------------------------------------------------------
  .function "gc_InitGraph",_InitGraph
  .function "gc_CloseGraph",_CloseGraph
  .function "gc_SetColorIndex",_SetColorIndex
@@ -43,6 +46,10 @@
  .function "gc_SetCustomFontData",_SetCustomFontData
  .function "gc_SetCustomFontSpacing",_SetCustomFontSpacing
  .function "gc_SetFontMonospace",_SetFontMonospace
+;-------------------------------------------------------------------------------
+; v2 functions
+;-------------------------------------------------------------------------------
+ .function "gc_SetClipWindow",_SetClipWindow
  .function "gc_ClipDrawSprite",_ClipDrawSprite
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
  .function "gc_ClipGetSprite",_ClipGetSprite
@@ -56,6 +63,30 @@ lcdsize			        equ lcdwidth*lcdhheight*2
 currentDrawingBuffer	equ mpLcdBase+4
 ;-------------------------------------------------------------------------------
 
+;-------------------------------------------------------------------------------
+_SetClipWindow
+; Sets the clipping window for clipped routines
+; Arguments:
+;  __frame_arg0 : Xmin
+;  __frame_arg1 : Ymin
+;  __frame_arg2 : Xmax
+;  __frame_arg3 : Ymax
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	(XminBound_ASM),hl \.r
+	ld	hl,(ix+__frame_arg1)
+	ld	(YminBound_ASM),hl \.r
+	ld	hl,(ix+__frame_arg2)
+	ld	(XmaxBound_ASM),hl \.r
+	ld	hl,(ix+__frame_arg3)
+	ld	(YmaxBound_ASM),hl \.r
+	pop	ix
+	ret
+ 
 ;-------------------------------------------------------------------------------
 _SetColorIndex:
 ; Sets the global color index for all routines
@@ -756,13 +787,13 @@ _ClipDrawSprite:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(UpBound_ASM)
+	ld	de,(YminBound_ASM)
 	ld	hl,(ix+__frame_arg2)
 	or	a,a
 	sbc	hl,de
 	add	hl,de
 	jr	nc,TopSpriteClip
-	ld	de,(DownBound_ASM)
+	ld	de,(YmaxBound_ASM)
 	sbc	hl,de
 	jp	nc,ClipSpriteOffscreen
 	ex	de,hl
@@ -1605,13 +1636,13 @@ _PixelPtr_ASM:
 ; Inner library data
 ;-------------------------------------------------------------------------------
  
-LeftBound_ASM:
+XminBound_ASM:
 	.dl 0
-RightBound_ASM:
+YminBound_ASM:
+	.dl 0
+XmaxBound_ASM:
 	.dl lcdWidth
-UpBound_ASM:
-	.dl 0
-DownBound_ASM:
+YmaxBound_ASM:
 	.dl lcdHeight
 MonoFlag_ASM:
 	.db 0

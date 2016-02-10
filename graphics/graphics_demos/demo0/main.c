@@ -36,7 +36,7 @@ void main(void)
     gc_PrintStringXY("Palette Test",150,10);
     
     /* This is a really bad function to use. Don't use it in actual things */
-    _OS( while(!GetCSC) );
+    _OS( GetKey() );
 
     /* Close the graphics canvas and return to the OS */
     gc_CloseGraph();
