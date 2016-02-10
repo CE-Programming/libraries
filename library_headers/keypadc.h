@@ -37,7 +37,7 @@
 #define H_KEYPADC
 
 #pragma asm "include "libheader.asm""
-#pragma asm "include "keypad.asm""
+#pragma asm "include "keypadc.asm""
 #pragma asm "segment code"
 
 /**
