@@ -1647,6 +1647,9 @@ _ShiftWindowRight:
 	push	hl
 	pop	de
 	sbc	hl,bc
+	dec	hl
+	dec	de
+	inc	a
 XDeltaDownRight_ASM =$+1
 _:	ld	bc,0
 	lddr
@@ -1693,6 +1696,9 @@ _ShiftWindowLeft:
 	push	hl
 	pop	de
 	add	hl,bc
+	dec	hl
+	dec	de
+	inc	a
 XDeltaUpLeft_ASM =$+1
 _:	ld	bc,0
 	ldir
@@ -1762,9 +1768,6 @@ _:	sub	a,c
 	add	hl,de
 	ld	de,vRAM
 	add	hl,de
-	dec	hl
-	dec	de
-	inc	a
 	ret
 ;-------------------------------------------------------------------------------
 _DownRightShiftCalculate_ASM:
@@ -1799,9 +1802,9 @@ XminBound_ASM:
 YminBound_ASM:
 	.dl 0
 XmaxBound_ASM:
-	.dl lcdWidth-1
+	.dl lcdWidth
 YmaxBound_ASM:
-	.dl lcdHeight-1
+	.dl lcdHeight
 MonoFlag_ASM:
 	.db 0
 CharSpacing_ASM:
