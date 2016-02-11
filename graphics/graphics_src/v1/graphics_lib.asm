@@ -59,13 +59,13 @@ _SetColorIndex:
 ; Arguments:
 ;  __frame_arg0 : Color Index
 ; Returns:
-;  None
+;  Previous global color index
 	pop	hl
 	pop	de
 	push	de
 	push	hl
 	ld	a,(color1) \.r
-	push	af
+	ld	d,a
 	ld	a,e
 	ld	(color1),a \.r
 	ld	(color2),a \.r
@@ -74,7 +74,7 @@ _SetColorIndex:
 	ld	(color5),a \.r
 	ld	(color6),a \.r
 	ld	(color7),a \.r
-	pop	af
+	ld	a,d
 	ret
 
 ;-------------------------------------------------------------------------------
