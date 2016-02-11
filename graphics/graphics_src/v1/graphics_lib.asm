@@ -173,13 +173,9 @@ _GetColor:
 	add	hl,sp
 	ld	de,mpLcdPalette/2
 	ld	e,(hl)
-	sbc	hl,hl
 	ex	de,hl
 	add	hl,hl
-	ld	e,(hl)
-	inc	l
-	ld	d,(hl)
-	ex	de,hl
+	ld	hl,(hl)
 	ret
  
 ;-------------------------------------------------------------------------------
