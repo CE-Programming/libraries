@@ -297,17 +297,17 @@ _NoClipRectangle:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(ix+__frame_arg0)
-	ld	l,(ix+__frame_arg1)
+	ld	hl,(ix+__frame_arg0)
+	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
 	ld	a,(ix+__frame_arg3)
-	ld	h,lcdWidth/2
-	mlt	hl
-	add	hl,hl
+	ld	d,lcdWidth/2
+	mlt	de
+	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-	dec	bc
+	dec.s	bc
 FillRectangle_Loop:
 color2 =$+1
 	ld	(hl),0
