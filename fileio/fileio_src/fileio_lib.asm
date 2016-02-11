@@ -630,8 +630,9 @@ _DeleteVar:
 ;  0 if failure
 	pop	hl
 	pop	de
-	pop	af
-	push	af
+	pop	bc
+	ld	a,c
+	push	bc
 	push	de
 	push	hl
 	jr	+_
@@ -734,8 +735,9 @@ _Close:
 ; Returns:
 ;  None
 	pop	hl
-	pop	af
-	push	af
+	pop	bc
+	ld	a,c
+	push	bc
 	push	hl
 	ld	(CurrentSlot_ASM),a \.r
 	call	_GetSlotVATPtr_ASM \.r
