@@ -36,36 +36,7 @@
 #ifndef H_GRAPHC
 #define H_GRAPHC
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "GRAPHC.asm""
-#pragma asm "segment code"
-
-/**
- * Quickly set and get pixels.
- * No clipping is performed.
- */
-#define gc_DrawingBuffer                  (*(unsigned char**)(0xE30014))
-#define gc_NoClipPixelPtr(x, y)           ((unsigned char*)(gc_DrawingBuffer + (unsigned short)x + ((unsigned char)y)*320))
-#define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
-#define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
-#define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
-
-/**
- * Used for accessing the palette directly
- */
-unsigned short gc_Palette[256] _At 0xE30200;
-
-/**
- * Array of the LCD VRAM
- */
-unsigned char gc_VRAM[240][320][2] _At 0xD40000;
-
-/**
- * Sets the color index that drawing routines will use
- * This applies to lines, rectangles, etc
- * Returns the previous global color index
- */
-unsigned char gc_SetColorIndex(unsigned char index);
+#include <stdint.h>
 
 /**
  * Initializes the graphics setup.
@@ -82,89 +53,116 @@ void gc_InitGraph(void);
 void gc_CloseGraph(void);
 
 /**
+ * Used for accessing the palette directly
+ */
+uint16_t gc_paletteArray[256] _At 0xE30200;
+
+/**
+ * Array of the LCD VRAM in 8bpp mode
+ */
+uint8_t (*gc_vramArray)[240][320] _At 0xE30014;
+
+/**
+ * Quickly set and get pixels.
+ * No clipping is performed.
+ */
+#define gc_drawingBuffer                  (*(uint8_t**)(0xE30014))
+#define gc_NoClipPixelPtr(x, y)           ((uint8_t*)(gc_drawingBuffer + (uint16_t)x + ((uint8_t)y)*320))
+#define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
+#define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
+#define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
+
+/**
+ * Sets the color index that drawing routines will use
+ * This applies to lines, rectangles, etc
+ * Returns the previous global color index
+ */
+uint8_t gc_SetColorIndex(uint8_t index);
+
+/**
  * Sets up the default palette where high=low
  */
 void gc_SetDefaultPalette(void);
 
 /**
- * Sets up the palette; size is in bytes
+ * Sets up the palette; paletteSize is in bytes
  */
-void gc_SetPalette(unsigned short *palette, unsigned short size);
+void gc_SetPalette(uint16_t *palette, uint16_t paletteSize);
 
 /**
  * Fills the screen with the given palette index
  */
-void gc_FillScrn(unsigned char color);
+void gc_FillScrn(uint8_t color);
 
 /**
  * Gets the 1555 color located at the given palette index.
  * Included for backwards compatibility  with v1.0
- * It is recomended you use the gc_Palette array instead
+ * It is recomended you use the gc_paletteArray array instead
  */
-unsigned short gc_GetColor(unsigned char index);
+uint16_t gc_GetColor(uint8_t index);
 
 /**
  * Sets the 1555 color located at the given palette index.
  * Included for backwards compatibility  with v1.0
- * It is recomended you use the gc_Palette array instead
+ * It is recomended you use the gc_paletteArray array instead
  */
-void gc_SetColor(unsigned char index, unsigned short color);
+void gc_SetColor(uint8_t index, uint16_t color);
 
 /**
  * Sets the XY pixel measured from the top left origin of the screen to the
  * given palette index color. This routine performs clipping.
  */
-void gc_ClipSetPixel(int x, int y);
+void gc_ClipSetPixel(int24_t x, int24_t y);
 
 /**
  * Gets the palette index color of the XY pixel measured from the top
  * left origin of the screen. This routine performs clipping.
  */
-unsigned char gc_ClipGetPixel(int x, int y);
+uint8_t gc_ClipGetPixel(int24_t x, int24_t y);
 
 /**
  * Draws a line given the x,y,x,y coordinates measured from the top left origin.
  * No clipping is performed.
  */
-void gc_NoClipLine(unsigned short x0, unsigned char y0, unsigned short x1, unsigned char y1);
+void gc_NoClipLine(uint16_t x0, uint8_t y0, uint16_t x1, uint8_t y1);
 
 /**
  * Draws a filled rectangle measured from the top left origin.
  * No clipping is performed.
  */
-void gc_NoClipRectangle(unsigned short x, unsigned char y, unsigned short width, unsigned char height);
+void gc_NoClipRectangle(uint16_t x, uint8_t y, uint16_t width, uint8_t height);
 
 /**
  * Draws a rectangle outline measured from the top left origin.
  * No clipping is performed.
  */
-void gc_NoClipRectangleOutline(unsigned short x, unsigned char y, unsigned short width, unsigned char height);
+void gc_NoClipRectangleOutline(uint16_t x, uint8_t y, uint16_t width, uint8_t height);
 
 /**
  * Draws a fast horizontal line measured from the top left origin.
  * No clipping is performed.
  */
-void gc_NoClipHorizLine(unsigned short x, unsigned char y, unsigned short length);
+void gc_NoClipHorizLine(uint16_t x, uint8_t y, uint16_t length);
 
 /**
  * Draws a fast vertical line measured from the top left origin.
  * No clipping is performed.
  */
-void gc_NoClipVertLine(unsigned short x, unsigned char y, unsigned char length);
+void gc_NoClipVertLine(uint16_t x, uint8_t y, uint8_t length);
 
 /**
  * Draws a filled circle measured from the top left origin.
  * No clipping is performed.
  * This routine disasbles interrupts
  */
-void gc_NoClipCircle(unsigned short x, unsigned char y, unsigned short radius);
+void gc_NoClipCircle(uint16_t x, uint8_t y, uint16_t radius);
 
 /**
  * Draws circle outline measured from the top left origin.
  * Clipping is performed.
  * This routine disasbles interrupts
  */
-void gc_ClipCircleOutline(unsigned short x, unsigned char y, unsigned short radius);
+void gc_ClipCircleOutline(uint16_t x, uint8_t y, uint16_t radius);
 
 /**
  * Forces all graphics routines to write to the offscreen buffer
@@ -186,7 +184,7 @@ void gc_SwapDraw(void);
  * Returns 0 if graphics routines are currently drawing to visible screen
  * The current drawing location remains the same.
  */
-unsigned char gc_DrawState(void);
+uint8_t gc_DrawState(void);
 
 /**
  * Outputs a character at the current cursor position
@@ -200,7 +198,7 @@ void gc_PrintChar(char c);
  * Values range from: (-8388608-8388607)
  * length must be between 0-8
  */
-void gc_PrintInt(int n, unsigned int length);
+void gc_PrintInt(int n, uint24_t length);
 
 /**
  * Outputs an unsigned integer at the current cursor position.
@@ -208,7 +206,7 @@ void gc_PrintInt(int n, unsigned int length);
  * Values range from: (0-16777215)
  * length must be between 0-8
  */
-void gc_PrintUnsignedInt(unsigned int n, unsigned int length);
+void gc_PrintUnsignedInt(uint24_t n, uint24_t length);
 
 /**
  * Outputs a string at the current cursor position
@@ -221,22 +219,22 @@ void gc_PrintString(char *string);
  * The current cursor position is updated.
  * No text clipping is performed.
  */
-void gc_PrintStringXY(char *string, unsigned short x, unsigned char y);
+void gc_PrintStringXY(char *string, uint16_t x, uint8_t y);
 
 /**
  * Returns the current text cursor X position
  */
-unsigned short gc_TextX(void);
+uint16_t gc_TextX(void);
 
 /**
  * Returns the current text cursor Y position
  */
-unsigned char gc_TextY(void);
+uint8_t gc_TextY(void);
 
 /**
  * Sets the text cursor XY position
  */
-void gc_SetTextXY(unsigned short x, unsigned char y);
+void gc_SetTextXY(uint16_t x, uint8_t y);
 
 /**
  * Sets the current text color.
@@ -244,53 +242,52 @@ void gc_SetTextXY(unsigned short x, unsigned char y);
  * High 8 bits represent the background color.
  * Returns previous text color
  */
-unsigned short gc_SetTextColor(unsigned short color);
+uint16_t gc_SetTextColor(uint16_t color);
 
 /**
  * Sets the transparent color used in text and sprite functions
  * Default index transparency color is 0xFF
  * Returns the previous transparent color
  */
-unsigned char gc_SetTransparentColor(unsigned char color);
+uint8_t gc_SetTransparentColor(uint8_t color);
 
 /**
  * Draws a given sprite to the screen as fast as possible; no transparency, clipping, or anything of the sort.
  * Basically just a direct rectangular data dump onto vram.
  * Note: This routine disables interrupts.
  */
-void gc_NoClipDrawSprite(unsigned char *data, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+void gc_NoClipDrawSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
  * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well.
  * Note: This routine disables interrupts.
  */
-void gc_NoClipDrawTransparentSprite(unsigned char *data, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+void gc_NoClipDrawTransparentSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Quickly grab the background behind a sprite (useful for transparency)
  * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
  * spriteBuffer is updated with the screen coordinates given.
- * A pointer to spriteBuffer is also returned for ease of use.
  * Note: This routine disables interrupts.
  */
-unsigned char *gc_NoClipGetSprite(unsigned char *spriteBuffer, unsigned short x, unsigned char y, unsigned char width, unsigned char height);
+void *gc_NoClipGetSprite(uint8_t *spriteBuffer, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Set the font routines to use the provided font, formated 8x8
  */
-void gc_SetCustomFontData(unsigned char *fontdata);
+void gc_SetCustomFontData(uint8_t *fontdata);
 
 /**
  * Set the font routines to use the provided font spacing
  */
-void gc_SetCustomFontSpacing(unsigned char *fontspacing);
+void gc_SetCustomFontSpacing(uint8_t *fontspacing);
 
 /**
  * To disable monospaced font, gc_SetFontMonospace(0)
  * Otherwise, send the width int pixels you wish all characters to be
  */
-void gc_SetFontMonospace(unsigned char monospace);
+void gc_SetFontMonospace(uint8_t monospace);
 
 /**
  * Returns the width of the input sting
@@ -308,13 +305,13 @@ unsigned int gc_CharWidth(char c);
  * Draws a given sprite to the screen as fast as possible; no transparency.
  * Basically just a direct rectangular data dump onto vram.
  */
-void gc_ClipDrawSprite(unsigned char *data, int x, int y, unsigned char width, unsigned char height);
+void gc_ClipDrawSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
 
 /**
  * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
  * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well..
  */
-void gc_ClipDrawTransparentSprite(unsigned char *data, int x, int y, unsigned char width, unsigned char height);
+void gc_ClipDrawTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
 
 /**
  * Quickly grab the background behind a sprite (useful for transparency)
@@ -322,20 +319,24 @@ void gc_ClipDrawTransparentSprite(unsigned char *data, int x, int y, unsigned ch
  * spriteBuffer is updated with the screen coordinates given.
  * A pointer to spriteBuffer is also returned for ease of use.
  */
-void gc_ClipGetSprite(unsigned char *spriteBuffer, int x, int y, unsigned char width, unsigned char height);
+void gc_ClipGetSprite(uint8_t *spriteBuffer, int24_t x, int24_t y, uint8_t width, uint8_t height);
 
 /**
  * Sets the clipping window for clipped routines
  */
-void gc_SetClipWindow(unsigned int xmin, unsigned char ymin, unsigned int xmax, unsigned char ymax);
+void gc_SetClipWindow(int24_t xmin, int24_t ymin, int24_t xmax, int24_t ymax);
 
 /**
  * Screen shifting routines that operate within the clipping window
  * Note that the data left over is undefined (Must be drawn over)
  */
-void gc_ShiftWindowDown(unsigned int pixels);
-void gc_ShiftWindowUp(unsigned int pixels);
-void gc_ShiftWindowLeft(unsigned int pixels);
-void gc_ShiftWindowRight(unsigned int pixels);
+void gc_ShiftWindowDown(uint24_t pixels);
+void gc_ShiftWindowUp(uint24_t pixels);
+void gc_ShiftWindowLeft(uint24_t pixels);
+void gc_ShiftWindowRight(uint24_t pixels);
+
+#pragma asm "include "libheader.asm""
+#pragma asm "include "GRAPHC.asm""
+#pragma asm "segment code"
 
 #endif
