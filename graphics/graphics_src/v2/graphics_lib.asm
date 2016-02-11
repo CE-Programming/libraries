@@ -569,15 +569,14 @@ _SetTextXY:
 ;  __frame_arg1 : Text Y Pos
 ; Returns:
 ;  None
-	ld	hl,6
+	ld	hl,3
 	add	hl,sp
+	ld	de,TextXPos_ASM \.r
+	ldi
+	ldi
+	inc hl
 	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
-	dec	hl
-	dec	hl
-	ld	de,TextXPos_ASM+1 \.r
-	ldd
-	ldd
 	ret
  
 ;-------------------------------------------------------------------------------
