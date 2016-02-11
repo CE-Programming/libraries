@@ -44,12 +44,22 @@
  * Quickly set and get pixels.
  * No clipping is performed.
  */
-#define gc_drawingBuffer                  (*(uint8_t**)(0xE30014))
-#define gc_NoClipPixelPtr(x, y)           ((uint8_t*)(gc_drawingBuffer + x + y*320))
+#define gc_DrawingBuffer                  (*(unsigned char**)(0xE30014))
+#define gc_NoClipPixelPtr(x, y)           ((unsigned char*)(gc_DrawingBuffer + (unsigned short)x + ((unsigned char)y)*320))
 #define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
 #define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
 #define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
-                            
+
+/**
+ * Used for accessing the palette directly
+ */
+unsigned short gc_Palette[256] _At 0xE30200;
+
+/**
+ * Array of the LCD VRAM
+ */
+unsigned char gc_VRAM[240][320][2] _At 0xD40000;
+
 /**
  * Sets the color index that drawing routines will use
  * This applies to lines, rectangles, etc
@@ -88,11 +98,15 @@ void gc_FillScrn(unsigned char color);
 
 /**
  * Gets the 1555 color located at the given palette index.
+ * Included for backwards compatibility  with v1.0
+ * It is recomended you use the gc_Palette array instead
  */
 unsigned short gc_GetColor(unsigned char index);
 
 /**
  * Sets the 1555 color located at the given palette index.
+ * Included for backwards compatibility  with v1.0
+ * It is recomended you use the gc_Palette array instead
  */
 void gc_SetColor(unsigned char index, unsigned short color);
 
