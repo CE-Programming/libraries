@@ -768,10 +768,9 @@ _NoClipDrawSprite:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(ix+__frame_arg1)               ; X
-	dec	de
-	inc.s	de
+	ld	hl,(ix+__frame_arg1)               ; X
 	ld	c,(ix+__frame_arg2)                ; Y
+	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
@@ -816,11 +815,10 @@ _NoClipGetSprite:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl,(currentDrawingBuffer)
-	ld	de,(ix+__frame_arg1)
-	dec	de
-	inc.s	de
+	ld	hl,(ix+__frame_arg1)
 	ld	c,(ix+__frame_arg2)
+	ex.s	de,hl
+	ld	hl,(currentDrawingBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -863,11 +861,10 @@ _NoClipDrawTransparentSprite:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl,(currentDrawingBuffer)
-	ld	de,(ix+__frame_arg1)
-	dec	de
-	inc.s	de
+	ld	hl,(ix+__frame_arg1)
 	ld	c,(ix+__frame_arg2)
+	ex.s	de,hl
+	ld	hl,(currentDrawingBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
