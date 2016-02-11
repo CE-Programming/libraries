@@ -352,7 +352,7 @@ _MemSet_ASM:
 	push	hl
 	cpi
 	ex	de,hl
-	pop	de
+	pop	hl
 	ret	po
 	ldir
 	ret
