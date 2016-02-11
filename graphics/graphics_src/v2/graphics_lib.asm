@@ -357,7 +357,7 @@ _NoClipRectangleOutline:
 	pop	bc
 	inc	bc
 	dec.s	bc
-	jp	_MemSet_ASM
+	jr	_MemSet_ASM
  
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
