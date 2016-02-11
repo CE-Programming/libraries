@@ -122,7 +122,7 @@ unsigned int ti_Close(const unsigned int slot);
  *  varaible slot to write the data to
  * Returns the number of bytes written
  */
-unsigned int ti_Write(const void *data, unsigned char size, unsigned int count, unsigned int slot);
+unsigned int ti_Write(const void *data, unsigned int size, unsigned int count, unsigned int slot);
 
 /**
  * Reads from the current variable pointer given:
@@ -136,7 +136,7 @@ unsigned int ti_Write(const void *data, unsigned char size, unsigned int count, 
  *  varaible slot to read from
  * Returns the number of bytes read
  */
-unsigned int ti_Read(const void *data, unsigned char size, unsigned int count, unsigned int slot);
+unsigned int ti_Read(const void *data, unsigned int size, unsigned int count, unsigned int slot);
 
 /**
  * Puts a character directly into the slot data pointer, and increments the offset
