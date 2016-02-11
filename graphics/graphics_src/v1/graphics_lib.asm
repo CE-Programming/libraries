@@ -325,14 +325,17 @@ _NoClipHorizLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	pop	ix
-	pop	de
-	pop	hl
-	pop	bc
-	push	bc
-	push	hl
-	push	de
 	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	e,(ix+__frame_arg1)
+	ld	d,0
+	ex.s	de,hl
+	ld	bc,(ix+__frame_arg2)
+	dec.s	bc
+	inc	bc
+	pop	ix
 _HorizLine_ASM:
 	ld	h,lcdWidth/2
 	mlt	hl
@@ -357,6 +360,8 @@ _NoClipVertLine:
 	ld	ix,0
 	add	ix,sp
 	ld	de,(ix+__frame_arg0)		; x
+	dec.s	de
+	inc	de
 	ld	h,(ix+__frame_arg1)		; y
 	ld	b,(ix+__frame_arg2)		; length
 	pop	ix
