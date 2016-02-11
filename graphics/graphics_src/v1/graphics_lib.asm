@@ -313,6 +313,7 @@ _NoClipRectangleOutline:
 	ld	e, c
 	call	_RectOutlineVert_ASM_2 \.r
 	pop	bc
+	inc	bc
 	dec.s	bc
 	jr	_MemSet_ASM
  
@@ -526,15 +527,15 @@ _SetTextXY:
 ;  __frame_arg1 : Text Y Pos
 ; Returns:
 ;  None
-	pop	de
-	pop	hl
-	pop	bc
-	ld	a,c
-	push	bc
-	push	hl
-	push	de
-	ld	(TextXPos_ASM),hl \.r
+	ld	hl,6
+	add	hl,sp
+	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
+	dec	hl
+	dec	hl
+	ld	de,TextXPos_ASM+1 \.r
+	ldd
+	ldd
 	ret
  
 ;-------------------------------------------------------------------------------
