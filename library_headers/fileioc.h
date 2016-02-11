@@ -88,7 +88,7 @@ void ti_CloseAll(void);
  * Opens a varaible given then name and flags
  * ti_Open opens an AppVar as default file storage
  * ti_OpenVar opens a Program or Protected Program, depending on the type given
- * If there isn't enough memory to create the variable, or a slot isn't open, NULL is returned
+ * If there isn't enough memory to create the variable, or a slot isn't open, zero (0) is returned
  * Otherwise it returns the available slot number (1-5)
  * Available modes:
  * "r"  - Opens a file for reading. The file must exist. Keeps file in archive if in archive.                                   (Archive)
