@@ -313,7 +313,6 @@ _NoClipRectangleOutline:
 	ld	e, c
 	call	_RectOutlineVert_ASM_2 \.r
 	pop	bc
-	inc	bc
 	dec.s	bc
 	jr	_MemSet_ASM
  
@@ -333,8 +332,8 @@ _NoClipHorizLine:
 	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
 	pop	ix
-	inc	bc
 _RectOUtlineHoriz_ASM:
+	inc	bc
 	dec.s	bc
 	ld	a,b
 	or	a,c
