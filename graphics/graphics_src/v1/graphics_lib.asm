@@ -902,15 +902,16 @@ _ClipCircleOutline:
 ; Returns:
 ;  None
 	di
-	pop	ix
-	pop	hl
-	pop	de
-	pop	bc
-	push	bc
-	push	de
-	push	hl
 	push	ix
-	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)
+	ld	hl,(ix+__frame_arg1)
+	ex.s	de,hl
+	ld	d,0
+	ld	bc,(ix+__frame_arg2)
+	dec	bc
+	inc.s	bc
 	push	hl
 	push	de
 	exx
@@ -1095,9 +1096,13 @@ _NoClipCircle:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg1)
+	ld	de,(ix+__frame_arg0)
+	ld	hl,(ix+__frame_arg1)
+	ex.s	de,hl
+	ld	d,0
 	ld	bc,(ix+__frame_arg2)
+	dec	bc
+	inc.s	bc
 	push	hl
 	push	de
 	exx
