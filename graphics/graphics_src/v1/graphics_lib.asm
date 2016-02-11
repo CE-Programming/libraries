@@ -296,25 +296,26 @@ _NoClipRectangleOutline:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(ix+__frame_arg0)
-	ld	h,(ix+__frame_arg1)
+	ld	hl,(ix+__frame_arg0)
+	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
-	ld	l,(ix+__frame_arg3)
-	push	de
+	ld	d,(ix+__frame_arg3)
+	pop	ix
+	push	bc
 	push	hl
-	call	_HorizLine_ASM \.r
-	ld	b,(ix+__frame_arg3)
-	dec	b
+	push	de
+	call	_RectOutlineHoriz_ASM \.r
+	pop	bc
 	push	bc
 	call	_RectOutlineVert_ASM \.r
 	pop	bc
 	pop	hl
-	pop	de
+	ld	e, c
 	call	_RectOutlineVert_ASM_2 \.r
-	ld	bc,(ix+__frame_arg2)
-	call	_memset
-	pop	ix
-	ret
+	pop	bc
+	inc	bc
+	dec.s	bc
+	jp	_MemSet_ASM
  
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
@@ -330,22 +331,31 @@ _NoClipHorizLine:
 	add	ix,sp
 	ld	hl,(ix+__frame_arg0)
 	ld	e,(ix+__frame_arg1)
-	ld	d,0
-	ex.s	de,hl
 	ld	bc,(ix+__frame_arg2)
-	dec	bc
-	inc.s	bc
 	pop	ix
-_HorizLine_ASM:
-	ld	h,lcdWidth/2
-	mlt	hl
-	add	hl,hl
+	inc	bc
+_RectOUtlineHoriz_ASM:
+	dec.s	bc
+	ld	a,b
+	or	a,c
+	ret	z
+	ld	d,lcdWidth/2
+	mlt	de
+	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 color3 =$+1
 	ld	a,0
-	jp	_memset
+_MemSet_ASM:
+	ld	(hl),a
+	push	hl
+	cpi
+	ex	de,hl
+	pop	de
+	ret	po
+	ldir
+	ret
  
 ;-------------------------------------------------------------------------------
 _NoClipVertLine:
@@ -359,16 +369,17 @@ _NoClipVertLine:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(ix+__frame_arg0)		; x
-	dec	de
-	inc.s	de
-	ld	h,(ix+__frame_arg1)		; y
+	ld	hl,(ix+__frame_arg0)		; x
+	ld	e,(ix+__frame_arg1)		; y
 	ld	b,(ix+__frame_arg2)		; length
 	pop	ix
+	inc	b
 _RectOutlineVert_ASM_2:
-	ld	l,lcdWidth/2
-	mlt	hl
-	add	hl,hl
+	dec	b
+	ret	z
+	ld	d,lcdWidth/2
+	mlt	de
+	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
