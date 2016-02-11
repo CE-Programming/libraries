@@ -115,7 +115,6 @@ _SetColorIndex:
 	ld	(color4),a \.r
 	ld	(color5),a \.r
 	ld	(color6),a \.r
-	ld	(color7),a \.r
 	ld	a,d
 	ret
 
@@ -208,7 +207,7 @@ _SetPalette:
 _GetColor:
 ; Gets the color of a given pallete entry
 ; Arguments:
-;  None
+;  __frame_arg0 : Color index
 ; Returns:
 ;  16 bit color palette entry
 	ld	hl,3
@@ -300,29 +299,30 @@ _NoClipRectangle:
 	ld	hl,(ix+__frame_arg0)
 	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
+	inc	bc
+	dec.s	bc
+	ld	a,b
+	or	a,c
 	ld	a,(ix+__frame_arg3)
+	pop	ix
+	ret	z
+	or	a,a
+	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-	dec.s	bc
 FillRectangle_Loop:
-color2 =$+1
-	ld	(hl),0
-	push	hl
-	pop	de
-	inc	de
 	push	bc
-	ldir
+	call	_FillHoriz_ASM
 	pop	bc
-	ld	de,lcdWidth
+	ld	hl,lcdWidth
 	add	hl,de
 	sbc	hl,bc
 	dec	a
 	jr	nz,FillRectangle_Loop
-	pop	ix
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ _NoClipRectangleOutline:
 	pop	bc
 	inc	bc
 	dec.s	bc
-	jr	_MemSet_ASM
+	jr	_FillHoriz_ASM
  
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
@@ -387,10 +387,9 @@ _RectOUtlineHoriz_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-color3 =$+1
-	ld	a,0
-_MemSet_ASM:
-	ld	(hl),a
+_FillHoriz_ASM:
+color2 =$+1
+	ld	(hl),0
 	push	hl
 	cpi
 	ex	de,hl
@@ -427,7 +426,7 @@ _RectOutlineVert_ASM_2:
 	add	hl,de
 _RectOutlineVert_ASM:
 	ld	de,lcdWidth
-color4 =$+1
+color3 =$+1
 _:	ld	(hl),0
 	add	hl,de
 	djnz	-_
@@ -1188,7 +1187,7 @@ _DrawPixelCircle_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-color5 =$+1
+color4 =$+1
 	ld	(hl),0
 	ret
 
@@ -1448,7 +1447,7 @@ changeXLoop:
 	push	bc
 	ld	bc,(currentDrawingBuffer)
 	add	hl,bc 
-color6 =$+1
+color5 =$+1
 	ld	(hl),0
 	pop	bc
 	push	bc
@@ -1487,7 +1486,7 @@ changeYLoop:
 	add	hl,bc 
 	ld	bc,(currentDrawingBuffer)
 	add	hl,bc 
-color7 =$+1
+color6 =$+1
 	ld	(hl),0 
 	pop	hl
 	pop	bc
