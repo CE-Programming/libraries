@@ -398,14 +398,13 @@ _DrawBuffer:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,vRAM
-	ld	de,(mpLcdBase)
+	ld	hl,(mpLcdBase)
+	ld	de,vRAM
 	or	a,a 
 	sbc	hl,de
-	add	hl,de
-	jr	nz,+_
-	ld	hl,vram+lcdSize
-_:	ld	(currentDrawingBuffer),hl
+	jr	nz,++_
+_:	ld	de,vram+lcdSize
+_:	ld	(currentDrawingBuffer),de
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -415,14 +414,12 @@ _DrawScreen:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,vRAM
-	ld	de,(mpLcdBase)
+	ld	hl,(mpLcdBase)
+	ld	de,vRAM
 	or	a,a
 	sbc	hl,de
-	add	hl,de
 	jr	z,-_
-	ld	hl,vRAM+lcdSize
-	jr	-_
+	jr	--_
  
 ;-------------------------------------------------------------------------------
 _SwapDraw:
@@ -431,21 +428,19 @@ _SwapDraw:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,vRAM
-	ld	de,(mpLcdBase)
+	ld	hl,(mpLcdBase)
+	ld	(currentDrawingBuffer),hl
+	ld	de,vRAM
 	or	a,a
 	sbc	hl,de
-	add	hl,de
 	jr	nz,+_
-	ld	hl,vRAM+lcdSize
-_:	ld	(currentDrawingBuffer),de
-	ld	de,mpLcdIcr
-	ld	a,(de)
-	or	a,%00000100 
-	ld	(de),a
-	ld	(mpLcdBase),hl
-_:	ld	a,(mpLcdRis)
-	and	a,%00000100
+	ld	de,vRAM+lcdSize
+_:	ld	hl,mpLcdIcr
+	set	2,(hl)
+	ld	l,mpLcdBase & $FF
+	ld	(hl),de
+	ld	l,mpLcdRis & $FF
+_:	bit	2,(hl)
 	jr	z,-_
 	ret
  
@@ -494,14 +489,13 @@ _SetTransparentColor:
 	pop	hl
 	pop	de
 	push	de
-	push	hl
 	ld	a,(TransparentTextColor) \.r
 	ld	d,a
 	ld	a,e
 	ld	(TransparentTextColor),a \.r
 	ld	(TransparentSpriteColor),a \.r
 	ld	a,d
-	ret
+	jp	(hl)
  
 ;-------------------------------------------------------------------------------
 _SetTextColor:
