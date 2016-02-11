@@ -1246,8 +1246,9 @@ _NoClipLine:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	de,(ix+__frame_arg0)
-	ld	hl,(ix+__frame_arg2)
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg2)
+	ex.s	de,hl
 	ld	b,(ix+__frame_arg1)
 	ld	c,(ix+__frame_arg3)
 	pop	ix
