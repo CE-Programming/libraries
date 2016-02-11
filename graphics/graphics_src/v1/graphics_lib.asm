@@ -333,8 +333,8 @@ _NoClipHorizLine:
 	ld	d,0
 	ex.s	de,hl
 	ld	bc,(ix+__frame_arg2)
-	dec.s	bc
-	inc	bc
+	dec	bc
+	inc.s	bc
 	pop	ix
 _HorizLine_ASM:
 	ld	h,lcdWidth/2
@@ -360,8 +360,8 @@ _NoClipVertLine:
 	ld	ix,0
 	add	ix,sp
 	ld	de,(ix+__frame_arg0)		; x
-	dec.s	de
-	inc	de
+	dec	de
+	inc.s	de
 	ld	h,(ix+__frame_arg1)		; y
 	ld	b,(ix+__frame_arg2)		; length
 	pop	ix
@@ -755,6 +755,8 @@ _NoClipDrawSprite:
 	ld	ix,0
 	add	ix,sp
 	ld	de,(ix+__frame_arg1)               ; X
+	dec	de
+	inc.s	de
 	ld	c,(ix+__frame_arg2)                ; Y
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
@@ -764,7 +766,8 @@ _NoClipDrawSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprMoveAmt),hl \.r
@@ -800,7 +803,9 @@ _NoClipGetSprite:
 	ld	ix,0
 	add	ix,sp
 	ld	hl,(currentDrawingBuffer)
-	ld	de,(ix+__frame_arg1) 
+	ld	de,(ix+__frame_arg1)
+	dec	de
+	inc.s	de
 	ld	c,(ix+__frame_arg2)
 	add	hl,de
 	ld	b,lcdWidth/2
@@ -809,7 +814,8 @@ _NoClipGetSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprGrabMoveAmt),hl \.r
@@ -845,6 +851,8 @@ _NoClipDrawTransparentSprite:
 	add	ix,sp
 	ld	hl,(currentDrawingBuffer)
 	ld	de,(ix+__frame_arg1)
+	dec	de
+	inc.s	de
 	ld	c,(ix+__frame_arg2)
 	add	hl,de
 	ld	b,lcdWidth/2
@@ -853,7 +861,8 @@ _NoClipDrawTransparentSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprTransMoveAmt),hl \.r
@@ -861,7 +870,7 @@ _NoClipDrawTransparentSprite:
 	ld	b,(ix+__frame_arg4)
 	ld	hl,(ix+__frame_arg0)
 	pop	ix
-_:	push bc
+_:	push	bc
 NoClipSprTransNextLine: =$+1
 	ld	b,0
 _:	ld	a,(hl)
