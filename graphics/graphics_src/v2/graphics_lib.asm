@@ -763,6 +763,9 @@ _PrintInt:
 	pop	hl
 	pop	bc
 	push	bc
+	dec	bc
+	inc.s	bc
+	ld	b,0
 	push	hl
 	push	de
 	call	_SetAtoHLU
