@@ -19,16 +19,13 @@ void main(void)
     /* Some variable intialization */
     unsigned int x,y,r;
     unsigned char color = 0;
-    unsigned short c;
-    
-    c = gc_NoClipGetPixel(0,0);
-    
+
     gc_InitGraph();
 
     /* Draw an 8x8 palette */
     for(y=0;y<128;y+=16) {
         for(x=0;x<128;x+=16) {
-            gc_SetColorIndex(c);
+            gc_SetColorIndex(color);
             gc_NoClipRectangle(x,y,16,16);
             color++;
         }
