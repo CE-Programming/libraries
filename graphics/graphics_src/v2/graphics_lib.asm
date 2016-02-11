@@ -538,11 +538,11 @@ _SetTransparentColor:
 	push	de
 	push	hl
 	ld	a,(TransparentTextColor) \.r
-	push	af
+	ld	d,a
 	ld	a,e
 	ld	(TransparentTextColor),a \.r
 	ld	(TransparentSpriteColor),a \.r
-	pop	af
+	ld	a,d
 	ret
  
 ;-------------------------------------------------------------------------------
