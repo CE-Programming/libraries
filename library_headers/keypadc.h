@@ -36,21 +36,19 @@
 #ifndef H_KEYPADC
 #define H_KEYPADC
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "keypadc.asm""
-#pragma asm "segment code"
+#include <stdint.h>
 
 /**
  * Scans the given keyboard row and returns the row value
  * Note: Diasbles interrupts
  */
-unsigned char kb_ScanGroup(unsigned char row);
+uint8_t kb_ScanGroup(uint8_t row);
 
 /**
  * Scans the keyboard quickly to tell if any key was pressed
  * Note: Diasbles interrupts
  */
-unsigned char kb_AnyKey(void);
+uint8_t kb_AnyKey(void);
 
 /**
  * Scans the keyboard to update data values
@@ -67,16 +65,16 @@ void kb_Reset(void);
 /**
  * Keyboard group 0 (Unused)
  */
-#define kb_group_0 0
+#define kb_group_0      0
 
 /**
  * Keyboard group 1
  */
-#define kb_group_1  1
-#define kb_Graph    1<<0
-#define kb_Trace    1<<1
-#define kb_Zoom	    1<<2
-#define kb_Window   1<<3
+#define kb_group_1      1
+#define kb_Graph        1<<0
+#define kb_Trace        1<<1
+#define kb_Zoom	        1<<2
+#define kb_Window       1<<3
 #define kb_Yequ 	1<<4
 #define kb_2nd		1<<5
 #define kb_Mode		1<<6
@@ -85,7 +83,7 @@ void kb_Reset(void);
 /**
  * Keyboard group 2
  */
-#define kb_group_2  2
+#define kb_group_2      2
 #define kb_Store	1<<1
 #define kb_Ln		1<<2
 #define kb_Log		1<<3
@@ -97,7 +95,7 @@ void kb_Reset(void);
 /**
  * Keyboard group 3
  */
-#define kb_group_3  3
+#define kb_group_3      3
 #define kb_0		1<<0
 #define kb_1		1<<1
 #define kb_4		1<<2
@@ -110,7 +108,7 @@ void kb_Reset(void);
 /**
  * Keyboard group 4
  */
-#define kb_group_4  4
+#define kb_group_4      4
 #define kb_DecPnt	1<<0
 #define kb_2		1<<1
 #define kb_5		1<<2
@@ -123,7 +121,7 @@ void kb_Reset(void);
 /**
  * Keyboard group 5
  */
-#define kb_group_5  5
+#define kb_group_5      5
 #define kb_Chs		1<<0
 #define kb_3		1<<1
 #define kb_6		1<<2
@@ -135,7 +133,7 @@ void kb_Reset(void);
 /**
  * Keyboard group 6
  */
-#define kb_group_6  6
+#define kb_group_6      6
 #define kb_Enter	1<<0
 #define kb_Add		1<<1
 #define kb_Sub		1<<2
@@ -147,10 +145,14 @@ void kb_Reset(void);
 /**
  * Keyboard group 7
  */
-#define kb_group_7  7
-#define kb_Down	    1<<0
-#define kb_Left	    1<<1
+#define kb_group_7      7
+#define kb_Down	        1<<0
+#define kb_Left	        1<<1
 #define kb_Right	1<<2
 #define kb_Up		1<<3
+
+#pragma asm "include "libheader.asm""
+#pragma asm "include "keypadc.asm""
+#pragma asm "segment code"
 
 #endif

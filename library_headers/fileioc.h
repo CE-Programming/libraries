@@ -36,9 +36,7 @@
 #ifndef H_FILEIOC
 #define H_FILEIOC
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "fileioc.asm""
-#pragma asm "segment code"
+#include <stdint.h>
 
 /**
  * Varible and flag definitions
@@ -101,14 +99,14 @@ void ti_CloseAll(void);
  * Type:
  *  Specifies the type of variable to open
  */
-unsigned int ti_Open(const char *varname, const char *mode);
-unsigned int ti_OpenVar(const char *varname, const char *mode, unsigned int type);
+uint8_t ti_Open(const char *varname, const char *mode);
+uint8_t ti_OpenVar(const char *varname, const char *mode, uint8_t type);
 
 /**
  * Frees an open variable slot
  * Returns zero if closing failed
  */
-unsigned int ti_Close(const unsigned int slot);
+int24_t ti_Close(const uint8_t slot);
 
 /**
  * Writes to the current variable pointer given:
@@ -122,7 +120,7 @@ unsigned int ti_Close(const unsigned int slot);
  *  varaible slot to write the data to
  * Returns the number of bytes written
  */
-unsigned int ti_Write(const void *data, unsigned int size, unsigned int count, unsigned int slot);
+int24_t ti_Write(const void *data, uint24_t size, uint24_t count, uint8_t slot);
 
 /**
  * Reads from the current variable pointer given:
@@ -136,7 +134,7 @@ unsigned int ti_Write(const void *data, unsigned int size, unsigned int count, u
  *  varaible slot to read from
  * Returns the number of bytes read
  */
-unsigned int ti_Read(const void *data, unsigned int size, unsigned int count, unsigned int slot);
+uint24_t ti_Read(const void *data, uint24_t size, uint24_t count, uint8_t slot);
 
 /**
  * Puts a character directly into the slot data pointer, and increments the offset
@@ -146,7 +144,7 @@ unsigned int ti_Read(const void *data, unsigned int size, unsigned int count, un
  * slot:
  *  varaible slot to put the character to
  */
-unsigned int ti_PutC(unsigned int c, unsigned int slot);
+uint24_t ti_PutC(uint24_t c, uint8_t slot);
 
 /**
  * Pulls a character directly from the slot data pointer, and increments the offset
@@ -154,7 +152,7 @@ unsigned int ti_PutC(unsigned int c, unsigned int slot);
  * slot:
  *  varaible slot to get the character from
  */
-unsigned int ti_GetC(unsigned int slot);
+uint24_t ti_GetC(uint8_t slot);
 
 /**
  * Seeks to an offset from the origin:
@@ -164,7 +162,7 @@ unsigned int ti_GetC(unsigned int slot);
  * slot:
  *  varaible slot seeking in
  */
-unsigned int ti_Seek(int offset, unsigned int origin, unsigned int slot);
+uint24_t ti_Seek(int24_t offset, uint24_t origin, uint8_t slot);
 
 /**
  * Seeks to the start of the given variable
@@ -172,41 +170,45 @@ unsigned int ti_Seek(int offset, unsigned int origin, unsigned int slot);
  * slot:
  *  varaible slot seeking in
  */
-unsigned short ti_Rewind(unsigned int slot);
+uint24_t ti_Rewind(uint8_t slot);
 
 /**
  * Returns the value of the current cursor offset
  */
-unsigned short ti_Tell(unsigned int slot);
+uint16_t ti_Tell(uint8_t slot);
 
 /**
  * Returns the size of the variable in the slot
  */
-unsigned short ti_GetSize(unsigned int slot);
+uint16_t ti_GetSize(uint8_t slot);
 
 /**
  * Resizes the slot to the new size; note that the current file
  * offset is set to the beginning of the file
  */
-unsigned int ti_Resize(unsigned int new_size, unsigned int slot);
+int24_t ti_Resize(uint24_t new_size, uint8_t slot);
 
 /**
  * Returns zero if the slot is not in the archive
  */
-unsigned int ti_IsArchived(unsigned int slot);
+int24_t ti_IsArchived(uint8_t slot);
 
 /**
  * Sets the varaible into either the archive or RAM
  * Returns zero if the operation fails if not enough memory or some other error
  * NOTE: This routine also closes the file handle. You must reopen the file
  */
-unsigned int ti_SetArchiveStatus(unsigned int archived, unsigned int slot);
+int24_t ti_SetArchiveStatus(uint8_t archived, uint8_t slot);
 
 /**
  * ti_Delete    - Deletes an AppVar given the name
  * ti_DeleteVar - Deletes a varaible given the name and type
  */
-unsigned int ti_Delete(const char *varname);
-unsigned int ti_DeleteVar(const char *varname, unsigned int type);
+int24_t ti_Delete(const char *varname);
+int24_t ti_DeleteVar(const char *varname, uint24_t type);
+
+#pragma asm "include "libheader.asm""
+#pragma asm "include "fileioc.asm""
+#pragma asm "segment code"
 
 #endif
