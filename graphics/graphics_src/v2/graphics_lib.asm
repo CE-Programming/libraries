@@ -66,6 +66,7 @@
  
 ;-------------------------------------------------------------------------------
 ; used throughout the library
+lcdSize			        equ lcdWidth*lcdHeight
 currentDrawingBuffer	equ mpLcdBase+4
 ;-------------------------------------------------------------------------------
 
@@ -125,12 +126,16 @@ _InitGraph:
 ;  None
 ; Returns:
 ;  None
-	call	$000374
-	ld	a,lcdbpp8
-_:	ld	(mpLcdCtrl),a
-	ld	hl,vRAM
-	ld	(currentDrawingBuffer),hl
-	jr	_SetDefaultPalette
+	call	_SetDefaultPalette \.r
+	ld	hl,currentDrawingBuffer
+	ld	a,lcdBpp8
+_:	ld	de,vRam
+	ld	(hl),de
+	ld	l,mpLcdCtrl&$ff
+	ld	(hl),a
+	ld	l,mpLcdIcr&$ff
+	ld	(hl),4
+	jp	$000374
  
 ;-------------------------------------------------------------------------------
 _CloseGraph:
@@ -139,10 +144,8 @@ _CloseGraph:
 ;  None
 ; Returns:
 ;  None
-	call	$000374
-	ld	hl,vRAM
-	ld	(mpLcdBase),hl
-	ld	a,lcdbpp16
+	ld	hl,mpLcdBase
+	ld	a,lcdBpp16
 	jr	-_
 
 ;-------------------------------------------------------------------------------
@@ -157,7 +160,7 @@ _FillScrn:
 	push	bc
 	push	hl
 	ld	a,c
-	ld	bc,lcdWidth*lcdHeight
+	ld	bc,lcdSize
 	ld	hl,(currentDrawingBuffer)
 	jp	_memset
  
@@ -440,11 +443,11 @@ _DrawBuffer:
 ; Returns:
 ;  None
 	ld	hl,(mpLcdBase)
-	ld	de,vRAM
+	ld	de,vRam
 	or	a,a 
 	sbc	hl,de
 	jr	nz,++_
-_:	ld	de,vRAM+(lcdWidth*lcdHeight)
+_:	ld	de,vRam+lcdSize
 _:	ld	(currentDrawingBuffer),de
 	ret
 
@@ -456,7 +459,7 @@ _DrawScreen:
 ; Returns:
 ;  None
 	ld	hl,(mpLcdBase)
-	ld	de,vRAM
+	ld	de,vRam
 	or	a,a
 	sbc	hl,de
 	jr	z,-_
@@ -464,25 +467,26 @@ _DrawScreen:
  
 ;-------------------------------------------------------------------------------
 _SwapDraw:
-; Safely swap the vRAM buffer pointers for double buffered output
+; Safely swap the vRam buffer pointers for double buffered output
 ; Arguments:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,vRAM
-	ld	de,(mpLcdBase)
-	or	a,a
-	sbc	hl,de
-	add	hl,de
-	jr	nz,+_
-	ld	hl,vRAM+(lcdWidth*lcdHeight)
-_:	ld	(currentDrawingBuffer),de
-	ld	(mpLcdBase),hl
-	ld	hl,mpLcdIcr
-	set	2,(hl)
-	ld	hl,mpLcdRis
-_:	bit	2,(hl)
+	ld	hl,mpLcdBase&$ff<<8|mpLcdRis
+_:	ld	a,(hl)
+	and	a,4
 	jr	z,-_
+	ld	l,mpLcdIcr&$ff
+	ld	(hl),a
+	ld	l,h
+	ld	bc,(hl)
+	and	b
+	ld	de,vRam
+	jr	nz,_
+	ld	de,vRam+lcdSize
+_:	ld	(hl),de
+	ld	l,currentDrawingBuffer&$ff
+	ld	(hl),bc
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -1712,7 +1716,7 @@ _:	sub	a,c
 	add	hl,hl
 	pop	de
 	add	hl,de
-	ld	de,vRAM
+	ld	de,vRam
 	add	hl,de
 	ret
 ;-------------------------------------------------------------------------------
