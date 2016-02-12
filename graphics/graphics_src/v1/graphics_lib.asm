@@ -10,8 +10,8 @@
  .function "gc_SetDefaultPalette",_SetDefaultPalette
  .function "gc_SetPalette",_SetPalette
  .function "gc_FillScrn",_FillScrn
- .function "gc_SetPixel",_SetPixel
- .function "gc_GetPixel",_GetPixel
+ .function "gc_ClipSetPixel",_ClipSetPixel
+ .function "gc_ClipGetPixel",_ClipGetPixel
  .function "gc_GetColor",_GetColor
  .function "gc_SetColor",_SetColor
  .function "gc_NoClipLine",_NoClipLine
@@ -201,7 +201,7 @@ _SetColor:
 	ret
 
 ;-------------------------------------------------------------------------------
-_GetPixel:
+_ClipGetPixel:
 ; Gets the color index of a pixel
 ; Arguments:
 ;  __frame_arg0 : X Coord
@@ -228,14 +228,14 @@ getPixel_ASM:
 ;  __frame_arg1 : Y Coord
 ; Returns:
 ;  None
-_SetPixel:
+_ClipSetPixel:
 	pop	hl
 	pop	bc
 	pop	de
 	push	de
 	push	bc
 	push	hl
-_SetPixel_ASM:
+_ClipSetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
 color1 =$+1

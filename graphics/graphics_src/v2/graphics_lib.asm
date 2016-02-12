@@ -13,8 +13,8 @@
  .function "gc_SetDefaultPalette",_SetDefaultPalette
  .function "gc_SetPalette",_SetPalette
  .function "gc_FillScrn",_FillScrn
- .function "gc_SetPixel",_SetPixel
- .function "gc_GetPixel",_GetPixel
+ .function "gc_ClipSetPixel",_ClipSetPixel
+ .function "gc_ClipGetPixel",_ClipGetPixel
  .function "gc_GetColor",_GetColor
  .function "gc_SetColor",_SetColor
  .function "gc_NoClipLine",_NoClipLine
@@ -34,7 +34,7 @@
  .function "gc_PrintString",_PrintString
  .function "gc_PrintStringXY",_PrintStringXY
  .function "gc_StringWidth",_StringWidthC
- .function "gc_CharWidth_ASM",_CharWidth_ASM
+ .function "gc_CharWidth",_CharWidth
  .function "gc_TextX",_TextX
  .function "gc_TextY",_TextY
  .function "gc_SetTextXY",_SetTextXY
@@ -66,8 +66,7 @@
  
 ;-------------------------------------------------------------------------------
 ; used throughout the library
-lcdsize                 equ lcdwidth*lcdhheight*2
-currentDrawingBuffer    equ mpLcdBase+4
+currentDrawingBuffer	equ mpLcdBase+4
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -94,7 +93,7 @@ _SetClipWindow
 	ld	(YmaxBound_ASM),hl \.r
 	pop	ix
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetColorIndex:
 ; Sets the global color index for all routines
@@ -115,6 +114,7 @@ _SetColorIndex:
 	ld	(color4),a \.r
 	ld	(color5),a \.r
 	ld	(color6),a \.r
+	ld	(color7),a \.r
 	ld	a,d
 	ret
 
@@ -242,7 +242,7 @@ _SetColor:
 	ret
 
 ;-------------------------------------------------------------------------------
-_GetPixel:
+_ClipGetPixel:
 ; Gets the color index of a pixel
 ; Arguments:
 ;  __frame_arg0 : X Coord
@@ -269,14 +269,14 @@ getPixel_ASM:
 ;  __frame_arg1 : Y Coord
 ; Returns:
 ;  None
-_SetPixel:
+_ClipSetPixel:
 	pop	hl
 	pop	bc
 	pop	de
 	push	de
 	push	bc
 	push	hl
-_SetPixel_ASM:
+_ClipSetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
 color1 =$+1
@@ -299,30 +299,29 @@ _NoClipRectangle:
 	ld	hl,(ix+__frame_arg0)
 	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
-	inc	bc
-	dec.s	bc
-	ld	a,b
-	or	a,c
 	ld	a,(ix+__frame_arg3)
-	pop	ix
-	ret	z
-	or	a,a
-	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
+	dec.s	bc
 FillRectangle_Loop:
+color2 =$+1
+	ld	(hl),0
+	push	hl
+	pop	de
+	inc	de
 	push	bc
-	call	_FillHoriz_ASM
+	ldir
 	pop	bc
-	ld	hl,lcdWidth
+	ld	de,lcdWidth
 	add	hl,de
 	sbc	hl,bc
 	dec	a
 	jr	nz,FillRectangle_Loop
+	pop	ix
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -357,7 +356,7 @@ _NoClipRectangleOutline:
 	pop	bc
 	inc	bc
 	dec.s	bc
-	jr	_FillHoriz_ASM
+	jr	_MemSet_ASM
  
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
@@ -387,9 +386,10 @@ _RectOUtlineHoriz_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-_FillHoriz_ASM:
-color2 =$+1
-	ld	(hl),0
+color3 =$+1
+	ld	a,0
+_MemSet_ASM:
+	ld	(hl),a
 	push	hl
 	cpi
 	ex	de,hl
@@ -426,7 +426,7 @@ _RectOutlineVert_ASM_2:
 	add	hl,de
 _RectOutlineVert_ASM:
 	ld	de,lcdWidth
-color3 =$+1
+color4 =$+1
 _:	ld	(hl),0
 	add	hl,de
 	djnz	-_
@@ -444,7 +444,7 @@ _DrawBuffer:
 	or	a,a 
 	sbc	hl,de
 	jr	nz,++_
-_:	ld	de,vram+lcdSize
+_:	ld	de,vRAM+(lcdWidth*lcdHeight)
 _:	ld	(currentDrawingBuffer),de
 	ret
 
@@ -469,18 +469,18 @@ _SwapDraw:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,(mpLcdBase)
-	ld	(currentDrawingBuffer),hl
-	ld	de,vRAM
+	ld	hl,vRAM
+	ld	de,(mpLcdBase)
 	or	a,a
 	sbc	hl,de
+	add	hl,de
 	jr	nz,+_
-	ld	de,vRAM+lcdSize
-_:	ld	hl,mpLcdIcr
+	ld	hl,vRAM+(lcdWidth*lcdHeight)
+_:	ld	(currentDrawingBuffer),de
+	ld	(mpLcdBase),hl
+	ld	hl,mpLcdIcr
 	set	2,(hl)
-	ld	l,mpLcdBase & $FF
-	ld	(hl),de
-	ld	l,mpLcdRis & $FF
+	ld	hl,mpLcdRis
 _:	bit	2,(hl)
 	jr	z,-_
 	ret
@@ -567,7 +567,7 @@ _SetTextXY:
 	ld	de,TextXPos_ASM \.r
 	ldi
 	ldi
-	inc hl
+	inc	hl
 	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
 	ret
@@ -640,8 +640,8 @@ TextXPos_ASM = $+1
 	add	hl,de
 	ld	a,(hl)
 	inc	a
-_:	push	bc
-	ld	(CharWidth_ASM),a \.r
+	push	bc
+_:	ld	(CharWidthChange_ASM),a \.r
 	sbc	hl,hl
 	ld	l,a
 	neg
@@ -675,7 +675,7 @@ TextYPos_ASM = $+1
 	ld	b,8
 iloop:	push	bc
 	ld	c,(hl)
-CharWidth_ASM =$+1
+CharWidthChange_ASM =$+1
 	ld	b,0
 	ex	de,hl
 	push	de
@@ -782,79 +782,6 @@ _PrintInt:
 IsntNegative:
 	jp	_PrintUnsignedInt_ASM \.r
 
-ClipSpriteOffscreen:
-	pop	ix
-	ret
-	
-;-------------------------------------------------------------------------------
-_ClipGetSprite:
-_ClipDrawTransparentSprite:
-_ClipDrawSprite:
-; Places an sprite on the screen as fast as possible
-; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width
-;  __frame_arg4 : Height
-; Returns:
-;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	de,(YminBound_ASM)
-	ld	hl,(ix+__frame_arg2)
-	or	a,a
-	sbc	hl,de
-	add	hl,de
-	jr	nc,TopSpriteClip
-	ld	de,(YmaxBound_ASM)
-	sbc	hl,de
-	jp	nc,ClipSpriteOffscreen
-	ex	de,hl
-	or	a,a
-	sbc	hl,hl
-	or	a,a
-	sbc	hl,de
-TopSpriteClip:
-	
-
-
-
-
-
-
-	ld	de,(ix+__frame_arg1)	
-	ld	c,(ix+__frame_arg2)
-	ld	hl,(currentDrawingBuffer)
-	add	hl,de
-	ld	b,lcdWidth/2
-	mlt	bc
-	add	hl,bc
-	add	hl,bc
-	ex	de,hl
-	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
-	ld	a,c
-	sbc	hl,bc
-	ld	(ClipSprMoveAmt),hl \.r
-	ld	(ClipSprLineNext),a \.r
-	ld	b,(ix+__frame_arg4)
-	ld	hl,(ix+__frame_arg0)
-	pop	ix
-_:	push	bc
-ClipSprLineNext =$+1
-	ld	bc,0
-	
-	ex	de,hl
-ClipSprMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ex	de,hl
-	pop	bc
-	djnz	-_
-	ret
-	
 ;-------------------------------------------------------------------------------
 _NoClipDrawSprite:
 ; Places an sprite on the screen as fast as possible
@@ -880,7 +807,8 @@ _NoClipDrawSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprMoveAmt),hl \.r
@@ -926,7 +854,8 @@ _NoClipGetSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprGrabMoveAmt),hl \.r
@@ -971,7 +900,8 @@ _NoClipDrawTransparentSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	bc,(ix+__frame_arg3)
+	ld	bc,0
+	ld	c,(ix+__frame_arg3)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprTransMoveAmt),hl \.r
@@ -979,7 +909,7 @@ _NoClipDrawTransparentSprite:
 	ld	b,(ix+__frame_arg4)
 	ld	hl,(ix+__frame_arg0)
 	pop	ix
-_:	push bc
+_:	push	bc
 NoClipSprTransNextLine: =$+1
 	ld	b,0
 _:	ld	a,(hl)
@@ -1187,7 +1117,7 @@ _DrawPixelCircle_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-color4 =$+1
+color5 =$+1
 	ld	(hl),0
 	ret
 
@@ -1447,7 +1377,7 @@ changeXLoop:
 	push	bc
 	ld	bc,(currentDrawingBuffer)
 	add	hl,bc 
-color5 =$+1
+color6 =$+1
 	ld	(hl),0
 	pop	bc
 	push	bc
@@ -1486,7 +1416,7 @@ changeYLoop:
 	add	hl,bc 
 	ld	bc,(currentDrawingBuffer)
 	add	hl,bc 
-color6 =$+1
+color7 =$+1
 	ld	(hl),0 
 	pop	hl
 	pop	bc
@@ -1529,7 +1459,7 @@ _:	ld	a,(hl)
 	or	a,a
 	jr	z,+_
 	push	hl
-	call	_CharWidth_ASM_ASM \.r
+	call	_CharWidth_ASM \.r
 	pop	hl
 	inc	hl
 	jr	-_
@@ -1538,7 +1468,7 @@ _:	push	bc
 	ret
 
 ;-------------------------------------------------------------------------------	
-_CharWidth_ASM:
+_CharWidth:
 ; Gets the width of a character
 ; Arguments:
 ;  __frame_arg0 : Character
@@ -1550,7 +1480,7 @@ _CharWidth_ASM:
 	push	de
 	ld	bc,0
 	ld	a,l
-_CharWidth_ASM_ASM:
+_CharWidth_ASM:
 	ld	l,a
 	ld	a,(MonoFlag_ASM)
 	or	a,a
