@@ -12,9 +12,9 @@ _gc_SetPalette equ $
  jp 12
 _gc_FillScrn equ $
  jp 15
-_gc_SetPixel equ $
+_gc_ClipSetPixel equ $
  jp 18
-_gc_GetPixel equ $
+_gc_ClipGetPixel equ $
  jp 21
 _gc_GetColor equ $
  jp 24
