@@ -87,7 +87,7 @@ void gc_SetDefaultPalette(void);
 /**
  * Sets up the palette; paletteSize is in bytes
  */
-void gc_SetPalette(uint16_t *palette, uint16_t paletteSize);
+void gc_SetPalette(uint16_t *palette, uint24_t paletteSize);
 
 /**
  * Fills the screen with the given palette index
