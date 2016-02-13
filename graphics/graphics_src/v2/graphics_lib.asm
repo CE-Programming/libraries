@@ -57,42 +57,53 @@
 ;-------------------------------------------------------------------------------
 ; In progress for v2
 ;-------------------------------------------------------------------------------
+ .function "gc_ClipRectangle",_ClipRectangle
  .function "gc_ClipDrawSprite",_ClipDrawSprite
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
- .function "gc_ClipGetSprite",_ClipGetSprite
  
  .beginDependencies
  .endDependencies
  
 ;-------------------------------------------------------------------------------
-; used throughout the library
-lcdSize			        equ lcdWidth*lcdHeight
-currentDrawingBuffer	equ mpLcdBase+4
+; Used throughout the library
+lcdSize                 equ lcdWidth*lcdHeight
+currentDrawingBuffer    equ mpLcdCursorImg+1024-15
+_xmin                   equ mpLcdCursorImg+1024-12
+_ymin                   equ mpLcdCursorImg+1024-9
+_xmax                   equ mpLcdCursorImg+1024-6
+_ymax                   equ mpLcdCursorImg+1024-3
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-_SetClipWindow
+_SetClipWindow:
 ; Sets the clipping window for clipped routines
 ; Arguments:
 ;  __frame_arg0 : Xmin
 ;  __frame_arg1 : Ymin
 ;  __frame_arg2 : Xmax
 ;  __frame_arg3 : Ymax
-;  Must be within (0,0,319,239)
+;  Must be within (0,0,320,240)
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	(XminBound_ASM),hl \.r
-	ld	hl,(ix+__frame_arg1)
-	ld	(YminBound_ASM),hl \.r
-	ld	hl,(ix+__frame_arg2)
-	ld	(XmaxBound_ASM),hl \.r
-	ld	hl,(ix+__frame_arg3)
-	ld	(YmaxBound_ASM),hl \.r
-	pop	ix
+	call	_SetFullScreenClipping_ASM \.r
+	add	hl,sp
+	ex	de,hl
+	pop	hl
+	pop	hl
+	ld	(_x0),hl \.r
+	pop	hl
+	ld	(_y0),hl \.r
+	pop	hl
+	ld	(_x1),hl \.r
+	pop	hl
+	ld	(_y1),hl \.r
+	ex	de,hl
+	ld	sp,hl
+	call	_ClipRectangularObject \.r
+	ld	hl,_x0 \.r
+	ld	de,_xmin
+	ld	bc,16
+	ldir
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -126,16 +137,17 @@ _InitGraph:
 ;  None
 ; Returns:
 ;  None
-	call	_SetDefaultPalette \.r
+	call	$000374
+	call	_SetFullScreenClipping_ASM \.r
 	ld	hl,currentDrawingBuffer
 	ld	a,lcdBpp8
 _:	ld	de,vRam
 	ld	(hl),de
-	ld	l,mpLcdCtrl&$ff
+	ld	hl,mpLcdCtrl
 	ld	(hl),a
-	ld	l,mpLcdIcr&$ff
+	ld	l,mpLcdIcr&$FF
 	ld	(hl),4
-	jp	$000374
+	jr	_SetDefaultPalette
  
 ;-------------------------------------------------------------------------------
 _CloseGraph:
@@ -147,22 +159,6 @@ _CloseGraph:
 	ld	hl,mpLcdBase
 	ld	a,lcdBpp16
 	jr	-_
-
-;-------------------------------------------------------------------------------
-_FillScrn:
-; Fills the screen with the specified color index
-; Arguments:
-;  __frame_arg0 : Color Index
-; Returns:
-;  None
-	pop	hl
-	pop	bc
-	push	bc
-	push	hl
-	ld	a,c
-	ld	bc,lcdSize
-	ld	hl,(currentDrawingBuffer)
-	jp	_memset
  
 ;-------------------------------------------------------------------------------
 _SetDefaultPalette:
@@ -188,6 +184,22 @@ _:	ld	a,b
 	jr	nz,-_
 	ret
  
+;-------------------------------------------------------------------------------
+_FillScrn:
+; Fills the screen with the specified color index
+; Arguments:
+;  __frame_arg0 : Color Index
+; Returns:
+;  None
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
+	ld	a,c
+	ld	bc,lcdSize
+	ld	hl,(currentDrawingBuffer)
+	jp	_memset
+	
 ;-------------------------------------------------------------------------------
 _SetPalette:
 ; Sets the palette starting at 0x00 index and onward
@@ -287,6 +299,51 @@ color1 =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
+_ClipRectangle:
+; Draws an unclipped rectangle with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  None
+	or	a,a
+	sbc	hl,hl
+	add	hl,sp
+	ex	de,hl
+	pop	hl
+	pop	hl
+	ld	(_x0),hl \.r
+	pop	hl
+	ld	(_y0),hl \.r
+	pop	hl
+	ld	bc,(_x0) \.r
+	add	hl,bc
+	ld	(_x1),hl \.r
+	pop	hl
+	ld	bc,(_y0) \.r
+	add	hl,bc
+	ld	(_y1),hl \.r
+	ex	de,hl
+	ld	sp,hl
+	call	_ClipRectangularObject \.r
+	ld	de,(_x0) \.r
+	push	de
+	ld	hl,(_x1) \.r
+	or	a,a
+	sbc	hl,de
+	ld	b,h
+	ld	c,l
+	ld	de,(_y0) \.r
+	ld	hl,(_y1) \.r
+	or	a,a
+	sbc	hl,de
+	ld	a,l
+	pop	hl
+	jp	_NoClipRectangle_ASM \.r
+	
+;-------------------------------------------------------------------------------
 _NoClipRectangle:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
@@ -303,6 +360,8 @@ _NoClipRectangle:
 	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
 	ld	a,(ix+__frame_arg3)
+	pop	ix
+_NoClipRectangle_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
@@ -324,7 +383,6 @@ color2 =$+1
 	sbc	hl,bc
 	dec	a
 	jr	nz,FillRectangle_Loop
-	pop	ix
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -786,6 +844,13 @@ _PrintInt:
 IsntNegative:
 	jp	_PrintUnsignedInt_ASM \.r
 
+;-------------------------------------------------------------------------------
+_ClipDrawTransparentSprite:
+	ret
+;-------------------------------------------------------------------------------
+_ClipDrawSprite:
+	ret
+	
 ;-------------------------------------------------------------------------------
 _NoClipDrawSprite:
 ; Places an sprite on the screen as fast as possible
@@ -1695,8 +1760,8 @@ _UpLeftShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(XmaxBound_ASM) \.r
-	ld	de,(XminBound_ASM) \.r
+	ld	hl,(_xmax)
+	ld	de,(_xmin)
 	push	de
 	or	a,a
 	sbc	hl,de
@@ -1706,9 +1771,9 @@ _UpLeftShiftCalculate_ASM:
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetUpLeft_ASM),hl \.r
-	ld	a,(YminBound_ASM) \.r
+	ld	a,(_ymin)
 	ld	c,a
-	ld	a,(YmaxBound_ASM) \.r
+	ld	a,(_ymax)
 	ld	l,c
 _:	sub	a,c
 	ld	h,lcdwidth/2
@@ -1726,8 +1791,8 @@ _DownRightShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(XmaxBound_ASM) \.r
-	ld	de,(XminBound_ASM) \.r
+	ld	hl,(_xmax)
+	ld	de,(_xmin)
 	push	hl
 	or	a,a
 	sbc	hl,de
@@ -1737,24 +1802,100 @@ _DownRightShiftCalculate_ASM:
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetDownRight_ASM),hl \.r
-	ld	a,(YminBound_ASM) \.r
+	ld	a,(_ymin)
 	ld	c,a
-	ld	a,(YmaxBound_ASM) \.r
+	ld	a,(_ymax)
 	ld	l,a
 	jr	-_
 	
 ;-------------------------------------------------------------------------------
+_Max_ASM:
+; Calculate the resut of a signed comparison
+; Inputs:
+;  DE,HL=numbers
+; Oututs:
+;  HL=max number
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jp	p,+_ \.r
+	ret	pe
+	ex	de,hl
+_:	ret	po
+	ex	de,hl
+	ret
+	
+;-------------------------------------------------------------------------------
+_Min_ASM:
+; Calculate the resut of a signed comparison
+; Inputs:
+;  DE,HL=numbers
+; Oututs:
+;  HL=min number
+	or	a,a
+	sbc	hl,de
+	ex	de,hl
+	jp	p,_ \.r
+	ret	pe
+	add	hl,de
+_:	ret	po
+	add	hl,de
+	ret
+
+;-------------------------------------------------------------------------------
+_ClipRectangularObject:
+; Calcualtes the new coordinates given the clip window and inputs
+; Inputs:
+;  None
+; Outputs:
+;  Modifies data registers
+	ld	hl,(_xmin)
+	ld	de,(_x0) \.r
+	call	_Max_ASM \.r
+	ld	(_x0),hl \.r
+	ld	hl,(_ymin)
+	ld	de,(_y0) \.r
+	call	_Max_ASM \.r
+	ld	(_y0),hl \.r
+	ld	hl,(_xmax)
+	ld	de,(_x1) \.r
+	call	_Min_ASM \.r
+	ld	(_x1),hl \.r
+	ld	hl,(_ymax)
+	ld	de,(_y1) \.r
+	call	_Min_ASM \.r
+	ld	(_y1),hl \.r
+	ret
+
+;-------------------------------------------------------------------------------
+_SetFullScreenClipping_ASM:
+; Sets the clipping window to the entire screen
+; Inputs:
+;  None
+; Outputs:
+;  HL=0
+	ld	hl,lcdWidth
+	ld	(_xmax),hl
+	ld	hl,lcdHeight
+	ld	(_ymax),hl
+	ld	l,0
+	ld	(_xmin),hl
+	ld	(_ymin),hl
+	ret
+
+;-------------------------------------------------------------------------------
 ; Inner library data
 ;-------------------------------------------------------------------------------
- 
-XminBound_ASM:
+
+_x0:
 	.dl 0
-YminBound_ASM:
+_y0:
 	.dl 0
-XmaxBound_ASM:
-	.dl lcdWidth
-YmaxBound_ASM:
-	.dl lcdHeight
+_x1:
+	.dl 0
+_y1:
+	.dl 0
+
 MonoFlag_ASM:
 	.db 0
 CharSpacing_ASM:

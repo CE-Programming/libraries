@@ -60,7 +60,16 @@ uint16_t gc_paletteArray[256] _At 0xE30200;
 /**
  * Array of the LCD VRAM in 8bpp mode
  */
-uint8_t (*gc_vramArray)[240][320] _At 0xE30014;
+uint8_t (*gc_vramArray)[240][320] _At 0xE30BF1;
+
+/**
+ * Definitions for the clipping window
+ * It is recommended you use gc_SetClipWindow if your clip window has a tendency to go out of bounds
+ */
+uint24_t gc_xmin _At 0xE30BF4;
+uint24_t gc_ymin _At 0xE30BF7;
+uint24_t gc_xmax _At 0xE30BFA;
+uint24_t gc_ymax _At 0xE30BFD;
 
 /**
  * Quickly set and get pixels.
@@ -334,6 +343,11 @@ void gc_ShiftWindowDown(uint24_t pixels);
 void gc_ShiftWindowUp(uint24_t pixels);
 void gc_ShiftWindowLeft(uint24_t pixels);
 void gc_ShiftWindowRight(uint24_t pixels);
+
+/**
+ * Draws a filled rectangle measured from the top left origin.
+ */
+void gc_ClipRectangle(int24_t x, int24_t y, uint24_t width, uint24_t height);
 
 #pragma asm "include "libheader.asm""
 #pragma asm "include "GRAPHC.asm""
