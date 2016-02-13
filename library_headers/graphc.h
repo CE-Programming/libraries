@@ -285,7 +285,6 @@ void gc_SetCustomFontSpacing(uint8_t *fontspacing);
 
 /**
  * To disable monospaced font, gc_SetFontMonospace(0)
- * Otherwise, send the width int pixels you wish all characters to be
  */
 void gc_SetFontMonospace(uint8_t monospace);
 
@@ -300,40 +299,6 @@ unsigned int gc_StringWidth(char *string);
  * Takes into account monospacing flag
  */
 unsigned int gc_CharWidth(char c);
-
-/**
- * Draws a given sprite to the screen as fast as possible; no transparency.
- * Basically just a direct rectangular data dump onto vram.
- */
-void gc_ClipDrawSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
-
-/**
- * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
- * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well..
- */
-void gc_ClipDrawTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
-
-/**
- * Quickly grab the background behind a sprite (useful for transparency)
- * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
- * spriteBuffer is updated with the screen coordinates given.
- * A pointer to spriteBuffer is also returned for ease of use.
- */
-void gc_ClipGetSprite(uint8_t *spriteBuffer, int24_t x, int24_t y, uint8_t width, uint8_t height);
-
-/**
- * Sets the clipping window for clipped routines
- */
-void gc_SetClipWindow(int24_t xmin, int24_t ymin, int24_t xmax, int24_t ymax);
-
-/**
- * Screen shifting routines that operate within the clipping window
- * Note that the data left over is undefined (Must be drawn over)
- */
-void gc_ShiftWindowDown(uint24_t pixels);
-void gc_ShiftWindowUp(uint24_t pixels);
-void gc_ShiftWindowLeft(uint24_t pixels);
-void gc_ShiftWindowRight(uint24_t pixels);
 
 #pragma asm "include "libheader.asm""
 #pragma asm "include "GRAPHC.asm""
