@@ -50,14 +50,15 @@
 ; v2 functions
 ;-------------------------------------------------------------------------------
  .function "gc_SetClipWindow",_SetClipWindow
+ .function "gc_ClipRegion",_ClipRegion
  .function "gc_ShiftWindowDown",_ShiftWindowDown
  .function "gc_ShiftWindowUp",_ShiftWindowUp
  .function "gc_ShiftWindowLeft",_ShiftWindowLeft
  .function "gc_ShiftWindowRight",_ShiftWindowRight
+ .function "gc_ClipRectangle",_ClipRectangle
 ;-------------------------------------------------------------------------------
 ; In progress for v2
 ;-------------------------------------------------------------------------------
- .function "gc_ClipRectangle",_ClipRectangle
  .function "gc_ClipDrawSprite",_ClipDrawSprite
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
  
@@ -68,7 +69,6 @@
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
 
-_saveIX                 equ mpLcdCursorImg+1024-18
 _xmin                   equ mpLcdCursorImg+1024-15
 _ymin                   equ mpLcdCursorImg+1024-12
 _xmax                   equ mpLcdCursorImg+1024-9
@@ -91,23 +91,12 @@ _SetClipWindow:
 	push	ix
 	ld	ix,6
 	add	ix,sp
-	ld	hl,(ix+6)
-	ld	de,(ix)
-	add	hl,de
-	inc	hl
-	ld	(ix+6),hl
-	ld	hl,(ix+9)
-	ld	de,(ix+3)
-	add	hl,de
-	inc	hl
-	ld	(ix+9),hl
-	call	_ClipRectangularObject \.r
-	push	ix
-	pop	hl
+	call	_ClipRectangularRegion_ASM \.r
+	lea	hl,ix
 	pop	ix
 	ret	c
 	ld	de,_xmin
-	ld	bc,16
+	ld	bc,12
 	ldir
 	ret
 
@@ -324,7 +313,7 @@ _ClipRectangle:
 	ld	de,(ix+3)
 	add	hl,de
 	ld	(ix+9),hl
-	call	_ClipRectangularObject \.r
+	call	_ClipRectangularRegion_ASM \.r
 	jp	c,_ReturnRestoreIX_ASM \.r
 	ld	de,(ix)
 	push	de
@@ -1726,7 +1715,23 @@ PosOffsetUpLeft_ASM =$+1
 	dec	a
 	jr	nz,-_
 	ret
-	
+
+;-------------------------------------------------------------------------------
+_ClipRegion:
+; Arguments:
+;  Pointer to struct
+; Returns:
+;  False if offscreen
+	pop	hl
+	ex	(sp),ix
+	push	hl
+	call	_ClipRectangularRegion_ASM
+	sbc	a,a
+	inc	a
+	pop	hl
+	ex	(sp),ix
+	jp	(hl)
+
 ;-------------------------------------------------------------------------------
 ; Inner library routines
 ;-------------------------------------------------------------------------------
@@ -1843,7 +1848,7 @@ _:	ret	po
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipRectangularObject:
+_ClipRectangularRegion_ASM:
 ; Calcualtes the new coordinates given the clip window and inputs
 ; Inputs:
 ;  None

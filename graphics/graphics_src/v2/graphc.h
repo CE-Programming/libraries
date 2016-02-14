@@ -37,6 +37,11 @@
 #define H_GRAPHC
 
 #include <stdint.h>
+#include <stdbool.h>
+
+typedef struct gc_region {
+	int xleft, ytop, xright, ybottom;
+} gc_region_t;
 
 /**
  * Initializes the graphics setup.
@@ -66,10 +71,10 @@ uint8_t (*gc_vramArray)[240][320] _At 0xE30BF1;
  * Definitions for the clipping window
  * It is recommended you use gc_SetClipWindow if your clip window has a tendency to go out of bounds
  */
-uint24_t gc_xmin _At 0xE30BF4;
-uint24_t gc_ymin _At 0xE30BF7;
-uint24_t gc_xmax _At 0xE30BFA;
-uint24_t gc_ymax _At 0xE30BFD;
+uint24_t gc_xmin _At 0xE30BF1;
+uint24_t gc_ymin _At 0xE30BF4;
+uint24_t gc_xmax _At 0xE30BF7;
+uint24_t gc_ymax _At 0xE30BFA;
 
 /**
  * Quickly set and get pixels.
@@ -334,6 +339,12 @@ void gc_ClipGetSprite(uint8_t *spriteBuffer, int24_t x, int24_t y, uint8_t width
  * Sets the clipping window for clipped routines
  */
 void gc_SetClipWindow(int24_t xmin, int24_t ymin, int24_t xmax, int24_t ymax);
+
+/**
+ * Clips an arbitrary region to fit within the defined bounds
+ * Returns false if offscreen
+ */
+bool gc_ClipRegion(gc_region_t *region);
 
 /**
  * Screen shifting routines that operate within the clipping window
