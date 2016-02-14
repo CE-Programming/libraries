@@ -67,11 +67,13 @@
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
-currentDrawingBuffer    equ mpLcdCursorImg+1024-15
-_xmin                   equ mpLcdCursorImg+1024-12
-_ymin                   equ mpLcdCursorImg+1024-9
-_xmax                   equ mpLcdCursorImg+1024-6
-_ymax                   equ mpLcdCursorImg+1024-3
+
+_saveIX                 equ mpLcdCursorImg+1024-18
+_xmin                   equ mpLcdCursorImg+1024-15
+_ymin                   equ mpLcdCursorImg+1024-12
+_xmax                   equ mpLcdCursorImg+1024-9
+_ymax                   equ mpLcdCursorImg+1024-6
+currentDrawingBuffer    equ mpLcdCursorImg+1024-3
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -82,25 +84,26 @@ _SetClipWindow:
 ;  __frame_arg1 : Ymin
 ;  __frame_arg2 : Xmax
 ;  __frame_arg3 : Ymax
-;  Must be within (0,0,320,240)
+;  Must be within (0,0,319,239)
 ; Returns:
 ;  None
 	call	_SetFullScreenClipping_ASM \.r
-	add	hl,sp
-	ex	de,hl
-	pop	hl
-	pop	hl
-	ld	(_x0),hl \.r
-	pop	hl
-	ld	(_y0),hl \.r
-	pop	hl
-	ld	(_x1),hl \.r
-	pop	hl
-	ld	(_y1),hl \.r
-	ex	de,hl
-	ld	sp,hl
+	push	ix
+	ld	ix,6
+	add	ix,sp
+	ld	hl,(ix+6)
+	ld	de,(ix)
+	add	hl,de
+	ld	(ix+6),hl
+	ld	hl,(ix+9)
+	ld	de,(ix+3)
+	add	hl,de
+	ld	(ix+9),hl
 	call	_ClipRectangularObject \.r
-	ld	hl,_x0 \.r
+	push	ix
+	pop	hl
+	pop	ix
+	ret	c
 	ld	de,_xmin
 	ld	bc,16
 	ldir
@@ -308,39 +311,33 @@ _ClipRectangle:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
-	or	a,a
-	sbc	hl,hl
-	add	hl,sp
-	ex	de,hl
-	pop	hl
-	pop	hl
-	ld	(_x0),hl \.r
-	pop	hl
-	ld	(_y0),hl \.r
-	pop	hl
-	ld	bc,(_x0) \.r
-	add	hl,bc
-	ld	(_x1),hl \.r
-	pop	hl
-	ld	bc,(_y0) \.r
-	add	hl,bc
-	ld	(_y1),hl \.r
-	ex	de,hl
-	ld	sp,hl
+	push	ix
+	ld	ix,6
+	add	ix,sp
+	ld	hl,(ix+6)
+	ld	de,(ix)
+	add	hl,de
+	ld	(ix+6),hl
+	ld	hl,(ix+9)
+	ld	de,(ix+3)
+	add	hl,de
+	ld	(ix+9),hl
 	call	_ClipRectangularObject \.r
-	ld	de,(_x0) \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	de,(ix)
 	push	de
-	ld	hl,(_x1) \.r
+	ld	hl,(ix+6)
 	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
-	ld	de,(_y0) \.r
-	ld	hl,(_y1) \.r
+	ld	de,(ix+3)
+	ld	hl,(ix+9)
 	or	a,a
 	sbc	hl,de
 	ld	a,l
 	pop	hl
+	pop	ix
 	jp	_NoClipRectangle_ASM \.r
 	
 ;-------------------------------------------------------------------------------
@@ -1357,6 +1354,7 @@ drawFilledCirclePoints:
 	exx
 	pop	de
 	pop	hl
+_ReturnRestoreIX_ASM:
 	pop	ix
 	ret
 
@@ -1849,24 +1847,35 @@ _ClipRectangularObject:
 ;  None
 ; Outputs:
 ;  Modifies data registers
+;  Sets C flag if offscreen
 	ld	hl,(_xmin)
-	ld	de,(_x0) \.r
+	ld	de,(ix)
 	call	_Max_ASM \.r
-	ld	(_x0),hl \.r
-	ld	hl,(_ymin)
-	ld	de,(_y0) \.r
-	call	_Max_ASM \.r
-	ld	(_y0),hl \.r
+	ld	(ix),hl
 	ld	hl,(_xmax)
-	ld	de,(_x1) \.r
+	ld	de,(ix+6)
 	call	_Min_ASM \.r
-	ld	(_x1),hl \.r
+	ld	(ix+6),hl
+	ld	de,(ix)
+	call	_SignedCompare_ASM \.r
+	ret	c
+	ld	hl,(_ymin)
+	ld	de,(ix+3)
+	call	_Max_ASM \.r
+	ld	(ix+3),hl
 	ld	hl,(_ymax)
-	ld	de,(_y1) \.r
+	ld	de,(ix+9)
 	call	_Min_ASM \.r
-	ld	(_y1),hl \.r
+	ld	(ix+9),hl
+	ld	de,(ix+3)
+_SignedCompare_ASM:
+	or	a,a
+	sbc	hl,de
+	add	hl,hl
+	ret	po
+	ccf	
 	ret
-
+	
 ;-------------------------------------------------------------------------------
 _SetFullScreenClipping_ASM:
 ; Sets the clipping window to the entire screen
@@ -1882,19 +1891,10 @@ _SetFullScreenClipping_ASM:
 	ld	(_xmin),hl
 	ld	(_ymin),hl
 	ret
-
+	
 ;-------------------------------------------------------------------------------
 ; Inner library data
 ;-------------------------------------------------------------------------------
-
-_x0:
-	.dl 0
-_y0:
-	.dl 0
-_x1:
-	.dl 0
-_y1:
-	.dl 0
 
 MonoFlag_ASM:
 	.db 0
