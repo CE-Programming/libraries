@@ -94,10 +94,12 @@ _SetClipWindow:
 	ld	hl,(ix+6)
 	ld	de,(ix)
 	add	hl,de
+	inc	hl
 	ld	(ix+6),hl
 	ld	hl,(ix+9)
 	ld	de,(ix+3)
 	add	hl,de
+	inc	hl
 	ld	(ix+9),hl
 	call	_ClipRectangularObject \.r
 	push	ix
