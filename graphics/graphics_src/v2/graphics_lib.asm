@@ -56,6 +56,9 @@
  .function "gc_ShiftWindowLeft",_ShiftWindowLeft
  .function "gc_ShiftWindowRight",_ShiftWindowRight
  .function "gc_ClipRectangle",_ClipRectangle
+ .function "gc_ClipRectangleOutline",_ClipRectangleOutline
+ .function "gc_ClipHorizLine",_ClipHorizLine
+ .function "gc_ClipVertLine",_ClipVertLine
 ;-------------------------------------------------------------------------------
 ; In progress for v2
 ;-------------------------------------------------------------------------------
@@ -69,10 +72,6 @@
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
 
-_xmin                   equ mpLcdCursorImg+1024-15
-_ymin                   equ mpLcdCursorImg+1024-12
-_xmax                   equ mpLcdCursorImg+1024-9
-_ymax                   equ mpLcdCursorImg+1024-6
 currentDrawingBuffer    equ mpLcdCursorImg+1024-3
 ;-------------------------------------------------------------------------------
 
@@ -95,7 +94,7 @@ _SetClipWindow:
 	lea	hl,ix
 	pop	ix
 	ret	c
-	ld	de,_xmin
+	ld	de,_xmin \.r
 	ld	bc,12
 	ldir
 	ret
@@ -374,6 +373,18 @@ color2 =$+1
 	ret
  
 ;-------------------------------------------------------------------------------
+_ClipRectangleOutline:
+; Draws an unclipped rectangle outline with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  None
+	ret
+	
+;-------------------------------------------------------------------------------
 _NoClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
 ; Arguments:
@@ -406,7 +417,41 @@ _NoClipRectangleOutline:
 	inc	bc
 	dec.s	bc
 	jr	_MemSet_ASM
- 
+	
+;-------------------------------------------------------------------------------
+_ClipHorizLine:
+; Draws an clipped horizontal line with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Length
+; Returns:
+;  None
+	push	ix
+	ld	ix,6
+	add	ix,sp
+	ld	hl,(ix+6)
+	ld	de,(ix)
+	add	hl,de
+	ld	(ix+6),hl
+	call	_ClipRectangularRegion_ASM \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	de,(ix)
+	push	de
+	ld	hl,(ix+6)
+	or	a,a
+	sbc	hl,de
+	ld	b,h
+	ld	c,l
+	ld	de,(ix+3)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,de
+	ld	a,l
+	pop	hl
+	pop	ix
+	jr	_RectOutlineHoriz_ASM
+	
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
 ; Draws an unclipped horizontal line with the global color index
@@ -423,7 +468,7 @@ _NoClipHorizLine:
 	ld	e,(ix+__frame_arg1)
 	ld	bc,(ix+__frame_arg2)
 	pop	ix
-_RectOUtlineHoriz_ASM:
+_RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
 	ld	a,b
@@ -447,6 +492,17 @@ _MemSet_ASM:
 	ldir
 	ret
  
+;-------------------------------------------------------------------------------
+_ClipVertLine:
+; Draws an clipped horizontal line with the global color index
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Length
+; Returns:
+;  None
+	ret
+	
 ;-------------------------------------------------------------------------------
 _NoClipVertLine:
 ; Draws an unclipped vertical line with the global color index
@@ -966,20 +1022,20 @@ _NoClipDrawTransparentSprite:
 	ld	b,(ix+__frame_arg4)
 	ld	hl,(ix+__frame_arg0)
 	pop	ix
+TransparentSpriteColor =$+1
+	ld	c,0
 _:	push	bc
-NoClipSprTransNextLine: =$+1
+NoClipSprTransNextLine =$+1
 	ld	b,0
 _:	ld	a,(hl)
-TransparentSpriteColor =$+1
-	cp	a,$FF
-	jr	nz,+_
-	ld	a,(de)
-_:	ld	(de),a
-	inc	de
+	cp	a,c
+	jr	z,+_
+	ld	(de),a
+_:	inc	de
 	inc	hl
 	djnz	--_
 	ex	de,hl
-NoClipSprTransMoveAmt: =$+1
+NoClipSprTransMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
@@ -1032,7 +1088,7 @@ drawCircle_Loop:
 	or	a,a
 	sbc	hl,de
 	add	hl,de
-	jr	nc,_exit_loop
+	jp	nc,_ReturnRestoreIX_ASM \.r
 	ld	c,ixh
 	bit	7,c
 	jr	z,_dc_else
@@ -1063,9 +1119,6 @@ _dc_end:
 	call	drawCircleSection \.r
 	inc	hl
 	jr	drawCircle_Loop
-_exit_loop:
-	pop	ix
-	ret
 
 drawCircleSection: 
 	call	drawCirclePoints \.r
@@ -1223,7 +1276,7 @@ drawFilledCircle_Loop:
 	or	a,a
 	sbc	hl,de
 	add	hl,de
-	jr	nc,_exit_loop_filled
+	jp	nc,_ReturnRestoreIX_ASM \.r
 	ld	a,ixh
 	bit	7,a
 	jr	z,_dfc_else
@@ -1254,10 +1307,7 @@ _dfc_end:
 	call	drawFilledCircleSection \.r
 	inc	hl
 	jr	drawFilledCircle_Loop
-_exit_loop_filled:
-	pop ix
-	ret
-
+	
 drawFilledCircleSection:
 	call	drawFilledCirclePoints \.r
 	ex	de,hl
@@ -1744,6 +1794,7 @@ _PixelPtr_ASM:
 ;   E=Y
 ; Outputs:
 ;  HL->address of pixel
+	ld	hl,(_xmax)
 	ld	hl,-lcdWidth
 	add	hl,bc
 	ret	c
@@ -1765,8 +1816,8 @@ _UpLeftShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(_xmax)
-	ld	de,(_xmin)
+	ld	hl,(_xmax) \.r
+	ld	de,(_xmin) \.r
 	push	de
 	or	a,a
 	sbc	hl,de
@@ -1776,9 +1827,9 @@ _UpLeftShiftCalculate_ASM:
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetUpLeft_ASM),hl \.r
-	ld	a,(_ymin)
+	ld	a,(_ymin) \.r
 	ld	c,a
-	ld	a,(_ymax)
+	ld	a,(_ymax) \.r
 	ld	l,c
 _:	sub	a,c
 	ld	h,lcdwidth/2
@@ -1796,8 +1847,8 @@ _DownRightShiftCalculate_ASM:
 ;  None
 ; Outputs:
 ;  HL->Place to draw
-	ld	hl,(_xmax)
-	ld	de,(_xmin)
+	ld	hl,(_xmax) \.r
+	ld	de,(_xmin) \.r
 	push	hl
 	or	a,a
 	sbc	hl,de
@@ -1807,9 +1858,9 @@ _DownRightShiftCalculate_ASM:
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetDownRight_ASM),hl \.r
-	ld	a,(_ymin)
+	ld	a,(_ymin) \.r
 	ld	c,a
-	ld	a,(_ymax)
+	ld	a,(_ymax) \.r
 	ld	l,a
 	jr	-_
 	
@@ -1855,22 +1906,22 @@ _ClipRectangularRegion_ASM:
 ; Outputs:
 ;  Modifies data registers
 ;  Sets C flag if offscreen
-	ld	hl,(_xmin)
+	ld	hl,(_xmin) \.r
 	ld	de,(ix)
 	call	_Max_ASM \.r
 	ld	(ix),hl
-	ld	hl,(_xmax)
+	ld	hl,(_xmax) \.r
 	ld	de,(ix+6)
 	call	_Min_ASM \.r
 	ld	(ix+6),hl
 	ld	de,(ix)
 	call	_SignedCompare_ASM \.r
 	ret	c
-	ld	hl,(_ymin)
+	ld	hl,(_ymin) \.r
 	ld	de,(ix+3)
 	call	_Max_ASM \.r
 	ld	(ix+3),hl
-	ld	hl,(_ymax)
+	ld	hl,(_ymax) \.r
 	ld	de,(ix+9)
 	call	_Min_ASM \.r
 	ld	(ix+9),hl
@@ -1891,12 +1942,12 @@ _SetFullScreenClipping_ASM:
 ; Outputs:
 ;  HL=0
 	ld	hl,lcdWidth
-	ld	(_xmax),hl
+	ld	(_xmax),hl \.r
 	ld	hl,lcdHeight
-	ld	(_ymax),hl
+	ld	(_ymax),hl \.r
 	ld	l,0
-	ld	(_xmin),hl
-	ld	(_ymin),hl
+	ld	(_xmin),hl \.r
+	ld	(_ymin),hl \.r
 	ret
 	
 ;-------------------------------------------------------------------------------
@@ -1910,6 +1961,15 @@ CharSpacing_ASM:
 TextData_ASM:
 	.dl DefaultTextData_ASM \.r
  
+_xmin:
+	.dl 0
+_ymin:
+	.dl 0
+_xmax:
+	.dl lcdWidth
+_ymax:
+	.dl lcdHeight
+
 DefaultCharSpacing_ASM:
 	;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
 	.db 8,8,8,7,7,7,8,8,8,8,8,8,8,1,8,8
