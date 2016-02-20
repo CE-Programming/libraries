@@ -164,7 +164,7 @@ _OpenVar:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	a,(ix+__frame_arg3)
+	ld	a,(ix+__frame_arg2)
 	pop	ix
 	jr	+_
 ;-------------------------------------------------------------------------------
@@ -177,6 +177,7 @@ _Open:
 ;  Slot number if no error
 	ld	a,$15
 _:	ld	(varType),a \.r
+	ld	(op1),a
 	push	ix
 	ld	ix,0
 	add	ix,sp
