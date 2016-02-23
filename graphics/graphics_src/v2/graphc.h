@@ -5,6 +5,7 @@
  * @section LICENSE
  *
  * Copyright (c) 2016, Matthew Waltz
+ * Sections of this library are derivatives from Patrick Prendergast, aka tr1p1ea
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
