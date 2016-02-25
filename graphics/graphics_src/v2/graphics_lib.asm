@@ -546,6 +546,7 @@ _ClipVertLine:
 	or	a,a
 	sbc	hl,de
 	ld	b,l
+	inc	b
 	ld	hl,(ix)
 	pop	ix
 	jr	_RectOutlineVert_ASM_2
@@ -567,8 +568,7 @@ _NoClipVertLine:
 	ld	b,(ix+__frame_arg2)		; length
 	pop	ix
 _RectOutlineVert_ASM_2:
-	inc	b
-	dec.s	b
+	dec	b
 	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
