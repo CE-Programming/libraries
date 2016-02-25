@@ -382,6 +382,70 @@ _ClipRectangleOutline:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
+; Comments:
+;  Because I am lazy, I'm just going to send it to the clipped line routines
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg2)
+	pop	ix
+	push	bc
+	push	de
+	push	hl
+	call	_ClipHorizLine \.r
+	pop	hl
+	pop	de
+	pop	bc
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg3)
+	pop	ix
+	push	bc
+	push	de
+	push	hl
+	call	_ClipVertLine \.r
+	pop	hl
+	pop	de
+	pop	bc
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg0)
+	ld	de,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg2)
+	add	hl,bc
+	dec	hl
+	ld	bc,(ix+__frame_arg3)
+	pop	ix
+	push	bc
+	push	de
+	push	hl
+	call	_ClipVertLine \.r
+	pop	hl
+	pop	de
+	pop	bc
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	de,(ix+__frame_arg0)
+	ld	hl,(ix+__frame_arg1)
+	ld	bc,(ix+__frame_arg3)
+	add	hl,bc
+	dec	hl
+	ld	bc,(ix+__frame_arg2)
+	pop	ix
+	push	bc
+	push	hl
+	push	de
+	call	_ClipHorizLine \.r
+	pop	de
+	pop	hl
+	pop	bc
 	ret
 	
 ;-------------------------------------------------------------------------------
