@@ -416,7 +416,7 @@ _NoClipRectangleOutline:
 	pop	bc
 	inc	bc
 	dec.s	bc
-	jr	_MemSet_ASM
+	jp	_MemSet_ASM \.r
 	
 ;-------------------------------------------------------------------------------
 _ClipHorizLine:
@@ -430,11 +430,28 @@ _ClipHorizLine:
 	push	ix
 	ld	ix,6
 	add	ix,sp
+	ld	de,(_ymin) \.r
+	ld	hl,(ix+3)
+	call	_SignedCompare_ASM \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	hl,(_ymax) \.r
+	ld	de,(ix+3)
+	dec	hl
+	call	_SignedCompare_ASM \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
 	ld	hl,(ix+6)
 	ld	de,(ix)
 	add	hl,de
 	ld	(ix+6),hl
-	call	_ClipRectangularRegion_ASM \.r
+	ld	hl,(_xmin) \.r
+	call	_Max_ASM \.r
+	ld	(ix),hl
+	ld	hl,(_xmax) \.r
+	ld	de,(ix+6)
+	call	_Min_ASM \.r
+	ld	(ix+6),hl
+	ld	de,(ix)
+	call	_SignedCompare_ASM \.r
 	jp	c,_ReturnRestoreIX_ASM \.r
 	ld	de,(ix)
 	push	de
@@ -443,11 +460,7 @@ _ClipHorizLine:
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
-	ld	de,(ix+3)
-	ld	hl,(ix+9)
-	or	a,a
-	sbc	hl,de
-	ld	a,l
+	ld	e,(ix+3)
 	pop	hl
 	pop	ix
 	jr	_RectOutlineHoriz_ASM
@@ -501,8 +514,42 @@ _ClipVertLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	ret
-	
+	push	ix
+	ld	ix,6
+	add	ix,sp
+	ld	hl,(_xmax) \.r
+	ld	de,(ix)
+	push	de
+	dec	de
+	call	_SignedCompare_ASM \.r
+	pop	hl
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	de,(_xmin) \.r
+	call	_SignedCompare_ASM \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	hl,(ix+6)
+	ld	de,(ix+3)
+	add	hl,de
+	ld	(ix+6),hl
+	ld	hl,(_ymin) \.r
+	call	_Max_ASM \.r
+	ld	(ix+3),hl
+	ld	hl,(_ymax) \.r
+	ld	de,(ix+6)
+	call	_Min_ASM \.r
+	ld	(ix+6),hl
+	ld	de,(ix+3)
+	call	_SignedCompare_ASM \.r
+	jp	c,_ReturnRestoreIX_ASM \.r
+	ld	hl,(ix+6)
+	ld	de,(ix+3)
+	or	a,a
+	sbc	hl,de
+	ld	b,l
+	ld	hl,(ix)
+	pop	ix
+	jr	_RectOutlineVert_ASM_2
+
 ;-------------------------------------------------------------------------------
 _NoClipVertLine:
 ; Draws an unclipped vertical line with the global color index
@@ -519,9 +566,9 @@ _NoClipVertLine:
 	ld	e,(ix+__frame_arg1)		; y
 	ld	b,(ix+__frame_arg2)		; length
 	pop	ix
-	inc	b
 _RectOutlineVert_ASM_2:
-	dec	b
+	inc	b
+	dec.s	b
 	ret	z
 	ld	d,lcdWidth/2
 	mlt	de

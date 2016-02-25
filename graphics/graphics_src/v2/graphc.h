@@ -364,17 +364,17 @@ void gc_ClipRectangle(int24_t x, int24_t y, uint24_t width, uint24_t height);
 /**
  * Draws a rectangle outline measured from the top left origin.
  */
-void gc_ClipRectangleOutline(uint16_t x, uint8_t y, uint16_t width, uint8_t height);
+void gc_ClipRectangleOutline(int24_t x, int24_t y, uint24_t width, uint24_t height);
 
 /**
  * Draws a fast horizontal line measured from the top left origin.
  */
-void gc_ClipHorizLine(uint16_t x, uint8_t y, uint16_t length);
+void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
 
 /**
  * Draws a fast vertical line measured from the top left origin.
  */
-void gc_ClipVertLine(uint16_t x, uint8_t y, uint8_t length);
+void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
 
 #pragma asm "include "libheader.asm""
 #pragma asm "include "GRAPHC.asm""
