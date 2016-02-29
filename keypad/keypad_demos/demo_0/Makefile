@@ -1,8 +1,10 @@
 TARGET ?= keypad
 
 #Change ICONC to "ICON" to include a custom icon, and "NICON" to not use an icon
-ICONC ?= NICON
-DESCRIPTION ?= "Keypad C Demo Program"
+ICONC ?= ICON
+DESCRIPTION ?= "Keypad Demo C Program"
+ARCHIVED = NO
+APPVAR = NO
 
 empty :=
 space := $(empty) $(empty)
@@ -16,7 +18,7 @@ CEDEV ?= $(realpath ..\..)
 CC = "$(BIN)eZ80cc"
 LD = "$(BIN)eZ80link"
 CV = "$(BIN)convhex"
-PG = "$(BIN)ConvPNG" >nul
+PG = "$(BIN)convpng" >nul
 RM = del /f 2>nul
 else
 NATIVEPATH = $(subst \,/,$(1))
@@ -24,11 +26,18 @@ WINPATH = $(shell winepath --windows $(1))
 CEDEV ?= $(realpath ../..)
 CC = wine "$(BIN)eZ80cc"
 LD = wine "$(BIN)eZ80link"
-CV = "$(BIN)convhex"
-PG = "$(BIN)ConvPNG" >/dev/null
+CV = wine "$(BIN)convhex"
+PG = wine "$(BIN)convpng" >/dev/null
 RM = rm --force
 endif
 BIN = $(call NATIVEPATH,$(CEDEV)/bin/)
+
+ifneq ($(ARCHIVED),NO)
+CVFLAGS := -a
+endif
+ifneq ($(APPVAR),NO)
+CVFLAGS += -v
+endif
 
 SOURCES := $(wildcard *.c)
 ASMSOURCES := $(wildcard *.asm)
@@ -62,7 +71,7 @@ $(TARGET).hex : $(OBJECTS) $(LIBRARIES)
 	@$(LD) @Linkcmd $@ = "$(subst $(space),$(comma),$(call WINPATH,$^))" $(LDFLAGS) || @$(RM) $(TARGET).hex
 
 %.8xp : %.hex
-	@$(CV) $(@:%.8xp=%)
+	@$(CV) $(CVFLAGS) $(@:%.8xp=%)
 
 %.obj : %.c
 	@$(PG) $(PNG_FLAGS) $(DESCRIPTION)

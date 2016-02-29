@@ -333,8 +333,9 @@ void gc_ClipDrawTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t w
  * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
  * spriteBuffer is updated with the screen coordinates given.
  * A pointer to spriteBuffer is also returned for ease of use.
+ * This routine is technically not clipped, but as long as you use one of the clipped drawing routines, it is fine
  */
-void gc_ClipGetSprite(uint8_t *spriteBuffer, int24_t x, int24_t y, uint8_t width, uint8_t height);
+#define gc_ClipGetSprite gc_NoClipGetSprite
 
 /**
  * Sets the clipping window for clipped routines

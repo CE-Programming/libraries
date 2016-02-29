@@ -59,11 +59,15 @@
  .function "gc_ClipRectangleOutline",_ClipRectangleOutline
  .function "gc_ClipHorizLine",_ClipHorizLine
  .function "gc_ClipVertLine",_ClipVertLine
+ .function "gc_ClipDrawSprite",_ClipDrawSprite
+ .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
 ;-------------------------------------------------------------------------------
 ; In progress for v2
 ;-------------------------------------------------------------------------------
- .function "gc_ClipDrawSprite",_ClipDrawSprite
- .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
+ .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
+ .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
+ .function "gc_ClipDrawScaledSprite",_ClipDrawScaledSprite
+ .function "gc_ClipDrawScaledTransparentSprite",_ClipDrawScaledTransparentSprite
  
  .beginDependencies
  .endDependencies
@@ -329,7 +333,7 @@ _ClipRectangle:
 	pop	hl
 	pop	ix
 	jp	_NoClipRectangle_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipRectangle:
 ; Draws an unclipped rectangle with the global color index
@@ -751,7 +755,8 @@ _SetTransparentColor:
 	ld	d,a
 	ld	a,e
 	ld	(TransparentTextColor),a \.r
-	ld	(TransparentSpriteColor),a \.r
+	ld	(NoClipSprTransColor),a \.r
+	ld	(ClipSprTransColor),a \.r
 	ld	a,d
 	jp	(hl)
  
@@ -1000,10 +1005,130 @@ IsntNegative:
 	jp	_PrintUnsignedInt_ASM \.r
 
 ;-------------------------------------------------------------------------------
-_ClipDrawTransparentSprite:
+; In progress
+_NoClipDrawScaledSprite:
 	ret
+_ClipDrawScaledSprite:
+	ret
+_NoClipDrawScaledTransparentSprite:
+	ret
+_ClipDrawScaledTransparentSprite:
+	ret
+
+;-------------------------------------------------------------------------------
+_ClipDrawTransparentSprite:
+; Draws a transparent sprite with clipping
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width -- 8bits
+;  __frame_arg4 : Height -- 8bits
+; Returns:
+;  None
+	call	_ClipDraw_ASM \.r
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	sub	a,(ix+__frame_arg3)	; how much to add to the sprite per iterations
+	ld	(ClipSprTransNextAmt),a \.r
+	or	a,a
+	sbc	hl,hl
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	e,(ix+__frame_arg3)
+	ld	a,e
+	sbc	hl,de
+	ld	(ClipSprTransMoveAmt),hl \.r
+	ld	(ClipSprTransNextLine),a \.r
+	ld	de,(ix+__frame_arg1)
+	ld	l,(ix+__frame_arg2)
+	ld	h,160
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	ex	de,hl
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+ClipSprTransColor =$+1
+	ld	c,0
+_:	push	bc
+ClipSprTransNextLine =$+1
+	ld	b,0
+_:	ld	a,(hl)
+	cp	a,c
+	jr	z,+_
+	ld	(de),a
+_:	inc	de
+	inc	hl
+	djnz	--_
+	ex	de,hl
+ClipSprTransMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+ClipSprTransNextAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	pop	bc
+	djnz	---_
+	pop	ix
+	ret
+	
 ;-------------------------------------------------------------------------------
 _ClipDrawSprite:
+; Places an sprite on the screen as fast as possible with clipping
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width -- 8bits
+;  __frame_arg4 : Height -- 8bits
+; Returns:
+;  None
+	call	_ClipDraw_ASM \.r
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	sub	a,(ix+__frame_arg3)	; how much to add to the sprite per iterations
+	ld	(ClipSprNextAmt),a \.r
+	or	a,a
+	sbc	hl,hl
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	e,(ix+__frame_arg3)
+	ld	a,e
+	sbc	hl,de
+	ld	(ClipSprMoveAmt),hl \.r
+	ld	(ClipSprLineNext),a \.r
+	ld	de,(ix+__frame_arg1)
+	ld	l,(ix+__frame_arg2)
+	ld	h,160
+	mlt	hl
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	ex	de,hl
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+_:	push	bc
+ClipSprLineNext =$+1
+	ld	bc,0
+	ldir
+	ex	de,hl
+ClipSprMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+ClipSprNextAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	pop	bc
+	djnz	-_
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------
@@ -1133,7 +1258,7 @@ _NoClipDrawTransparentSprite:
 	ld	b,(ix+__frame_arg4)
 	ld	hl,(ix+__frame_arg0)
 	pop	ix
-TransparentSpriteColor =$+1
+NoClipSprTransColor =$+1
 	ld	c,0
 _:	push	bc
 NoClipSprTransNextLine =$+1
@@ -1542,7 +1667,7 @@ _NoClipLine_ASM:
 	ld	a,$0B
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
-	ex	de,hl 
+	ex	de,hl
 	or	a,a 
 	sbc	hl,hl
 	sbc	hl,de
@@ -2059,6 +2184,113 @@ _SetFullScreenClipping_ASM:
 	ld	l,0
 	ld	(_xmin),hl \.r
 	ld	(_ymin),hl \.r
+	ret
+	
+;-------------------------------------------------------------------------------
+_ClipDraw_ASM:
+; Clipping stuff
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width -- 8bits
+;  __frame_arg4 : Height -- 8bits
+; Returns:
+;  None
+	push	ix
+	ld	ix,3
+	add	ix,sp
+	ld	a,(ix+__frame_arg3)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	(ix+__frame_arg3),hl
+	ld	l,(ix+__frame_arg4)
+	ld	(ix+__frame_arg4),hl
+	ld	(tmpSpriteWidth_ASM),a \.r
+	ld	de,(ix+__frame_arg2)
+	ld	hl,(_ymin) \.r
+	or	a,a
+	sbc	hl,de
+	jp	m,NoTopClipNeeded_ASM \.r
+	jp	z,NoTopClipNeeded_ASM \.r
+	ld	a,l
+	ld	de,(ix+__frame_arg2)
+	ld	hl,(ix+__frame_arg4)
+	add	hl,de
+	bit	7,h
+	jp	nz,_ReturnRestoreIX_ASM \.r
+	ld	hl,(ix+__frame_arg4)
+	add	hl,de
+	ld	(ix+__frame_arg4),hl
+	ld	l,a
+	ld	h,(ix+__frame_arg3)
+	mlt	hl
+	ld	de,(ix+__frame_arg0)
+	add	hl,de
+	ld	(ix+__frame_arg0),hl
+	ld	hl,(_ymin) \.r
+	ld	(ix+__frame_arg2),hl
+NoTopClipNeeded_ASM:
+	ld	hl,(ix+__frame_arg2)
+	ld	de,(_ymax) \.r
+	call	_SignedCompare_ASM \.r
+	jp	nc,_ReturnRestoreIX_ASM \.r
+	ld	de,(ix+__frame_arg2)
+	ld	hl,(ix+__frame_arg4)
+	add	hl,de
+	ld	de,(_ymax) \.r
+	call	_SignedCompare_ASM \.r
+	jp	c,NoBottomClipNeeded_ASM \.r
+	ld	hl,(_ymax) \.r
+	ld	de,(ix+__frame_arg2)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+__frame_arg4),hl
+NoBottomClipNeeded_ASM:
+	ld	hl,(ix+__frame_arg1)
+	ld	de,(_xmin) \.r
+	call	_SignedCompare_ASM \.r
+	jp	nc,NoLeftClip_ASM \.r
+	ld	hl,(ix+__frame_arg1)
+	ld	de,(ix+__frame_arg3)
+	add	hl,de
+	ld	de,(_xmin) \.r
+	ex	de,hl
+	call	_SignedCompare_ASM \.r
+	jp	nc,_ReturnRestoreIX_ASM \.r
+	ld	de,(ix+__frame_arg1)
+	ld	hl,(ix+__frame_arg0)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+__frame_arg0),hl
+	ld	hl,(ix+__frame_arg3)
+	add	hl,de
+	jp	p,_ReturnRestoreIX_ASM \.r
+	ld	(ix+__frame_arg3),hl
+	ld	de,(_xmin) \.r
+	ld	(ix+__frame_arg1),de
+NoLeftClip_ASM:
+	ld	hl,(ix+__frame_arg1)
+	ld	de,(_xmax) \.r
+	call	_SignedCompare_ASM \.r
+	jp	nc,_ReturnRestoreIX_ASM \.r
+	ld	hl,(ix+__frame_arg1)
+	ld	de,(ix+__frame_arg3)
+	add	hl,de
+	ld	de,(_xmax) \.r
+	ex	de,hl
+	call	_SignedCompare_ASM \.r
+	jp	nc,NoRightClip_ASM \.r
+	ld	hl,(_xmax) \.r
+	ld	de,(ix+__frame_arg1)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+__frame_arg3),hl
+NoRightClip_ASM:
+tmpSpriteWidth_ASM =$+1
+	ld	a,0
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------
