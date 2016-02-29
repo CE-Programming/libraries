@@ -102,9 +102,10 @@
 #define __frame_arg2 12
 #define __frame_arg3 15
 #define __frame_arg4 18
-#define __frame_arg6 21
-#define __frame_arg7 24
-#define __frame_arg8 27
-#define __frame_arg9 30
+#define __frame_arg5 21
+#define __frame_arg6 24
+#define __frame_arg7 27
+#define __frame_arg8 30
+#define __frame_arg9 33
 
 .list

@@ -1007,7 +1007,55 @@ IsntNegative:
 ;-------------------------------------------------------------------------------
 ; In progress
 _NoClipDrawScaledSprite:
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg1)
+	ld	c,(ix+__frame_arg2)
+	ex.s	de,hl
+	ld	hl,(currentDrawingBuffer)
+	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	c,(ix+__frame_arg3)
+	ld	b,(ix+__frame_arg5)
+	ld	a,b
+	ld	(NoClipSprScaledWidth),a
+	ld	(ix+__frame_arg5)
+	ld	a,c
+	mlt	bc
+	or	a,a
+	sbc	hl,bc
+	ld	(NoClipSprScaledMoveAmt),hl \.r
+	ld	(NoClipSprScaledLineNext),a \.r
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+_:	push	bc
+NoClipSprScaledLineNext =$+1
+	ld	c,0
+NoClipSprScaledWidth =$+1
+_:	ld	b,0
+	ld	a,(hl)
+_:	ld	(de),a
+	inc	de
+	djnz	-_
+	inc	hl
+	dec	c
+	jr	nz,-_
+	ex	de,hl
+NoClipSprScaledMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+	pop	bc
+	djnz	---_
+	pop	ix
 	ret
+	
 _ClipDrawScaledSprite:
 	ret
 _NoClipDrawScaledTransparentSprite:

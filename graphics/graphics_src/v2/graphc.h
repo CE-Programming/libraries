@@ -64,9 +64,9 @@ void gc_CloseGraph(void);
 uint16_t gc_paletteArray[256] _At 0xE30200;
 
 /**
- * Array of the LCD VRAM in 8bpp mode
+ * Array of the LCD VRAM
  */
-uint8_t (*gc_vramArray)[240][320] _At 0xE30BF1;
+uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 
 /**
  * Definitions for the clipping window
@@ -376,6 +376,15 @@ void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
  * Draws a fast vertical line measured from the top left origin.
  */
 void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
+
+/**
+ * Scaled sprite routines
+ * scale factors must be between 1 and 8 inclausive
+ */
+void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
+void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
+void gc_ClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
+void gc_ClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 
 #pragma asm "include "libheader.asm""
 #pragma asm "include "GRAPHC.asm""
