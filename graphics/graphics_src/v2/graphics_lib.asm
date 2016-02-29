@@ -1026,10 +1026,8 @@ _ClipDrawTransparentSprite:
 ;  __frame_arg4 : Height -- 8bits
 ; Returns:
 ;  None
-	call	_ClipDraw_ASM \.r
 	push	ix
-	ld	ix,0
-	add	ix,sp
+	call	_ClipDraw_ASM \.r
 	sub	a,(ix+__frame_arg3)	; how much to add to the sprite per iterations
 	ld	(ClipSprTransNextAmt),a \.r
 	or	a,a
@@ -1088,10 +1086,8 @@ _ClipDrawSprite:
 ;  __frame_arg4 : Height -- 8bits
 ; Returns:
 ;  None
-	call	_ClipDraw_ASM \.r
 	push	ix
-	ld	ix,0
-	add	ix,sp
+	call	_ClipDraw_ASM \.r
 	sub	a,(ix+__frame_arg3)	; how much to add to the sprite per iterations
 	ld	(ClipSprNextAmt),a \.r
 	or	a,a
@@ -2197,11 +2193,9 @@ _ClipDraw_ASM:
 ;  __frame_arg4 : Height -- 8bits
 ; Returns:
 ;  None
-	push	ix
 	ld	ix,3
 	add	ix,sp
 	ld	a,(ix+__frame_arg3)
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+__frame_arg3),hl
@@ -2210,7 +2204,6 @@ _ClipDraw_ASM:
 	ld	(tmpSpriteWidth_ASM),a \.r
 	ld	de,(ix+__frame_arg2)
 	ld	hl,(_ymin) \.r
-	or	a,a
 	sbc	hl,de
 	jp	m,NoTopClipNeeded_ASM \.r
 	jp	z,NoTopClipNeeded_ASM \.r
@@ -2290,7 +2283,6 @@ NoLeftClip_ASM:
 NoRightClip_ASM:
 tmpSpriteWidth_ASM =$+1
 	ld	a,0
-	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------

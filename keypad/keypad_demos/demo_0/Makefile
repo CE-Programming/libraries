@@ -1,7 +1,7 @@
 TARGET ?= keypad
 
 #Change ICONC to "ICON" to include a custom icon, and "NICON" to not use an icon
-ICONC ?= ICON
+ICONC ?= NICON
 DESCRIPTION ?= "Keypad Demo C Program"
 ARCHIVED = NO
 APPVAR = NO

@@ -1,7 +1,7 @@
 TARGET ?= graphics
 
 #Change ICONC to "ICON" to include a custom icon, and "NICON" to not use an icon
-ICONC ?= ICON
+ICONC ?= NICON
 DESCRIPTION ?= "Graphics Demo C Program"
 ARCHIVED = NO
 APPVAR = NO
