@@ -383,8 +383,6 @@ void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
  */
 void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
-void gc_ClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
-void gc_ClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 
 #pragma asm "include "libheader.asm""
 #pragma asm "include "GRAPHC.asm""

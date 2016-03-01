@@ -61,13 +61,11 @@
  .function "gc_ClipVertLine",_ClipVertLine
  .function "gc_ClipDrawSprite",_ClipDrawSprite
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
+ .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
+ .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
 ;-------------------------------------------------------------------------------
 ; In progress for v2
 ;-------------------------------------------------------------------------------
- .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
- .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
- .function "gc_ClipDrawScaledSprite",_ClipDrawScaledSprite
- .function "gc_ClipDrawScaledTransparentSprite",_ClipDrawScaledTransparentSprite
  
  .beginDependencies
  .endDependencies
@@ -757,6 +755,7 @@ _SetTransparentColor:
 	ld	(TransparentTextColor),a \.r
 	ld	(NoClipSprTransColor),a \.r
 	ld	(ClipSprTransColor),a \.r
+	ld	(ClipSprScaledTransColor),a \.r
 	ld	a,d
 	jp	(hl)
  
@@ -1005,8 +1004,18 @@ IsntNegative:
 	jp	_PrintUnsignedInt_ASM \.r
 
 ;-------------------------------------------------------------------------------
-; In progress
 _NoClipDrawScaledSprite:
+; Draws a scaled sprite to the screen
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width -- 8bits
+;  __frame_arg4 : Height -- 8bits
+;  __frame_arg5 : Width Scale (integer)
+;  __frame_arg6 : Height Scale (integer)
+; Returns:
+;  None
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -1024,19 +1033,22 @@ _NoClipDrawScaledSprite:
 	ld	c,(ix+__frame_arg3)
 	ld	b,(ix+__frame_arg5)
 	ld	a,b
-	ld	(NoClipSprScaledWidth),a
-	ld	(ix+__frame_arg5)
+	ld	(NoClipSprScaledWidth),a \.r
 	ld	a,c
 	mlt	bc
+	ld	(NoClipSprScaledCopyAmt),bc \.r
 	or	a,a
 	sbc	hl,bc
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
+	ld	a,(ix+__frame_arg6)
+	ld	(NoClipHeightScale),a \.r
 	ld	b,(ix+__frame_arg4)
 	ld	hl,(ix+__frame_arg0)
 _:	push	bc
 NoClipSprScaledLineNext =$+1
 	ld	c,0
+	push	de
 NoClipSprScaledWidth =$+1
 _:	ld	b,0
 	ld	a,(hl)
@@ -1045,24 +1057,118 @@ _:	ld	(de),a
 	djnz	-_
 	inc	hl
 	dec	c
-	jr	nz,-_
+	jr	nz,--_
 	ex	de,hl
 NoClipSprScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
+NoClipHeightScale =$+1
+	ld	a,0
+	push	hl
+	pop	ix
+	pop	hl
+HeightScaleLoop:
+	dec	a
+	jr	z,+_
+	push	bc
+NoClipSprScaledCopyAmt = $+1
+	ld	bc,0
+	ldir
 	pop	bc
-	djnz	---_
+	ex	de,hl
+	add	hl,bc
+	ex	de,hl
+	add	hl,bc
+	jr	HeightScaleLoop
+_:	lea	hl,ix
+	pop	bc
+	djnz	----_
 	pop	ix
 	ret
-	
-_ClipDrawScaledSprite:
-	ret
-_NoClipDrawScaledTransparentSprite:
-	ret
-_ClipDrawScaledTransparentSprite:
-	ret
 
+;-------------------------------------------------------------------------------
+_NoClipDrawScaledTransparentSprite:
+; Draws a scaled sprite to the screen with transparency
+; Arguments:
+;  __frame_arg0 : Pointer to sprite
+;  __frame_arg1 : X Coord
+;  __frame_arg2 : Y Coord
+;  __frame_arg3 : Width -- 8bits
+;  __frame_arg4 : Height -- 8bits
+;  __frame_arg5 : Width Scale (integer)
+;  __frame_arg6 : Height Scale (integer)
+; Returns:
+;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+__frame_arg1)
+	ld	c,(ix+__frame_arg2)
+	ex.s	de,hl
+	ld	hl,(currentDrawingBuffer)
+	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ex	de,hl
+	ld	hl,lcdWidth
+	ld	c,(ix+__frame_arg3)
+	ld	b,(ix+__frame_arg5)
+	ld	a,b
+	ld	(ClipSprScaledWidth),a \.r
+	ld	a,c
+	mlt	bc
+	or	a,a
+	sbc	hl,bc
+	ld	(ClipSprScaledMoveAmt),hl \.r
+	ld	(ClipSprScaledLineNext),a \.r
+	ld	b,(ix+__frame_arg4)
+	ld	hl,(ix+__frame_arg0)
+	ld	a,(ix+__frame_arg6)
+	ld	(ClipHeightScale),a \.r
+_:	push	bc
+ClipHeightScale =$+1
+	ld	a,0
+_:	dec	a
+	jr	z,++++_
+	push	af
+	push	hl
+ClipSprScaledLineNext =$+1
+	ld	c,0
+ClipSprScaledWidth =$+1
+_:	ld	b,0
+	ld	a,(hl)
+ClipSprScaledTransColor =$+1
+	cp	a,0
+	jr	z,+++_
+_:	ld	(de),a
+	inc	de
+	djnz	-_
+_:	inc	hl
+	dec	c
+	jr	nz,---_
+	ex	de,hl
+ClipSprScaledMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc
+	ex	de,hl
+	push	hl
+	pop	ix
+	pop	hl
+	pop	af
+	jr	----_
+_:	lea	hl,ix
+	pop	bc
+	djnz	------_
+	pop	ix
+	ret
+_:	inc	de
+	djnz	-_
+	jr	--_
+	
+	
 ;-------------------------------------------------------------------------------
 _ClipDrawTransparentSprite:
 ; Draws a transparent sprite with clipping
