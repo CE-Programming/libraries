@@ -40,8 +40,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Type for the clip region */
 typedef struct gc_region {
-	int xleft, ytop, xright, ybottom;
+	int x_left, y_top, x_right, y_bottom;
 } gc_region_t;
 
 /**
@@ -67,15 +68,6 @@ uint16_t gc_paletteArray[256] _At 0xE30200;
  * Array of the LCD VRAM
  */
 uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
-
-/**
- * Definitions for the clipping window
- * It is recommended you use gc_SetClipWindow if your clip window has a tendency to go out of bounds
- */
-uint24_t gc_xmin _At 0xE30BF1;
-uint24_t gc_ymin _At 0xE30BF4;
-uint24_t gc_xmax _At 0xE30BF7;
-uint24_t gc_ymax _At 0xE30BFA;
 
 /**
  * Quickly set and get pixels.
@@ -205,7 +197,7 @@ uint8_t gc_DrawState(void);
  * Outputs a character at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintChar(char c);
+void gc_PrintChar(const char c);
 
 /**
  * Outputs a signed integer at the current cursor position.
@@ -227,14 +219,14 @@ void gc_PrintUnsignedInt(uint24_t n, uint24_t length);
  * Outputs a string at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintString(char *string);
+void gc_PrintString(const char *string);
 
 /**
  * Outputs a string at the given XY coordinates measured from the top left origin.
  * The current cursor position is updated.
  * No text clipping is performed.
  */
-void gc_PrintStringXY(char *string, uint16_t x, uint8_t y);
+void gc_PrintStringXY(const char *string, uint16_t x, uint8_t y);
 
 /**
  * Returns the current text cursor X position
@@ -308,13 +300,13 @@ void gc_SetFontMonospace(uint8_t monospace);
  * Returns the width of the input sting
  * Takes into account monospacing flag
  */
-unsigned int gc_StringWidth(char *string);
+unsigned int gc_StringWidth(const char *string);
 
 /**
  * Returns the width of the character
  * Takes into account monospacing flag
  */
-unsigned int gc_CharWidth(char c);
+unsigned int gc_CharWidth(const char c);
 
 /**
  * Draws a given sprite to the screen as fast as possible; no transparency.
@@ -379,13 +371,9 @@ void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
 
 /**
  * Scaled sprite routines
- * scale factors must be between 1 and 8 inclausive
+ * Scaling factors must be greater than or equal to 1.
  */
 void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
-
-#pragma asm "include "libheader.asm""
-#pragma asm "include "GRAPHC.asm""
-#pragma asm "segment code"
 
 #endif

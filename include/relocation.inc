@@ -12,8 +12,8 @@
  #define noextname eval(name)
  
  .echo > relocation_table ""
- .echo > asmname " db 0C0h,\"",noextname,"\",0\n"
- .db $C0,$C0
+ .echo > asmname " define .libs,space=ram\n segment .libs\n .assume ADL=1\n db 192,\"",noextname,"\",0,"
+ .db 192,192
 #endmacro
 #define .libraryName libraryName(
 
@@ -21,7 +21,7 @@
 
 #macro libraryVersion(version)
  #define libversion eval(version)
- .echo >> asmname " db ",libversion,"\n"
+ .echo >> asmname libversion,"\n\n"
  .db libversion
 #endmacro
 #define .libraryVersion libraryVersion(
@@ -29,7 +29,8 @@
 ;---------------------------------------------
 
 #macro function(funcname, funclabel)
- .echo >> asmname "_",funcname," equ $\n"
+ .echo >> asmname " .def _",funcname,"\n"
+ .echo >> asmname "_",funcname,":\n"
  .echo >> asmname " jp ",numfunctions*3,"\n"
  .dl funclabel
 
@@ -53,6 +54,7 @@
  .echo "Relocation table size:\t",numrelocations*3
  .echo "Functions vector size:\t",numfunctions*3
  .echo "Success!"
+ .echo >> asmname " end\n"
 #endmacro
 #define .endLibrary endLibrary()
 

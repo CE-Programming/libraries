@@ -1,5 +1,8 @@
 TARGET ?= keypad
 
+# Include the graphics library
+L := keypadc
+
 #Change ICONC to "ICON" to include a custom icon, and "NICON" to not use an icon
 ICONC ?= NICON
 DESCRIPTION ?= "Keypad Demo C Program"
@@ -9,6 +12,7 @@ APPVAR = NO
 empty :=
 space := $(empty) $(empty)
 comma := ,
+suffix := .asm$(empty) $(empty)
 
 BIN = $(call NATIVEPATH,$(CEDEV)/bin)
 ifeq ($(OS),Windows_NT)
@@ -51,15 +55,24 @@ ASMSOURCES := $(filter-out iconc.asm, $(wildcard *.asm))
 PNG_FLAGS := -h
 endif
 OBJECTS := $(SOURCES:%.c=%.obj) $(ASMSOURCES:%.asm=%.obj)
-HEADERS := $(subst $(space),;,$(call WINPATH,$(realpath .) $(addprefix $(CEDEV)/,include/ce include/ce/asm include include/std lib/ce lib/ce/asm)))
-LIBRARIES := $(call NATIVEPATH,$(addprefix $(CEDEV)/lib/std/,cdebug.lib chelp.lib crt.lib crtS.lib nokernel.lib fplib.lib fplibS.lib))
+ASMSOURCES += $(call NATIVEPATH,$(addprefix $(CEDEV)/include/ce/asm/,cstartup.asm))
+ifdef L
+ASMSOURCES += $(call NATIVEPATH,$(addprefix $(CEDEV)/include/ce/asm/,libheader.asm))
+OBJECTS += libheader.obj
+endif
+LIBS := $(call NATIVEPATH,$(addprefix $(CEDEV)/lib/ce/,$(addsuffix $(suffix),$(L))))
+ASMSOURCES += $(LIBS)
+OBJECTS += $(notdir $(LIBS:%.asm=%.obj))
+OBJECTS += cstartup.obj
+HEADERS := $(subst $(space),;,$(call WINPATH,$(realpath .) $(addprefix $(CEDEV)/,include/ce/asm include/ce/c include include/std lib/std/ce lib/ce)))
+LIBRARIES := $(call NATIVEPATH,$(addprefix $(CEDEV)/lib/std/,ce/ctice.lib ce/cdebug.lib chelp.lib crt.lib crtS.lib nokernel.lib fplib.lib fplibS.lib))
 
 ASM_FLAGS := \
 	-name -define:_EZ80=1 -define:_SIMULATE=1 -define:$(ICONC) -include:$(HEADERS) -NOlist -NOlistmac \
-	-pagelen:250 -pagewidth:132 -quiet -sdiopt -warn -NOdebug -NOigcase -cpu:eZ80190
+	-pagelen:250 -pagewidth:132 -quiet -sdiopt -warn -NOdebug -NOigcase -cpu:EZ80F91
 
 CFLAGS :=  \
-	-quiet -define:NDEBUG -define:_EZ80190 -define:_EZ80 -define:$(ICONC) -define:_SIMULATE -NOlistinc -NOmodsect -cpu:eZ80190 -keepasm \
+	-quiet -define:NDEBUG -define:_EZ80190 -define:_EZ80 -define:$(ICONC) -define:_SIMULATE -NOlistinc -NOmodsect -cpu:EZ80F91 -keepasm \
 	-optspeed -NOreduceopt -NOgenprintf -stdinc:"$(HEADERS)" -usrinc:"." -NOdebug \
 	-asmsw:"$(ASM_FLAGS)" -asm $(ASMSOURCES)
 
@@ -69,7 +82,8 @@ all : $(TARGET).8xp
 
 $(TARGET).hex : $(OBJECTS) $(LIBRARIES)
 	@$(LD) @Linkcmd $@ = "$(subst $(space),$(comma),$(call WINPATH,$^))" $(LDFLAGS) || @$(RM) $(TARGET).hex
-
+	@$(RM) $(OBJECTS)
+	
 %.8xp : %.hex
 	@$(CV) $(CVFLAGS) $(@:%.8xp=%)
 

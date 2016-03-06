@@ -1,10 +1,11 @@
 /**
  * @file    GRAPHC CE C Library
- * @version 1.0
+ * @version 2.0
  *
  * @section LICENSE
  *
  * Copyright (c) 2016, Matthew Waltz
+ * Sections of this library are derivatives from Patrick Prendergast, aka tr1p1ea
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,12 @@
 #define H_GRAPHC
 
 #include <stdint.h>
+#include <stdbool.h>
+
+/* Type for the clip region */
+typedef struct gc_region {
+	int x_left, y_top, x_right, y_bottom;
+} gc_region_t;
 
 /**
  * Initializes the graphics setup.
@@ -58,9 +65,9 @@ void gc_CloseGraph(void);
 uint16_t gc_paletteArray[256] _At 0xE30200;
 
 /**
- * Array of the LCD VRAM in 8bpp mode
+ * Array of the LCD VRAM
  */
-uint8_t (*gc_vramArray)[240][320] _At 0xE30014;
+uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 
 /**
  * Quickly set and get pixels.
@@ -87,7 +94,7 @@ void gc_SetDefaultPalette(void);
 /**
  * Sets up the palette; paletteSize is in bytes
  */
-void gc_SetPalette(uint16_t *palette, uint24_t paletteSize);
+void gc_SetPalette(uint16_t *palette, uint16_t paletteSize);
 
 /**
  * Fills the screen with the given palette index
@@ -190,7 +197,7 @@ uint8_t gc_DrawState(void);
  * Outputs a character at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintChar(char c);
+void gc_PrintChar(const char c);
 
 /**
  * Outputs a signed integer at the current cursor position.
@@ -198,7 +205,7 @@ void gc_PrintChar(char c);
  * Values range from: (-8388608-8388607)
  * length must be between 0-8
  */
-void gc_PrintInt(int24_t n, uint24_t length);
+void gc_PrintInt(int n, uint24_t length);
 
 /**
  * Outputs an unsigned integer at the current cursor position.
@@ -212,14 +219,14 @@ void gc_PrintUnsignedInt(uint24_t n, uint24_t length);
  * Outputs a string at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintString(char *string);
+void gc_PrintString(const char *string);
 
 /**
  * Outputs a string at the given XY coordinates measured from the top left origin.
  * The current cursor position is updated.
  * No text clipping is performed.
  */
-void gc_PrintStringXY(char *string, uint16_t x, uint8_t y);
+void gc_PrintStringXY(const char *string, uint16_t x, uint8_t y);
 
 /**
  * Returns the current text cursor X position
@@ -285,6 +292,7 @@ void gc_SetCustomFontSpacing(uint8_t *fontspacing);
 
 /**
  * To disable monospaced font, gc_SetFontMonospace(0)
+ * Otherwise, send the width int pixels you wish all characters to be
  */
 void gc_SetFontMonospace(uint8_t monospace);
 
@@ -292,16 +300,80 @@ void gc_SetFontMonospace(uint8_t monospace);
  * Returns the width of the input sting
  * Takes into account monospacing flag
  */
-unsigned int gc_StringWidth(char *string);
+unsigned int gc_StringWidth(const char *string);
 
 /**
  * Returns the width of the character
  * Takes into account monospacing flag
  */
-unsigned int gc_CharWidth(char c);
+unsigned int gc_CharWidth(const char c);
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "GRAPHC.asm""
-#pragma asm "segment code"
+/**
+ * Draws a given sprite to the screen as fast as possible; no transparency.
+ * Basically just a direct rectangular data dump onto vram.
+ */
+void gc_ClipDrawSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
+
+/**
+ * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
+ * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well..
+ */
+void gc_ClipDrawTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
+
+/**
+ * Quickly grab the background behind a sprite (useful for transparency)
+ * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
+ * spriteBuffer is updated with the screen coordinates given.
+ * A pointer to spriteBuffer is also returned for ease of use.
+ * This routine is technically not clipped, but as long as you use one of the clipped drawing routines, it is fine
+ */
+#define gc_ClipGetSprite gc_NoClipGetSprite
+
+/**
+ * Sets the clipping window for clipped routines
+ */
+void gc_SetClipWindow(int24_t xmin, int24_t ymin, int24_t xmax, int24_t ymax);
+
+/**
+ * Clips an arbitrary region to fit within the defined bounds
+ * Returns false if offscreen
+ */
+bool gc_ClipRegion(gc_region_t *region);
+
+/**
+ * Screen shifting routines that operate within the clipping window
+ * Note that the data left over is undefined (Must be drawn over)
+ */
+void gc_ShiftWindowDown(uint24_t pixels);
+void gc_ShiftWindowUp(uint24_t pixels);
+void gc_ShiftWindowLeft(uint24_t pixels);
+void gc_ShiftWindowRight(uint24_t pixels);
+
+/**
+ * Draws a filled rectangle measured from the top left origin.
+ */
+void gc_ClipRectangle(int24_t x, int24_t y, uint24_t width, uint24_t height);
+
+/**
+ * Draws a rectangle outline measured from the top left origin.
+ */
+void gc_ClipRectangleOutline(int24_t x, int24_t y, uint24_t width, uint24_t height);
+
+/**
+ * Draws a fast horizontal line measured from the top left origin.
+ */
+void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
+
+/**
+ * Draws a fast vertical line measured from the top left origin.
+ */
+void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
+
+/**
+ * Scaled sprite routines
+ * Scaling factors must be greater than or equal to 1.
+ */
+void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
+void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 
 #endif

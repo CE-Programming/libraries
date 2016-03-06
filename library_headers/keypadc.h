@@ -151,8 +151,4 @@ void kb_Reset(void);
 #define kb_Right	1<<2
 #define kb_Up		1<<3
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "keypadc.asm""
-#pragma asm "segment code"
-
 #endif

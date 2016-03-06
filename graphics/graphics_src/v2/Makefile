@@ -1,11 +1,11 @@
 LIB = GRAPHC
 SOURCES = graphics_lib.asm
 
-CC = @"..\..\..\include\spasm"
- 
-CFLAGS =  -E
+AS = @"..\..\..\include\spasm"
+
+ASMFLAGS =  -E
  
 $(LIB) :
-	$(CC) $(CFLAGS) $(SOURCES) $(LIB).8xv
+	$(AS) $(ASMFLAGS) $(SOURCES) $(LIB).8xv
 	
 all : $(LIB)

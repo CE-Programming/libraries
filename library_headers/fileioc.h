@@ -207,8 +207,4 @@ int24_t ti_SetArchiveStatus(uint8_t archived, uint8_t slot);
 int24_t ti_Delete(const char *varname);
 int24_t ti_DeleteVar(const char *varname, uint24_t type);
 
-#pragma asm "include "libheader.asm""
-#pragma asm "include "fileioc.asm""
-#pragma asm "segment code"
-
 #endif
