@@ -12,6 +12,7 @@
 
 /* Shared libraries */
 #include <graphc.h>
+#include <debug.h>
 
 /* Other available headers */
 // stdarg.h, setjmp.h, assert.h, ctype.h, float.h, iso646.h, limits.h, errno.h
@@ -23,11 +24,21 @@ void waitSeconds(uint8_t seconds);
 void main(void) {
     gc_InitGraph();
     
+    gc_DrawBuffer();
+    
     /* Fill the screen white */
-    gc_FillScrn(0xFF);
+    gc_FillScrn(0x00);
+    
+    gc_SetTransparentColor(0x01);
+    
+    gc_SetTextColor(0x01E0);
+    
+    gc_PrintStringXY("TEST",0,0);
     
     /* Wait for 2 seconds */
     waitSeconds(2);
+    
+    sprintf(dbgout, "test");
     
     gc_CloseGraph();
     pgrm_CleanUp();

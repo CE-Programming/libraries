@@ -1,7 +1,7 @@
-LIB = FILEIOC
-SOURCES = fileio_lib.asm
+LIB = GRAPHC
+SOURCES = graphics_lib.asm
 
-AS = @"..\..\include\spasm"
+AS = @"..\..\..\include\spasm"
 
 ASMFLAGS =  -E
  

@@ -1,7 +1,7 @@
 LIB = KEYPADC
 SOURCES = keypad_lib.asm
 
-AS = @"..\..\include\spasm"
+AS = @"..\..\..\include\spasm"
 
 ASMFLAGS =  -E
  
