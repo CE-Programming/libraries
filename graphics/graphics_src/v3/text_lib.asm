@@ -261,7 +261,7 @@ _PrintInt:
 	pop	bc
 IsntNegative:
 	jp	_PrintUnsignedInt_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _StringWidthC:
 ; Gets the width of a string
@@ -281,6 +281,10 @@ _:	ld	a,(hl)
 	call	_CharWidth_ASM \.r
 	pop	hl
 	inc	hl
+	ld	a,(hl)
+	or	a,a
+	jr	z,+_
+	inc	bc
 	jr	-_
 _:	push	bc
 	pop	hl
