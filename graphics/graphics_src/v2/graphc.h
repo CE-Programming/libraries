@@ -205,7 +205,7 @@ void gc_PrintChar(const char c);
  * Values range from: (-8388608-8388607)
  * length must be between 0-8
  */
-void gc_PrintInt(int n, uint24_t length);
+void gc_PrintInt(int n, uint8_t length);
 
 /**
  * Outputs an unsigned integer at the current cursor position.
@@ -213,7 +213,7 @@ void gc_PrintInt(int n, uint24_t length);
  * Values range from: (0-16777215)
  * length must be between 0-8
  */
-void gc_PrintUnsignedInt(uint24_t n, uint24_t length);
+void gc_PrintUnsignedInt(unsigned int n, uint8_t length);
 
 /**
  * Outputs a string at the current cursor position
