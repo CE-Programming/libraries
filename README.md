@@ -10,4 +10,4 @@ Simply send the libraries in the root directory of the zip file to your calculat
 
 To use this libraries in development, simply navigate to the `\library_headers` directory, and copy all the files inside into your C development library include directory, which is located at `CEdev\lib\ce`.
 
-Once copied, you can simply `#include <libname.h>` for example to use the library functions in your program.
+Once copied, you can simply `#include <lib/ce/libname.h>` to use the library's functions within your program.

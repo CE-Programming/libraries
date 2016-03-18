@@ -1,6 +1,6 @@
 /**
  * @file    FILEIOC CE C Library
- * @version 1.0
+ * @version 1.5
  *
  * @section LICENSE
  *
@@ -37,44 +37,22 @@
 #define H_FILEIOC
 
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 /**
  * Varible and flag definitions
  */
-#define Real                (0)
-#define RealList            (1)
-#define Matrix              (2)
-#define Equation            (3)
-#define String              (4)
 #define Program             (5)
 #define ProtectedProgram    (6)
-#define Picture             (7)
-#define GraphDatabase       (8)
-#define Unknown             (9)
-#define UnknownEquation     (10)
-#define NewEquation         (11)
-#define Complex             (12)
-#define ComplexList         (13)
-#define Undefined           (14)
-#define Window              (15)
-#define RecallWindow        (16)
-#define TableRange          (17)
 #define AppVar              (21)
 #define TempProgram         (22)
-#define Group               (23)
-#define RealFraction        (24)
-#define Image               (26)
-#define ComplexFraction     (27)
-#define RealRadical         (28)
-#define ComplexRadical      (29)
-#define ComplexPi           (30)
-#define ComplexPiFraction   (31)
-#define RealPi              (32)
-#define RealPiFraction      (33)
 
 #ifndef EOF
 #define EOF (-1)
 #endif
+
+typedef uint8_t ti_var_t;
 
 /**
  * Closes all open slots
@@ -99,14 +77,14 @@ void ti_CloseAll(void);
  * Type:
  *  Specifies the type of variable to open
  */
-uint8_t ti_Open(const char *varname, const char *mode);
-uint8_t ti_OpenVar(const char *varname, const char *mode, uint8_t type);
+ti_var_t ti_Open(const char *varname, const char *mode);
+ti_var_t ti_OpenVar(const char *varname, const char *mode, uint8_t type);
 
 /**
  * Frees an open variable slot
  * Returns zero if closing failed
  */
-int24_t ti_Close(const uint8_t slot);
+int ti_Close(const ti_var_t slot);
 
 /**
  * Writes to the current variable pointer given:
@@ -118,9 +96,9 @@ int24_t ti_Close(const uint8_t slot);
  *  number of data chunks to write to the variable slot
  * slot:
  *  varaible slot to write the data to
- * Returns the number of bytes written
+ * Returns the number of chunks written (should be equal to count)
  */
-int24_t ti_Write(const void *data, uint24_t size, uint24_t count, uint8_t slot);
+size_t ti_Write(const void *data, size_t size, size_t count, const ti_var_t slot);
 
 /**
  * Reads from the current variable pointer given:
@@ -132,9 +110,9 @@ int24_t ti_Write(const void *data, uint24_t size, uint24_t count, uint8_t slot);
  *  number of data chunks to read from the variable slot
  * slot:
  *  varaible slot to read from
- * Returns the number of bytes read
+ * Returns the number of chuncks read (should be equal to count)
  */
-uint24_t ti_Read(const void *data, uint24_t size, uint24_t count, uint8_t slot);
+size_t ti_Read(const void *data, size_t size, size_t count, const ti_var_t slot);
 
 /**
  * Puts a character directly into the slot data pointer, and increments the offset
@@ -144,7 +122,7 @@ uint24_t ti_Read(const void *data, uint24_t size, uint24_t count, uint8_t slot);
  * slot:
  *  varaible slot to put the character to
  */
-uint24_t ti_PutC(uint24_t c, uint8_t slot);
+int ti_PutC(const char c, const ti_var_t slot);
 
 /**
  * Pulls a character directly from the slot data pointer, and increments the offset
@@ -152,7 +130,7 @@ uint24_t ti_PutC(uint24_t c, uint8_t slot);
  * slot:
  *  varaible slot to get the character from
  */
-uint24_t ti_GetC(uint8_t slot);
+int ti_GetC(const ti_var_t slot);
 
 /**
  * Seeks to an offset from the origin:
@@ -162,7 +140,7 @@ uint24_t ti_GetC(uint8_t slot);
  * slot:
  *  varaible slot seeking in
  */
-uint24_t ti_Seek(int24_t offset, uint24_t origin, uint8_t slot);
+int ti_Seek(int offset, unsigned int origin, const ti_var_t slot);
 
 /**
  * Seeks to the start of the given variable
@@ -170,41 +148,41 @@ uint24_t ti_Seek(int24_t offset, uint24_t origin, uint8_t slot);
  * slot:
  *  varaible slot seeking in
  */
-uint24_t ti_Rewind(uint8_t slot);
+int ti_Rewind(const ti_var_t slot);
 
 /**
  * Returns the value of the current cursor offset
  */
-uint16_t ti_Tell(uint8_t slot);
+uint16_t ti_Tell(const ti_var_t slot);
 
 /**
  * Returns the size of the variable in the slot
  */
-uint16_t ti_GetSize(uint8_t slot);
+uint16_t ti_GetSize(const ti_var_t slot);
 
 /**
  * Resizes the slot to the new size; note that the current file
  * offset is set to the beginning of the file
  */
-int24_t ti_Resize(uint24_t new_size, uint8_t slot);
+int ti_Resize(size_t new_size, const ti_var_t slot);
 
 /**
  * Returns zero if the slot is not in the archive
  */
-int24_t ti_IsArchived(uint8_t slot);
+int ti_IsArchived(const ti_var_t slot);
 
 /**
  * Sets the varaible into either the archive or RAM
  * Returns zero if the operation fails if not enough memory or some other error
- * NOTE: This routine also closes the file handle. You must reopen the file
+ * NOTE: This routine also closes the file handle. You must reopen the file afterwords.
  */
-int24_t ti_SetArchiveStatus(uint8_t archived, uint8_t slot);
+int ti_SetArchiveStatus(bool archived, const ti_var_t slot);
 
 /**
  * ti_Delete    - Deletes an AppVar given the name
  * ti_DeleteVar - Deletes a varaible given the name and type
  */
-int24_t ti_Delete(const char *varname);
-int24_t ti_DeleteVar(const char *varname, uint24_t type);
+int ti_Delete(const char *varname);
+int ti_DeleteVar(const char *varname, uint8_t type);
 
 #endif

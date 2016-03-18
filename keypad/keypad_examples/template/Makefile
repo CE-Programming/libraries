@@ -8,17 +8,17 @@
 #Change APPVAR to "YES" to create the file as an AppVar, otherwise "NO" for programs
 
 #----------------------------
-TARGET ?= Graphics
+TARGET ?= KEYPADT
 ICONC ?= NICON
 DEBUGMODE ?= NDEBUG
-DESCRIPTION ?= "Graphics C program - Demo 0"
+DESCRIPTION ?= "Keypad C program - Template"
 ARCHIVED ?= NO
 APPVAR ?= NO
 #----------------------------
 
 #Add shared library names to the L varible, i.e.
 # L := graphc fileioc keypadc
-L := graphc
+L := keypadc
 
 #----------------------------
 

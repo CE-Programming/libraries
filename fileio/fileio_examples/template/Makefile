@@ -8,17 +8,17 @@
 #Change APPVAR to "YES" to create the file as an AppVar, otherwise "NO" for programs
 
 #----------------------------
-TARGET ?= Graphics
+TARGET ?= FILEIOT
 ICONC ?= NICON
 DEBUGMODE ?= NDEBUG
-DESCRIPTION ?= "Graphics C program - Demo 0"
+DESCRIPTION ?= "FileIO C program - Template"
 ARCHIVED ?= NO
 APPVAR ?= NO
 #----------------------------
 
 #Add shared library names to the L varible, i.e.
 # L := graphc fileioc keypadc
-L := graphc
+L := fileioc
 
 #----------------------------
 

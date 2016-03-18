@@ -1,10 +1,10 @@
-#include "..\\..\\include\\relocation.inc"
-#include "ti84pce.inc"
+#include "..\..\..\include\relocation.inc"
+#include "..\..\..\include\ti84pce.inc"
 
  .libraryName		"KEYPADC"	                    ; Name of library
  .libraryVersion	2		                    ; Version information (1-255)
  
- .function "kb_Scan",_keyboardscan
+ .function "kb_Scan",_Scan
  .function "kb_ScanGroup",_ScanGroup
  .function "kb_AnyKey",_AnyKey
  .function "kb_Reset",_Reset
@@ -13,7 +13,7 @@
  .endDependencies
  
 ;-------------------------------------------------------------------------------
-_keyboardscan:
+_Scan:
 ; Scans the keypad and updates data registers
 ; Note: Disables interrupts
 ; Arguments:

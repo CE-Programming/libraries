@@ -1,5 +1,5 @@
 #include "..\..\..\include\relocation.inc"
-#include "ti84pce.inc"
+#include "..\..\..\include\ti84pce.inc"
 
  .libraryName		"GRAPHC"	                ; Name of library
  .libraryVersion	3		                    ; Version information (1-255)
@@ -47,7 +47,7 @@
  .function "gc_SetCustomFontSpacing",_SetCustomFontSpacing
  .function "gc_SetFontMonospace",_SetFontMonospace
 ;-------------------------------------------------------------------------------
-; v2 functions
+; v2 functions -- No longer able to insert or move (Can optimize/fix though)
 ;-------------------------------------------------------------------------------
  .function "gc_SetClipWindow",_SetClipWindow
  .function "gc_ClipRegion",_ClipRegion
@@ -63,6 +63,8 @@
  .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
  .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
  .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
+;-------------------------------------------------------------------------------
+; v3 functions
 ;-------------------------------------------------------------------------------
 
  .beginDependencies

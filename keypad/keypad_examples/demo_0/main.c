@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <ti84pce.h>
+#include <tice.h>
  
 /* Standard headers - it's recommended to leave them included */
 #include <math.h>
@@ -11,18 +11,17 @@
 #include <string.h>
 
 /* CE Keypad C Library */
-#include <keypadc.h>
+#include <lib/ce/keypadc.h>
 
 /* Some LCD defines */
 #define lcd_size 320*240*2
 #define lcd_buf  (uint16_t*)0xD40000
-void fillScreen(unsigned char color);
+void fillScreen(uint8_t color);
 
 /* Main Function */
-void main()
-{
+void main(void) {
     /* Key varaible */
-    unsigned char key;
+    uint8_t key;
     
     /* Loop until 2nd is pressed */
     while(kb_ScanGroup(kb_group_1) != kb_2nd) {
@@ -45,10 +44,10 @@ void main()
                 break;
         }
     }
-    kb_Reset();
+    pgrm_CleanUp();
 }
 
 /* Simple way to fill the screen with a given color */
-void fillScreen(unsigned char color) {
-    memset(lcd_buf, color, lcd_size);
+void fillScreen(uint8_t color) {
+    memset_fast(lcd_buf, color, lcd_size);
 }

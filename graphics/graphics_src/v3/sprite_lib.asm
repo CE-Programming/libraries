@@ -1,4 +1,86 @@
 ;-------------------------------------------------------------------------------
+; Eventually I would like to transform this routine to support arbitary degrees:
+; This would be rather slow though.
+; int xt,yt;
+; int xs,ys;
+; float sinma = sin(-angle);
+; float cosma = cos(-angle);
+; int hwidth = width / 2;
+; int hheight = height / 2;
+;
+; for(int x = 0; x < width; x++) {
+;	for(int y = 0; y < height; y++) {
+;		xt = x - hwidth;
+;		yt = y - hheight;
+;		
+;		xs = (int)round((cosma * xt - sinma * yt) + hwidth);
+;		ys = (int)round((sinma * xt + cosma * yt) + hheight);
+;
+;		if(xs >= 0 && xs < width && ys >= 0 && ys < height) {
+;			/* set target pixel (x,y) to color at (xs,ys) */
+;		} else {
+;			/* set target pixel (x,y) to sprite transparent color */
+;		}
+;	}
+;}
+;-------------------------------------------------------------------------------
+_RotateSprite:
+; Draws a scaled sprite to the screen
+; Arguments:
+;  __frame_arg0 : Pointer to sprite source
+;  __frame_arg1 : Pointer to sprite copy destination
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+;  __frame_arg4 : Rotation amount (90,-90,180) for now
+; Returns:
+;  Pointer to sprite copy destination
+	ret
+
+;-------------------------------------------------------------------------------
+_FlipSpriteHoriz:
+; Draws a scaled sprite to the screen
+; Arguments:
+;  __frame_arg0 : Pointer to sprite source
+;  __frame_arg1 : Pointer to sprite copy destination
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  Pointer to sprite copy destination
+	ret
+	
+;-------------------------------------------------------------------------------
+_FlipSpriteVert:
+; Draws a scaled sprite to the screen
+; Arguments:
+;  __frame_arg0 : Pointer to sprite source
+;  __frame_arg1 : Pointer to sprite copy destination
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  Pointer to sprite copy destination
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	a,(ix+__frame_arg2)
+	ld	(flipSpriteWidth_ASM),a \.r
+	ld	h,a
+	ld	l,(ix+__frame_arg3)
+	mlt	hl
+	push	hl
+	
+	ld	de,(ix+__frame_arg0)
+	ld	hl,(ix+__frame_arg1)
+	ld	b,(ix+__frame_arg3)
+_:	push	bc
+flipSpriteWidth_ASM =$+1
+	ld	bc,0
+	
+	pop	bc
+	djnz	-_
+	pop	ix
+	ret
+	
+;-------------------------------------------------------------------------------
 _NoClipDrawScaledSprite:
 ; Draws a scaled sprite to the screen
 ; Arguments:

@@ -1,5 +1,5 @@
-#include "..\\..\\include\\relocation.inc"
-#include "ti84pce.inc"
+#include "..\..\..\include\relocation.inc"
+#include "..\..\..\include\ti84pce.inc"
 
  .libraryName           "FILEIOC"       ; Name of library
  .libraryVersion        1               ; Version information (1-255)
@@ -177,7 +177,6 @@ _Open:
 ;  Slot number if no error
 	ld	a,$15
 _:	ld	(varType),a \.r
-	ld	(op1),a
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -211,7 +210,7 @@ _:	ld	(varType),a \.r
 	inc	a
 	sbc	hl,de
 	jr	z,+_
-	jp	_returnNULL_PopIX \.r
+	jp	_ReturnNULL_PopIX \.r
 _:	ld	(CurrentSlot_ASM),a \.r
 	ld	hl,(ix+__frame_arg0)
 	ld	de,op1+1
@@ -235,7 +234,7 @@ nooverwite:
 	cp	a,'a'
 	jr	z,+_
 	cp	a,'w'
-	jp	nz,_returnNULL_PopIX \.r
+	jp	nz,_ReturnNULL_PopIX \.r
 _:	inc	hl
 	ld	a,(hl)
 	cp	a,'+'
@@ -255,7 +254,7 @@ archivevar:
 	ld	d,(hl)
 	ex	de,hl
 	call	_enoughmem
-	jp	c,_returnNULL_PopIX \.r
+	jp	c,_ReturnNULL_PopIX \.r
 	call	_popop1
 	call	_pushop1
 	call	_arc_Unarc
@@ -271,13 +270,13 @@ _:	call	_chkfindsym
 	ld	a,(hl)
 	cp	a,'r'
 	pop	hl
-	jp	nz,_returnNULL_PopIX \.r
+	jp	nz,_ReturnNULL_PopIX \.r
 	jr	_SavePtrs_ASM
 	
 _:	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	cp	a,'r'
-	jp	z,_returnNULL_PopIX \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	or	a,a
 	sbc	hl,hl
 varType =$+1
@@ -372,7 +371,7 @@ _Write:
 ;  __frame_arg2 : Number of entries
 ;  __frame_arg3 : Slot number
 ; Returns:
-;  Number of bytes written if success
+;  Number of chunks written if success
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -383,14 +382,13 @@ _Write:
 	ld	a,(ix+__frame_arg3)
 	ld	(CurrentSlot_ASM),a \.r
 	ld	hl,(ix+__frame_arg0)
-	pop	ix
 	call	_CheckIfSlotOpen \.r
-	jp	z,_ReturnNULL \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
 	ld	a,l
 	pop	hl
-	jp	z,_ReturnNULL \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	ld	bc,0
 _:	ld	a,(hl)
 	push	hl
@@ -400,22 +398,17 @@ _:	ld	a,(hl)
 	call	_PutChar_ASM \.r
 	call	_SetAToHLU
 	bit	7,a
-	jr	nz,+_
 	pop	bc
 	pop	de
 	pop	hl
+	jr	nz,+_
 	inc	hl
 	inc	bc
 	dec	de
 	ld	a,e
 	or	a,d
 	jr	nz,-_
-	ex	de,hl
-	ret
-_:	pop	hl
-	pop	de
-	pop	bc
-	ret
+	jr	_s
  
 ;-------------------------------------------------------------------------------
 _Read:
@@ -426,7 +419,7 @@ _Read:
 ;  __frame_arg2 : Number of entries
 ;  __frame_arg3 : Slot number
 ; Returns:
-;  Number of bytes read if success
+;  Number of chunks read if success
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -434,37 +427,38 @@ _Read:
 	ld	hl,(ix+__frame_arg2)
 	call	$000228			; hl*bc
 	ex	de,hl
-	ld a,(ix+__frame_arg3)
-	ld (CurrentSlot_ASM),a \.r
-	ld hl,(ix+__frame_arg0)
-	pop ix
-	call _CheckIfSlotOpen \.r
-	jp z,_ReturnNULL \.r
-	ld bc,0
-_:	push hl
-	push de
-	push bc
-	call _GetChar_ASM \.r
-	call _SetAToHLU
-	bit 7,a
-	jr nz,+_
-	ld a,l
-	pop bc
-	pop de
-	pop hl
-	ld (hl),a
-	inc hl
-	inc bc
-	dec de
-	ld a,e
-	or a,d
-	jr nz,-_
-	ex de,hl
-	ret
-_:	pop hl
-	pop de
-	pop bc
-	ret
+	ld	a,(ix+__frame_arg3)
+	ld	(CurrentSlot_ASM),a \.r
+	ld	hl,(ix+__frame_arg0)
+	call	_CheckIfSlotOpen \.r
+	jp	z,_ReturnNULL_PopIX \.r
+	ld	bc,0
+_:	push	hl
+	push	de
+	push	bc
+	call	_GetChar_ASM \.r
+	call	_SetAToHLU
+	bit	7,a
+	ld	a,l
+	pop	bc
+	pop	de
+	pop	hl
+	jr	nz,_s
+	ld	(hl),a
+	inc	hl
+	inc	bc
+	dec	de
+	ld	a,e
+	or	a,d
+	jr	nz,-_
+_s:	ld	de,(ix+__frame_arg1)
+	ex.s	de,hl
+	push	hl
+	ld	l,c
+	ld	h,b
+	pop	bc
+	pop	ix
+	jp	__sdivu
 
 ;-------------------------------------------------------------------------------
 _GetChar:
@@ -815,7 +809,7 @@ SaveSize:
 	ld (hl),d								; write new size.
 	ret
  
-_returnNULL_PopIX:
+_ReturnNULL_PopIX:
 	pop	ix
 _ReturnNULL:
 	xor	a,a
