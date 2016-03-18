@@ -11,7 +11,7 @@
 #include <string.h>
 
 /* C CE Graphics library */
-#include <graphc.h>
+#include <lib/ce/graphc.h>
 
 /* Put function prototypes here */
 

@@ -11,11 +11,7 @@
 #include <string.h>
 
 /* Shared libraries */
-#include <graphc.h>
-#include <debug.h>
-
-/* Other available headers */
-// stdarg.h, setjmp.h, assert.h, ctype.h, float.h, iso646.h, limits.h, errno.h
+#include <lib/ce/graphc.h>
 
 /* Put function prototypes here */
 void waitSeconds(uint8_t seconds);
@@ -37,8 +33,6 @@ void main(void) {
     
     /* Wait for 2 seconds */
     waitSeconds(2);
-    
-    sprintf(dbgout, "test");
     
     gc_CloseGraph();
     pgrm_CleanUp();
