@@ -119,6 +119,7 @@ _SetColorIndex:
 	ld	(color5),a \.r
 	ld	(color6),a \.r
 	ld	(color7),a \.r
+	ld	(color8),a \.r
 	ld	a,d
 	ret
 
@@ -342,14 +343,23 @@ _NoClipRectangle:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	e,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	ld	a,(ix+__frame_arg3)
+	ld	hl,(ix+__frame_arg2)
+	dec.s	hl
+	add	hl,de
 	or	a,a
+	sbc	hl,de
+	ld	e,(ix+__frame_arg1)
+	ld	a,(ix+__frame_arg3)
+	ld	bc,(ix+__frame_arg2)
+	dec.s	bc
+	jr	z,NoClipRectangleOnePixelWidth
+	bit	7,h
+	ld	hl,(ix+__frame_arg0)
 	pop	ix
+	ret	nz
+	or	a,a
 	ret	z
-	cp	240
+	cp	a,240
 	ret	nc
 _NoClipRectangle_ASM:
 	ld	d,lcdWidth/2
@@ -358,8 +368,6 @@ _NoClipRectangle_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-	dec.s	bc
-	ret	c
 FillRectangle_Loop:
 color2 =$+1
 	ld	(hl),0
@@ -375,7 +383,29 @@ color2 =$+1
 	dec	a
 	jr	nz,FillRectangle_Loop
 	ret
- 
+NoClipRectangleOnePixelWidth:
+	ld	hl,(ix+__frame_arg0)
+	or	a,a
+	pop	ix
+	ret	z
+	cp	a,240
+	ret	nc
+	ld	d,lcdWidth/2
+	mlt	de
+	add.s	hl,de
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	ld	b,a
+FillRectangle_Loop_One:
+color8 =$+1
+	ld	(hl),0
+	ld	de,lcdWidth-1
+	add	hl,de
+	sbc	hl,bc
+	djnz	FillRectangle_Loop_One
+	ret
+	
 ;-------------------------------------------------------------------------------
 _ClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
