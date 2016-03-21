@@ -1,6 +1,6 @@
 /**
  * @file    GRAPHC CE C Library
- * @version 2.0
+ * @version 2.1
  *
  * @section LICENSE
  *
@@ -78,6 +78,9 @@ uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 #define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
 #define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
 #define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
+#define gc_fontHeight()                   8
+#define gc_lcdWidth                       320
+#define gc_lcdHeight                      240
 
 /**
  * Sets the color index that drawing routines will use

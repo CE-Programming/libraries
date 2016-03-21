@@ -12,7 +12,7 @@
  #define noextname eval(name)
  
  .echo > relocation_table ""
- .echo > asmname " define .libs,space=ram\n segment .libs\n .assume ADL=1\n db 192,\"",noextname,"\",0,"
+ .echo > asmname " define .",noextname,"_HEADER,space=ram\n define .",noextname,",space=ram\n segment .",noextname,"_HEADER\n .assume ADL=1\n db 192,\"",noextname,"\",0,"
  .db 192,192
 #endmacro
 #define .libraryName libraryName(
@@ -21,7 +21,7 @@
 
 #macro libraryVersion(version)
  #define libversion eval(version)
- .echo >> asmname libversion,"\n\n"
+ .echo >> asmname libversion,"\n"
  .db libversion
 #endmacro
 #define .libraryVersion libraryVersion(
@@ -29,9 +29,15 @@
 ;---------------------------------------------
 
 #macro function(funcname, funclabel)
- .echo >> asmname " .def _",funcname,"\n"
- .echo >> asmname "_",funcname,":\n"
- .echo >> asmname " jp ",numfunctions*3,"\n"
+  clr()
+  wr("#define modulename ",funcname,".src")
+  run()
+ 
+ .echo >  modulename " define .",noextname,",space=ram\n segment .",noextname,"\n .assume ADL=1\n"
+ .echo >> modulename " .def _",funcname,"\n"
+ .echo >> modulename "_",funcname,":\n"
+ .echo >> modulename " jp ",numfunctions*3,"\n"
+ .echo >> modulename " end"
  .dl funclabel
 
  #define numfunctions eval(numfunctions+1)

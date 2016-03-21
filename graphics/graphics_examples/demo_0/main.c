@@ -14,38 +14,33 @@
 #include <lib/ce/graphc.h>
 
 /* Put function prototypes here */
-void waitSeconds(uint8_t seconds);
+void printStringCentered(const char *str);
 
 /* Put all your code here */
 void main(void) {
-    gc_InitGraph();
-    
-    gc_DrawBuffer();
-    
-    /* Fill the screen white */
-    gc_FillScrn(0x00);
-    
-    gc_SetTransparentColor(0x01);
-    
-    gc_SetTextColor(0x01E0);
-    
-    gc_PrintStringXY("TEST",0,0);
-    
-    /* Wait for 2 seconds */
-    waitSeconds(2);
-    
-    gc_CloseGraph();
-    pgrm_CleanUp();
+	/* Seed the random numbers */
+	srand(rtc_Time());
+	
+	/* Initialize the graphics */
+	gc_InitGraph();
+	
+	/* Fill the screen black */
+	gc_FillScrn(0x00);
+	
+	/* Set the text color where index 0 is transparent, and the forecolor is random */
+	gc_SetTextColor(rand()%255);
+	
+	/* Print a string; centered on the screen */
+	printStringCentered("Hello World!");
+
+	/* Wait for a key to be pressed -- Don't use this in your actual programs! */
+	os_GetKey();
+	
+	/* Close the graphics and return to the OS */
+	gc_CloseGraph();
+	pgrm_CleanUp();
 }
 
-/* Wait for a specified about of seconds between 0 and 60 */
-void waitSeconds(uint8_t seconds) {
-    /* Set the inital seconds to 0 */
-    rtc_SetSeconds(0);
-    
-    /* Load the 0 seconds into the clock */
-    rtc_LoadSetTime();
-    
-    /* Wait until we reach the second needed */
-    while(rtc_GetSeconds() != seconds+1);
+void printStringCentered(const char *str) {
+	gc_PrintStringXY(str, (gc_lcdWidth-gc_StringWidth(str))/2,(gc_lcdHeight-gc_fontHeight())/2);
 }

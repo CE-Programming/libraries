@@ -49,12 +49,15 @@ void main(void) {
     
     /* Let's read it just to make sure we wrote it correctly */
     if ((ti_Rewind(myAppVar) == -1))                                    goto err;
+    ti_Seek(SEEK_SET, 1, myAppVar);
     if ((ti_Read(&dataStruct, sizeof(myData_t), 1, myAppVar)) != 1)     goto err;
     
     /* Make sure we read these varaibles correctly too */
     if (dataStruct.var1 != 10 && dataStruct.var2 != 20)                 goto err;
     
     printText(0,0,dataStruct.settings_name);
+    
+    /* Don't use os_GetKey() in your programs! */
     os_GetKey();
     
 err:
