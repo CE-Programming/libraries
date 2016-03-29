@@ -4,6 +4,9 @@
  .libraryName           "FILEIOC"       ; Name of library
  .libraryVersion        1               ; Version information (1-255)
  
+;-------------------------------------------------------------------------------
+; v1 functions
+;-------------------------------------------------------------------------------
  .function "ti_CloseAll",_CloseAll
  .function "ti_Open",_Open
  .function "ti_OpenVar",_OpenVar
@@ -61,7 +64,7 @@ _CloseAll:
 	ld	hl,VarOffset0 \.r
 	ld	bc,15
 	jp	_memclear
- 
+
 ;-------------------------------------------------------------------------------
 _Resize:
 ; Resizes an AppVar
@@ -181,32 +184,28 @@ _:	ld	(varType),a \.r
 	ld	ix,0
 	add	ix,sp
 	xor	a,a
-	ld	hl,VATPtr0
-	ld	hl,(hl)
+	ld	hl,(VATPtr0)
 	add	hl,de
 	inc	a
 	sbc	hl,de
 	jr	z,+_
-	ld	hl,VATPtr1
-	ld	hl,(hl)
+	ld	hl,(VATPtr1)
 	add	hl,de
 	inc	a
 	sbc	hl,de
 	jr	z,+_
-	ld	hl,VATPtr2
-	ld	hl,(hl)
+	ld	hl,(VATPtr2)
 	add	hl,de
 	inc	a
 	sbc	hl,de
 	jr	z,+_
-	ld	hl,VATPtr3
-	ld	hl,(hl)
+	ld	hl,(VATPtr3)
 	add	hl,de
 	inc	a
 	sbc	hl,de
 	jr	z,+_
-	ld	hl,VATPtr4
-	ld	hl,(hl)
+	ld	hl,(VATPtr4)
+	add	hl,de
 	inc	a
 	sbc	hl,de
 	jr	z,+_
@@ -271,8 +270,22 @@ _:	call	_chkfindsym
 	cp	a,'r'
 	pop	hl
 	jp	nz,_ReturnNULL_PopIX \.r
+; skip vat entry in archive
+        ex	de,hl
+	push	ix
+	push	de
+	push	hl
+	pop	ix
+	ld	a,10
+	add	a,(ix+9)
+	ld	de,0
+	ld	e,a
+	add	hl,de
+	ex	(sp),hl
+	add	hl,de
+	pop	de
+	pop	ix
 	jr	_SavePtrs_ASM
-	
 _:	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	cp	a,'r'
@@ -289,7 +302,7 @@ _SavePtrs_ASM:
 	ld	(hl),bc
 	call	_GetSlotVarPtr_ASM \.r
 	ld	(hl),de
-	ld	hl,(ix+__frame_arg1)				; a=flags
+	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	ld	bc,0
 	cp	a,'a'
@@ -646,7 +659,7 @@ _:	ld	(varTypeDelete),a \.r
 	push	hl
 	push	de
 	ld	de,op1+1
-	ld	bc,9
+	ld	bc,8
 	ldir
 	xor	a,a
 	ld	(de),a
