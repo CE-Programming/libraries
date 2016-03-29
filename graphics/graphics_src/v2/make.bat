@@ -11,6 +11,7 @@ mkdir lib
 set LIB_LIB=%LIB_NAME%.lib
 set LIB_ASM=%LIB_NAME%.asm
 set LIB_8XV=%LIB_NAME%.8xv
+set LIB_JMP=%LIB_NAME%.jmp
 set ASM_SRC=*.src
 set BIN=%CEDEV%\bin
 set ASM=%BIN%\ez80asm.exe
@@ -28,5 +29,6 @@ if exist relocation_table del relocation_table
 move /Y %LIB_LIB% lib > nul
 move /Y %LIB_ASM% lib > nul
 move /Y %LIB_8XV% lib > nul
+move /Y %LIB_JMP% lib > nul
 cd lib
 for /F %%a in ('dir /L /B') do rename %%a %%a
