@@ -10,16 +10,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Shared library headers -- depends on which ones you wish to use */
-#include <lib/ce/fileioc.h>
+/* CE Keypad C Library */
+#include <lib/ce/keypadc.h>
 
 /* Main Function */
 void main(void) {
-    ti_var_t myVar;
-    ti_CloseAll();
-    
-/* Place program here */
-
-    ti_CloseAll();
+    kb_Reset();
     pgrm_CleanUp();
 }

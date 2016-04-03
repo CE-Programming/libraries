@@ -12,7 +12,7 @@
 
 /* Shared libraries */
 #include <lib/ce/graphc.h>
-#include "logo_gfx.h"
+#include "gfx/logo_gfx.h"
 /* Put function prototypes here */
 
 /* Put all your code here */

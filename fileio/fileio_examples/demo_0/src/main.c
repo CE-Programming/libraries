@@ -24,7 +24,7 @@ typedef struct myData {
 
 myData_t dataStruct;
 
-void printText(uint8_t xpos, uint8_t ypos, const char *text);
+void printText(int8_t xpos, int8_t ypos, const char *text);
 
 /* Main Function */
 void main(void) {
@@ -55,18 +55,19 @@ void main(void) {
     /* Make sure we read these varaibles correctly too */
     if (dataStruct.var1 != 10 && dataStruct.var2 != 20)                 goto err;
     
-    printText(0,0,dataStruct.settings_name);
+    printText(0,0,"Read was successful");
     
-    /* Don't use os_GetKey() in your programs! */
-    os_GetKey();
+    /* Get the scan codes */
+    while( !os_GetCSC() );
     
 err:
+    printText(0,0,"An error occured");
     ti_CloseAll();
     pgrm_CleanUp();
 }
 
 /* Draw text on the homescreen at the given X/Y location */
-void printText(uint8_t xpos, uint8_t ypos, const char *text) {
+void printText(int8_t xpos, int8_t ypos, const char *text) {
     os_SetCursorPos(ypos, xpos);
     os_PutStrFull(text);
 }

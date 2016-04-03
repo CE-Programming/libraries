@@ -3,24 +3,23 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <tice.h>
-
+ 
 /* Standard headers - it's recommended to leave them included */
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* C CE Graphics library */
-#include <lib/ce/graphc.h>
+/* Shared library headers -- depends on which ones you wish to use */
+#include <lib/ce/fileioc.h>
 
-/* Put function prototypes here */
-
-/* Put all your code here */
+/* Main Function */
 void main(void) {
-    gc_InitGraph();
+    ti_var_t myVar;
+    ti_CloseAll();
     
-/* Place program code here */
+/* Place program here */
 
-    gc_CloseGraph();
+    ti_CloseAll();
     pgrm_CleanUp();
 }
