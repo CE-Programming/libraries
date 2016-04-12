@@ -1687,9 +1687,7 @@ _NoClipDrawScaledTransparentSprite:
 _:	push	bc
 ClipHeightScale =$+1
 	ld	a,0
-_:	dec	a
-	jr	z,++++_
-	push	af
+_:	push	af
 	push	hl
 ClipSprScaledLineNext =$+1
 	ld	c,0
@@ -1698,7 +1696,7 @@ _:	ld	b,0
 	ld	a,(hl)
 ClipSprScaledTransColor =$+1
 	cp	a,0
-	jr	z,+++_
+	jr	z,++++_
 _:	ld	(de),a
 	inc	de
 	djnz	-_
@@ -1714,6 +1712,8 @@ ClipSprScaledMoveAmt =$+1
 	pop	ix
 	pop	hl
 	pop	af
+	dec	a
+	jr	z,+_
 	jr	----_
 _:	lea	hl,ix
 	pop	bc
@@ -1722,7 +1722,7 @@ _:	lea	hl,ix
 	ret
 _:	inc	de
 	djnz	-_
-	jr	--_
+	jr	---_
 	
 	
 ;-------------------------------------------------------------------------------
@@ -2483,7 +2483,7 @@ TextData_ASM:
 	
 DefaultCharSpacing_ASM:
 	;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,0,7,7
+	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,1,7,7
 	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
 	.db 2,3,5,7,7,7,7,4,4,4,7,6,3,6,2,7
 	.db 7,6,7,7,7,7,7,7,7,7,2,3,5,6,5,6
