@@ -719,20 +719,19 @@ _SwapDraw:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,vRAM
-	ld	de,(mpLcdBase)
-	or	a,a
-	sbc	hl,de
-	add	hl,de
-	jr	nz,+_
-	ld	hl,vRAM+lcdSize
-_:	ld	(currentDrawingBuffer),de
-	ld	(mpLcdBase),hl
-	ld	hl,mpLcdIcr
-	set	2,(hl)
 	ld	hl,mpLcdRis
-_:	bit	2,(hl)
+_:	ld	a,(hl)
+	and	a,2
 	jr	z,-_
+	ld	(hl),a
+	ld	l,mpLcdBase&$ff
+	ld	de,(hl)
+	ld	(currentDrawingBuffer),de
+	cp	d
+	ld	de,vRam
+	jr	nc,_
+	ld	de,vRam+lcdSize
+_:	ld	(hl),de
 	ret
  
 ;-------------------------------------------------------------------------------
