@@ -113,13 +113,11 @@ _SetColorIndex:
 	ld	d,a
 	ld	a,e
 	ld	(color1),a \.r
-	ld	(color2),a \.r
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
 	ld	(color6),a \.r
 	ld	(color7),a \.r
-	ld	(color8),a \.r
 	ld	a,d
 	ret
 
@@ -340,27 +338,19 @@ _NoClipRectangle:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg2)
-	dec.s	hl
-	add	hl,de
-	or	a,a
-	sbc	hl,de
-	ld	e,(ix+__frame_arg1)
-	ld	a,(ix+__frame_arg3)
-	ld	bc,(ix+__frame_arg2)
-	dec.s	bc
-	jr	z,NoClipRectangleOnePixelWidth
-	bit	7,h
-	ld	hl,(ix+__frame_arg0)
-	pop	ix
-	ret	nz
+	ld	iy,0
+	add	iy,sp
+	ld	bc,(iy+__frame_arg2)
+	dec	bc
+	inc.s	bc
+	ld	a,b
+	or	a,c
+	ret	z
+	ld	a,(iy+__frame_arg3)
 	or	a,a
 	ret	z
-	cp	a,240
-	ret	nc
+	ld	hl,(iy+__frame_arg0)
+	ld	e,(iy+__frame_arg1)
 _NoClipRectangle_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
@@ -368,42 +358,24 @@ _NoClipRectangle_ASM:
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-FillRectangle_Loop:
-color2 =$+1
-	ld	(hl),0
-	push	hl
-	pop	de
-	inc	de
+	ex	de,hl
+NoClipRectangle_Loop:
 	push	bc
+	ld	hl,lcdWidth
+	add	hl,de
+	push	hl
+	ld	hl,color1
+	ldi
+	jp	po,NoClipRectangle_Skip
+	scf
+	sbc	hl,hl
+	add	hl,de
 	ldir
+NoClipRectangle_Skip:
+	pop	de
 	pop	bc
-	ld	de,lcdWidth
-	add	hl,de
-	sbc	hl,bc
 	dec	a
-	jr	nz,FillRectangle_Loop
-	ret
-NoClipRectangleOnePixelWidth:
-	ld	hl,(ix+__frame_arg0)
-	or	a,a
-	pop	ix
-	ret	z
-	cp	a,240
-	ret	nc
-	ld	d,lcdWidth/2
-	mlt	de
-	add.s	hl,de
-	add	hl,de
-	ld	de,(currentDrawingBuffer)
-	add	hl,de
-	ld	b,a
-FillRectangle_Loop_One:
-color8 =$+1
-	ld	(hl),0
-	ld	de,lcdWidth-1
-	add	hl,de
-	sbc	hl,bc
-	djnz	FillRectangle_Loop_One
+	jr	nz,NoClipRectangle_Loop
 	ret
 	
 ;-------------------------------------------------------------------------------
