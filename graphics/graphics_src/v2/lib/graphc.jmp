@@ -1,0 +1,107 @@
+ .db 192,"GRAPHC",0,2
+_gc_InitGraph:
+ jp 0
+_gc_CloseGraph:
+ jp 3
+_gc_SetColorIndex:
+ jp 6
+_gc_SetDefaultPalette:
+ jp 9
+_gc_SetPalette:
+ jp 12
+_gc_FillScrn:
+ jp 15
+_gc_ClipSetPixel:
+ jp 18
+_gc_ClipGetPixel:
+ jp 21
+_gc_GetColor:
+ jp 24
+_gc_SetColor:
+ jp 27
+_gc_NoClipLine:
+ jp 30
+_gc_NoClipRectangle:
+ jp 33
+_gc_NoClipRectangleOutline:
+ jp 36
+_gc_NoClipHorizLine:
+ jp 39
+_gc_NoClipVertLine:
+ jp 42
+_gc_NoClipCircle:
+ jp 45
+_gc_ClipCircleOutline:
+ jp 48
+_gc_DrawBuffer:
+ jp 51
+_gc_DrawScreen:
+ jp 54
+_gc_SwapDraw:
+ jp 57
+_gc_DrawState:
+ jp 60
+_gc_PrintChar:
+ jp 63
+_gc_PrintInt:
+ jp 66
+_gc_PrintUnsignedInt:
+ jp 69
+_gc_PrintString:
+ jp 72
+_gc_PrintStringXY:
+ jp 75
+_gc_StringWidth:
+ jp 78
+_gc_CharWidth:
+ jp 81
+_gc_TextX:
+ jp 84
+_gc_TextY:
+ jp 87
+_gc_SetTextXY:
+ jp 90
+_gc_SetTextColor:
+ jp 93
+_gc_SetTransparentColor:
+ jp 96
+_gc_NoClipDrawSprite:
+ jp 99
+_gc_NoClipDrawTransparentSprite:
+ jp 102
+_gc_NoClipGetSprite:
+ jp 105
+_gc_SetCustomFontData:
+ jp 108
+_gc_SetCustomFontSpacing:
+ jp 111
+_gc_SetFontMonospace:
+ jp 114
+_gc_SetClipWindow:
+ jp 117
+_gc_ClipRegion:
+ jp 120
+_gc_ShiftWindowDown:
+ jp 123
+_gc_ShiftWindowUp:
+ jp 126
+_gc_ShiftWindowLeft:
+ jp 129
+_gc_ShiftWindowRight:
+ jp 132
+_gc_ClipRectangle:
+ jp 135
+_gc_ClipRectangleOutline:
+ jp 138
+_gc_ClipHorizLine:
+ jp 141
+_gc_ClipVertLine:
+ jp 144
+_gc_ClipDrawSprite:
+ jp 147
+_gc_ClipDrawTransparentSprite:
+ jp 150
+_gc_NoClipDrawScaledSprite:
+ jp 153
+_gc_NoClipDrawScaledTransparentSprite:
+ jp 156
