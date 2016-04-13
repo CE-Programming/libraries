@@ -1,8 +1,8 @@
 #include "..\..\..\include\relocation.inc"
 #include "..\..\..\include\ti84pce.inc"
 
- .libraryName		"GRAPHC"	                    ; Name of library
- .libraryVersion	2		                    ; Version information (1-255)
+ .libraryName		"GRAPHC"          ; Name of library
+ .libraryVersion	2                 ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
 ; v1 functions -- No longer able to insert or move (Can optimize/fix though)
@@ -189,8 +189,8 @@ _FillScrn:
 	ld	a,c
 	ld	bc,lcdSize
 	ld	hl,(currentDrawingBuffer)
-	jp	_memset
-	
+	jp	_MemSet_ASM \.r
+
 ;-------------------------------------------------------------------------------
 _SetPalette:
 ; Sets the palette starting at 0x00 index and onward
@@ -340,17 +340,17 @@ _NoClipRectangle:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	bc,(iy+__frame_arg2)
+	ld	bc,(iy+9)
 	dec	bc
 	inc.s	bc
 	ld	a,b
 	or	a,c
 	ret	z
-	ld	a,(iy+__frame_arg3)
+	ld	a,(iy+12)
 	or	a,a
 	ret	z
-	ld	hl,(iy+__frame_arg0)
-	ld	e,(iy+__frame_arg1)
+	ld	hl,(iy+3)
+	ld	e,(iy+6)
 _NoClipRectangle_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
@@ -364,9 +364,9 @@ NoClipRectangle_Loop:
 	ld	hl,lcdWidth
 	add	hl,de
 	push	hl
-	ld	hl,color1
+	ld	hl,color1 \.r
 	ldi
-	jp	po,NoClipRectangle_Skip
+	jp	po,NoClipRectangle_Skip \.r
 	scf
 	sbc	hl,hl
 	add	hl,de
@@ -390,13 +390,12 @@ _ClipRectangleOutline:
 ;  None
 ; Comments:
 ;  Because I am lazy, I'm just going to send it to the clipped line routines
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	de,(ix+6)
+	ld	bc,(ix+9)
+	push	iy
 	push	bc
 	push	de
 	push	hl
@@ -404,13 +403,11 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg3)
-	pop	ix
+	pop	iy
+	ld	hl,(iy+3)
+	ld	de,(iy+6)
+	ld	bc,(iy+12)
+	push	iy
 	push	bc
 	push	de
 	push	hl
@@ -418,16 +415,14 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
+	pop	iy
+	ld	hl,(iy+3)
+	ld	de,(iy+6)
+	ld	bc,(iy+9)
 	add	hl,bc
 	dec	hl
-	ld	bc,(ix+__frame_arg3)
-	pop	ix
+	ld	bc,(iy+12)
+	push	iy
 	push	bc
 	push	de
 	push	hl
@@ -435,16 +430,13 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	de,(ix+__frame_arg0)
-	ld	hl,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg3)
+	pop	iy
+	ld	de,(iy+3)
+	ld	hl,(iy+6)
+	ld	bc,(iy+12)
 	add	hl,bc
 	dec	hl
-	ld	bc,(ix+__frame_arg2)
-	pop	ix
+	ld	bc,(iy+9)
 	push	bc
 	push	hl
 	push	de
@@ -464,14 +456,12 @@ _NoClipRectangleOutline:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	e,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	ld	d,(ix+__frame_arg3)
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	e,(iy+6)
+	ld	bc,(iy+9)
+	ld	d,(iy+12)
 	push	bc
 	push	hl
 	push	de
@@ -497,42 +487,40 @@ _ClipHorizLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,6
-	add	ix,sp
+	ld	iy,3
+	add	iy,sp
 	ld	de,(_ymin) \.r
-	ld	hl,(ix+3)
+	ld	hl,(iy+3)
 	call	_SignedCompare_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
+	ret	c
 	ld	hl,(_ymax) \.r
-	ld	de,(ix+3)
+	ld	de,(iy+3)
 	dec	hl
 	call	_SignedCompare_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
-	ld	hl,(ix+6)
-	ld	de,(ix)
+	ret	c
+	ld	hl,(iy+6)
+	ld	de,(iy)
 	add	hl,de
-	ld	(ix+6),hl
+	ld	(iy+6),hl
 	ld	hl,(_xmin) \.r
 	call	_Max_ASM \.r
-	ld	(ix),hl
+	ld	(iy),hl
 	ld	hl,(_xmax) \.r
-	ld	de,(ix+6)
+	ld	de,(iy+6)
 	call	_Min_ASM \.r
-	ld	(ix+6),hl
-	ld	de,(ix)
+	ld	(iy+6),hl
+	ld	de,(iy)
 	call	_SignedCompare_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
-	ld	de,(ix)
+	ret	c
+	ld	de,(iy)
 	push	de
-	ld	hl,(ix+6)
+	ld	hl,(iy+6)
 	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
-	ld	e,(ix+3)
+	ld	e,(iy+3)
 	pop	hl
-	pop	ix
 	jr	_RectOutlineHoriz_ASM
 	
 ;-------------------------------------------------------------------------------
@@ -544,13 +532,11 @@ _NoClipHorizLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	e,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	e,(iy+6)
+	ld	bc,(iy+9)
 _RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
@@ -584,41 +570,39 @@ _ClipVertLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,6
-	add	ix,sp
+	ld	iy,3
+	add	iy,sp
 	ld	hl,(_xmax) \.r
-	ld	de,(ix)
+	ld	de,(iy)
 	push	de
 	dec	de
 	call	_SignedCompare_ASM \.r
 	pop	hl
-	jp	c,_ReturnRestoreIX_ASM \.r
+	ret	c
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
-	ld	hl,(ix+6)
-	ld	de,(ix+3)
+	ret	c
+	ld	hl,(iy+6)
+	ld	de,(iy+3)
 	add	hl,de
-	ld	(ix+6),hl
+	ld	(iy+6),hl
 	ld	hl,(_ymin) \.r
 	call	_Max_ASM \.r
-	ld	(ix+3),hl
+	ld	(iy+3),hl
 	ld	hl,(_ymax) \.r
-	ld	de,(ix+6)
+	ld	de,(iy+6)
 	call	_Min_ASM \.r
-	ld	(ix+6),hl
-	ld	de,(ix+3)
+	ld	(iy+6),hl
+	ld	de,(iy+3)
 	call	_SignedCompare_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
-	ld	hl,(ix+6)
-	ld	de,(ix+3)
+	ret	c
+	ld	hl,(iy+6)
+	ld	de,(iy+3)
 	or	a,a
 	sbc	hl,de
 	ld	b,l
 	inc	b
-	ld	hl,(ix)
-	pop	ix
+	ld	hl,(iy)
 	jr	_RectOutlineVert_ASM_2
 
 ;-------------------------------------------------------------------------------
@@ -630,13 +614,11 @@ _NoClipVertLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)		; x
-	ld	e,(ix+__frame_arg1)		; y
-	ld	b,(ix+__frame_arg2)		; length
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+__frame_arg0)		; x
+	ld	e,(iy+__frame_arg1)		; y
+	ld	b,(iy+__frame_arg2)		; length
 _RectOutlineVert_ASM_2:
 	dec	b
 	ret	z
@@ -1107,37 +1089,35 @@ _NoClipLine:
 ;  __frame_arg3 : Y1 Coord
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	de,(ix+__frame_arg2)
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	de,(iy+9)
 	ex.s	de,hl
-	ld	b,(ix+__frame_arg1)
-	ld	c,(ix+__frame_arg3)
-	pop	ix
+	ld	b,(iy+6)
+	ld	c,(iy+12)
 _NoClipLine_ASM:
 	ld	a,c
 	ld	(y1),a \.r
+	ld	(nde),hl \.r
 	push	de
-	push	hl
-	push	bc    
-	or	a,a 
-	sbc	hl,de 
-	ld	a,$03 
-	jr	nc,+_ 
+	push	bc
+	or	a,a
+	sbc	hl,de
+	ld	a,$03
+	jr	nc,+_
 	ld	a,$0B
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
 	ex	de,hl
-	or	a,a 
+	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
 	ex	de,hl
 _:	ld	(dx),hl \.r
 	push	hl
-	add	hl,hl 
+	add	hl,hl
 	ld	(dx1),hl \.r
 	ld	(dx12),hl \.r
 	or	a,a
@@ -1146,107 +1126,98 @@ _:	ld	(dx),hl \.r
 	sbc	hl,hl
 	ld	e,b
 	ld	l,c
-	or	a,a 
+	or	a,a
 	sbc	hl,de
-	ld	a,$3C
-	jr	nc,+_
-	inc	a
-_:	ld	(yStep),a \.r
+	ld	a,30
+	adc	a,a
+	ld	(yStep),a \.r
 	ld	(yStep2),a \.r
-	ex	de,hl 
-	or	a,a 
-	sbc	hl,hl 
-	sbc	hl,de 
+	ex	de,hl
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,de
 	jp	p,+_ \.r
 	ex	de,hl
 _:	ld	(dy),hl \.r
-	push	hl
 	add	hl,hl
 	ld	(dy1),hl \.r
 	ld	(dy12),hl \.r
-	pop	hl
 	pop	de
 	pop	af
-	or	a,a
+	srl	h
+	rr	l
 	sbc	hl,de
-	pop	de
 	pop	bc
 	ld	hl,0
-	jr	nc,changeYLoop 
+	jr	nc,changeYLoop
 changeXLoop:
-	push	hl 
-	ld	l,a 
+	push	hl
+	ld	l,a
 	ld	h,lcdWidth/2 
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
-	push	bc
-	ld	bc,(currentDrawingBuffer)
-	add	hl,bc 
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
 color6 =$+1
 	ld	(hl),0
-	pop	bc
-	push	bc
+	sbc	hl,hl
+	ld	h,b
+	ld	l,c
+	or	a,a
+nde =$+1
+	ld	de,00
+	sbc	hl,de
 	pop	hl
-	or	a,a 
-	sbc	hl,de 
-	pop	hl 
-	ret	z 
-xStep:	nop
-	push	de
-dy1 =$+1 
-	ld	de,0 
+	ret	z
+xStep	nop
+dy1 =$+1
+	ld	de,0
 	or	a,a
 	adc	hl,de
-	jp	m,+_ \.r
+	jp	m,changeXLoop \.r
 dx =$+1
 	ld	de,0
 	or	a,a
-	sbc	hl,de 
-	add	hl,de 
-	jr	c,+_
-yStep: 	nop
-dx1 =$+1 
+	sbc	hl,de
+	add	hl,de
+	jr	c,changeXLoop
+yStep	nop
+dx1 =$+1
 	ld	de,0
-	sbc	hl,de 
-_:	pop	de
+	sbc	hl,de
 	jr	changeXLoop
-
 changeYLoop:
-	push	bc 
 	push	hl
-	ld	l,a 
+	ld	l,a
 	ld	h,lcdWidth/2 
 	mlt	hl
-	add	hl,hl 
-	add	hl,bc 
-	ld	bc,(currentDrawingBuffer)
-	add	hl,bc 
+	add	hl,hl
+	add	hl,bc
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
 color7 =$+1
-	ld	(hl),0 
+	ld	(hl),0
 	pop	hl
-	pop	bc
 y1 =$+1
 	cp	a,0
 	ret	z
-yStep2:	nop
-	push	de
+yStep2	nop
 dx12 =$+1
 	ld	de,0
 	or	a,a
 	adc	hl,de
-	jp	m,+_ \.r
+	jp	m,changeYLoop \.r
 dy =$+1
 	ld	de,0
 	or	a,a
 	sbc	hl,de
 	add	hl,de
-	jr	c,+_
-xStep2:	nop
+	jr	c,changeYLoop
+xStep2	nop
 dy12 =$+1
 	ld	de,0
 	sbc	hl,de
-_:	pop	de
 	jr	changeYLoop
 
 ;-------------------------------------------------------------------------------
@@ -1544,11 +1515,10 @@ _NoClipDrawScaledSprite:
 ;  __frame_arg6 : Height Scale (integer)
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg1)
-	ld	c,(ix+__frame_arg2)
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+6)
+	ld	c,(iy+9)
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
@@ -1558,8 +1528,8 @@ _NoClipDrawScaledSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	c,(ix+__frame_arg3)
-	ld	b,(ix+__frame_arg5)
+	ld	c,(iy+12)
+	ld	b,(iy+18)
 	ld	a,b
 	ld	(NoClipSprScaledWidth),a \.r
 	ld	a,c
@@ -1569,10 +1539,10 @@ _NoClipDrawScaledSprite:
 	sbc	hl,bc
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
-	ld	a,(ix+__frame_arg6)
+	ld	a,(iy+21)
 	ld	(NoClipHeightScale),a \.r
-	ld	b,(ix+__frame_arg4)
-	ld	hl,(ix+__frame_arg0)
+	ld	b,(iy+15)
+	ld	hl,(iy+3)
 _:	push	bc
 NoClipSprScaledLineNext =$+1
 	ld	c,0
@@ -1594,7 +1564,7 @@ NoClipSprScaledMoveAmt =$+1
 NoClipHeightScale =$+1
 	ld	a,0
 	push	hl
-	pop	ix
+	pop	iy
 	pop	hl
 _:	dec	a
 	jr	z,+_
@@ -1608,10 +1578,9 @@ NoClipSprScaledCopyAmt = $+1
 	ex	de,hl
 	add	hl,bc
 	jr	-_
-_:	lea	hl,ix
+_:	lea	hl,iy
 	pop	bc
 	djnz	-----_
-	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1819,11 +1788,10 @@ _NoClipDrawSprite:
 ;  __frame_arg4 : Height
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg1)
-	ld	c,(ix+__frame_arg2)
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+6)
+	ld	c,(iy+9)
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
@@ -1834,25 +1802,23 @@ _NoClipDrawSprite:
 	ex	de,hl
 	ld	hl,lcdWidth
 	ld	bc,0
-	ld	c,(ix+__frame_arg3)
+	ld	c,(iy+12)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprMoveAmt),hl \.r
 	ld	(NoClipSprLineNext),a \.r
-	ld	b,(ix+__frame_arg4)
-	ld	hl,(ix+__frame_arg0)
-	pop	ix
-_:	push	bc
+	ld	a,(iy+15)
+	ld	hl,(iy+3)
 NoClipSprLineNext =$+1
-	ld	bc,0
+_:	ld	bc,0
 	ldir
 	ex	de,hl
 NoClipSprMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
-	pop	bc
-	djnz	-_
+	dec	a
+	jr	nz,-_
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -1866,11 +1832,10 @@ _NoClipGetSprite:
 ;  __frame_arg4 : Height
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg1)
-	ld	c,(ix+__frame_arg2)
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+6)
+	ld	c,(iy+9)
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
@@ -1881,24 +1846,22 @@ _NoClipGetSprite:
 	ex	de,hl
 	ld	hl,lcdWidth
 	ld	bc,0
-	ld	c,(ix+__frame_arg3)
+	ld	c,(iy+12)
 	ld	a,c
 	sbc	hl,bc
 	ld	(NoClipSprGrabMoveAmt),hl \.r
 	ld	(NoClipSprGrabNextLine),a \.r
-	ld	b,(ix+__frame_arg4)
-	ld	hl,(ix+__frame_arg0)
-	pop	ix
+	ld	a,(iy+15)
+	ld	hl,(iy+3)
 	ex	de,hl
-_:	push	bc
 NoClipSprGrabNextLine =$+1
-	ld	bc,0
+_:	ld	bc,0
 	ldir
 NoClipSprGrabMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
-	pop	bc
-	djnz	-_
+	dec	a
+	jr	nz,-_
 	ret
  
 ;-------------------------------------------------------------------------------
