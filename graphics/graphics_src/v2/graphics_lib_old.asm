@@ -86,12 +86,10 @@ _SetClipWindow:
 ; Returns:
 ;  None
 	call	_SetFullScreenClipping_ASM \.r
-	push	ix
-	ld	ix,6
-	add	ix,sp
+	ld	iy,6
+	add	iy,sp
 	call	_ClipRectangularRegion_ASM \.r
-	lea	hl,ix
-	pop	ix
+	lea	hl,iy
 	ret	c
 	ld	de,_xmin \.r
 	ld	bc,12
@@ -299,34 +297,32 @@ _ClipRectangle:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,6
-	add	ix,sp
-	ld	hl,(ix+6)
-	ld	de,(ix)
+	ld	iy,6
+	add	iy,sp
+	ld	hl,(iy+6)
+	ld	de,(iy)
 	add	hl,de
-	ld	(ix+6),hl
-	ld	hl,(ix+9)
-	ld	de,(ix+3)
+	ld	(iy+6),hl
+	ld	hl,(iy+9)
+	ld	de,(iy+3)
 	add	hl,de
-	ld	(ix+9),hl
+	ld	(iy+9),hl
 	call	_ClipRectangularRegion_ASM \.r
-	jp	c,_ReturnRestoreIX_ASM \.r
-	ld	de,(ix)
+	ret	c
+	ld	de,(iy)
 	push	de
-	ld	hl,(ix+6)
+	ld	hl,(iy+6)
 	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
-	ld	de,(ix+3)
-	ld	hl,(ix+9)
+	ld	de,(iy+3)
+	ld	hl,(iy+9)
 	or	a,a
 	sbc	hl,de
 	ld	a,l
 	pop	hl
-	pop	ix
-	jp	_NoClipRectangle_ASM \.r
+	jr	_NoClipRectangle_ASM
 
 ;-------------------------------------------------------------------------------
 _NoClipRectangle:
@@ -393,8 +389,8 @@ _ClipRectangleOutline:
 	ld	iy,0
 	add	iy,sp
 	ld	hl,(iy+3)
-	ld	de,(ix+6)
-	ld	bc,(ix+9)
+	ld	de,(iy+6)
+	ld	bc,(iy+9)
 	push	iy
 	push	bc
 	push	de
@@ -1324,15 +1320,13 @@ _ClipRegion:
 ;  Pointer to struct
 ; Returns:
 ;  False if offscreen
-	pop	hl
-	ex	(sp),ix
-	push	hl
+	ld	hl,3
+	add	hl,sp
+	ld	iy,(hl)
 	call	_ClipRectangularRegion_ASM
 	sbc	a,a
 	inc	a
-	pop	hl
-	ex	(sp),ix
-	jp	(hl)
+	ret
 
 ;-------------------------------------------------------------------------------
 ; Inner library routines
@@ -1452,36 +1446,36 @@ _:	ret	po
 
 ;-------------------------------------------------------------------------------
 _ClipRectangularRegion_ASM:
-; Calcualtes the new coordinates given the clip window and inputs
+; Calculates the new coordinates given the clip window and inputs
 ; Inputs:
 ;  None
 ; Outputs:
 ;  Modifies data registers
 ;  Sets C flag if offscreen
 	ld	hl,(_xmin) \.r
-	ld	de,(ix)
+	ld	de,(iy)
 	call	_Max_ASM \.r
-	ld	(ix),hl
+	ld	(iy),hl
 	ld	hl,(_xmax) \.r
-	ld	de,(ix+6)
+	ld	de,(iy+6)
 	call	_Min_ASM \.r
-	ld	(ix+6),hl
-	ld	de,(ix)
+	ld	(iy+6),hl
+	ld	de,(iy)
 	call	_SignedCompare_ASM \.r
 	ret	c
 	ld	hl,(_ymin) \.r
-	ld	de,(ix+3)
+	ld	de,(iy+3)
 	call	_Max_ASM \.r
-	ld	(ix+3),hl
+	ld	(iy+3),hl
 	ld	hl,(_ymax) \.r
-	ld	de,(ix+9)
+	ld	de,(iy+9)
 	call	_Min_ASM \.r
-	ld	(ix+9),hl
-	ld	de,(ix+3)
+	ld	(iy+9),hl
+	ld	de,(iy+3)
 _SignedCompare_ASM:
 	or	a,a
 	sbc	hl,de
-	add	hl,hl
+	add	hl,de
 	ret	po
 	ccf	
 	ret
