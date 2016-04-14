@@ -1475,7 +1475,7 @@ _ClipRectangularRegion_ASM:
 _SignedCompare_ASM:
 	or	a,a
 	sbc	hl,de
-	add	hl,de
+	add	hl,hl
 	ret	po
 	ccf	
 	ret
