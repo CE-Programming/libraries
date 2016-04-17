@@ -15,17 +15,22 @@
 ;-------------------------------------------------------------------------------
 _Scan:
 ; Scans the keypad and updates data registers
-; Note: Disables interrupts
+; Note: Disables interrupts during execution
 ; Arguments:
 ;  None
 ; Returns:
 ;  None
+	ld	a,i
+	push	af
 	di
 	ld	hl,DI_Mode
 	ld	(hl),2
 	xor	a,a
 _:	cp	a,(hl)
 	jr	nz,-_
+	pop	af
+	ret	po
+	ei
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -55,15 +60,18 @@ _Reset:
 ;-------------------------------------------------------------------------------
 _ScanGroup:
 ; Scans a keypad group
+; Note: Disables interrupts during execution
 ; Arguments:
 ;  __frame_arg0 : Keypad group number
 ; Returns:
 ;  Value of entire group (Keys ORd)
-	di
 	pop	hl
 	pop	bc
 	push	bc
 	push	hl
+	ld	a,i
+	push	af
+	di
 	ld	hl,DI_Mode
 	ld	(hl),2
 	xor	a,a
@@ -77,19 +85,27 @@ _:	cp	a,(hl)
 	mlt	hl
 	ld	de,kbdG1-2
 	add	hl,de
+	pop	af
 	ld	a,(hl)
+	ret	po
+	ei
 	ret
-_:	xor	a,a
+_:	pop	af
+	ret	po
+	ei
+	xor	a,a
 	ret
 
 ;-------------------------------------------------------------------------------
 _AnyKey:
 ; Scans the keypad and updates data registers; checking if a key was pressed
-; Note: Disables interrupts
+; Note: Disables interrupts during execution
 ; Arguments:
 ;  None
 ; Returns:
 ;  0 if no key is pressed
+	ld	a,i
+	push	af
 	di
 	ld	hl,DI_Mode
 	ld	(hl),2
@@ -116,6 +132,10 @@ _:	cp	a,(hl)
 	inc	hl
 	inc	hl
 	or	a,(hl)
+	pop	bc
+	bit	2,c
+	ret	z
+	ei
 	ret
 
  .endLibrary

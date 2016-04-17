@@ -46,25 +46,25 @@ typedef uint16_t kb_lkey_t;
 
 /**
  * Scans the given keyboard row and returns the row value
- * Note: Diasbles interrupts
+ * Note: Disables interrupts during execution, and restores on completion
  */
 uint8_t kb_ScanGroup(uint8_t row);
 
 /**
  * Scans the keyboard quickly to tell if any key was pressed
- * Note: Diasbles interrupts
+ * Note: Disables interrupts during execution, and restores on completion
  */
 uint8_t kb_AnyKey(void);
 
 /**
  * Scans the keyboard to update data values
- * Note: Diasbles interrupts
+ * Note: Disables interrupts during execution, and restores on completion
  */
 void kb_Scan(void);
 
 /**
  * Resets the keyboard
- * Only use if you modify keyboard timmings or numer of rows
+ * Only use if you modify keyboard timers or number of rows
  */
 void kb_Reset(void);
 

@@ -27,7 +27,7 @@
 ;-------------------------------------------------------------------------------
 ; v2 functions
 ;-------------------------------------------------------------------------------
- .function "ti_GetToken",_GetTokem
+ .function "ti_GetToken",_GetToken
  
  .beginDependencies
  .endDependencies
@@ -131,7 +131,7 @@ NoResize:
  
 ;-------------------------------------------------------------------------------
 _GetToken:
-; Returns pointer to next token's string
+; Returns pointer to next token string
 ; Arguments:
 ;  __frame_arg0 : Slot number
 ; Returns:
