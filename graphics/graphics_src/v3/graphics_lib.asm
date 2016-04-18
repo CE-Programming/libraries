@@ -409,9 +409,9 @@ _ClipRectangleOutline:
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	ld	hl,(ix+3)
-	ld	de,(ix+6)
-	ld	bc,(ix+9)
+	ld	hl,(ix+6)
+	ld	de,(ix+9)
+	ld	bc,(ix+12)
 	push	bc
 	push	de
 	push	hl
@@ -419,35 +419,35 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	ld	hl,(ix+3)
-	ld	de,(ix+6)
-	ld	bc,(ix+12)
-	push	bc
-	push	de
-	push	hl
-	call	_ClipVertLine \.r
-	pop	hl
-	pop	de
-	pop	bc
-	ld	hl,(ix+3)
-	ld	de,(ix+6)
-	ld	bc,(ix+9)
-	add	hl,bc
-	dec	hl
-	ld	bc,(ix+12)
-	push	bc
-	push	de
-	push	hl
-	call	_ClipVertLine \.r
-	pop	hl
-	pop	de
-	pop	bc
-	ld	de,(ix+3)
 	ld	hl,(ix+6)
+	ld	de,(ix+9)
+	ld	bc,(ix+15)
+	push	bc
+	push	de
+	push	hl
+	call	_ClipVertLine \.r
+	pop	hl
+	pop	de
+	pop	bc
+	ld	hl,(ix+6)
+	ld	de,(ix+9)
 	ld	bc,(ix+12)
 	add	hl,bc
 	dec	hl
-	ld	bc,(ix+9)
+	ld	bc,(ix+15)
+	push	bc
+	push	de
+	push	hl
+	call	_ClipVertLine \.r
+	pop	hl
+	pop	de
+	pop	bc
+	ld	de,(ix+6)
+	ld	hl,(ix+9)
+	ld	bc,(ix+15)
+	add	hl,bc
+	dec	hl
+	ld	bc,(ix+12)
 	push	bc
 	push	hl
 	push	de
@@ -1824,11 +1824,9 @@ _ClipDrawSprite:
 	ld	a,(iy+15)
 	or	a,a
 	ret	z
-	ld	b,a
 	ld	hl,(iy+3)
-_:	push	bc
 ClipSprLineNext =$+1
-	ld	bc,0
+_:	ld	bc,0
 	ldir
 	ex	de,hl
 ClipSprMoveAmt =$+1
@@ -1838,10 +1836,10 @@ ClipSprMoveAmt =$+1
 ClipSprNextAmt =$+1
 	ld	bc,0
 	add	hl,bc
-	pop	bc
-	djnz	-_
+	dec	a
+	jr	nz,-_
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipDrawSprite:
 ; Places an sprite on the screen as fast as possible
@@ -2006,7 +2004,7 @@ _ClipDraw_ASM:
 	ld	hl,(_ymin) \.r
 	sbc	hl,de
 	jp	m,NoTopClipNeeded_ASM \.r
-	jp	z,NoTopClipNeeded_ASM \.r
+	jr	z,NoTopClipNeeded_ASM
 	ld	a,l
 	ld	de,(iy+9)
 	ld	hl,(iy+15)
@@ -2044,14 +2042,14 @@ NoBottomClipNeeded_ASM:
 	ld	hl,(iy+6)
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	jp	nc,NoLeftClip_ASM \.r
+	jr	nc,NoLeftClip_ASM
 	ld	hl,(iy+6)
 	ld	de,(iy+12)
 	add	hl,de
 	ld	de,(_xmin) \.r
 	ex	de,hl
 	call	_SignedCompare_ASM \.r
-	jp	nc,_PopCall \.r
+	jr	nc,_PopCall
 	ld	de,(iy+6)
 	ld	hl,(iy+3)
 	or	a,a
@@ -2067,14 +2065,14 @@ NoLeftClip_ASM:
 	ld	hl,(iy+6)
 	ld	de,(_xmax) \.r
 	call	_SignedCompare_ASM \.r
-	jp	nc,_PopCall \.r
+	jr	nc,_PopCall
 	ld	hl,(iy+6)
 	ld	de,(iy+12)
 	add	hl,de
 	ld	de,(_xmax) \.r
 	ex	de,hl
 	call	_SignedCompare_ASM \.r
-	jp	nc,NoRightClip_ASM \.r
+	jr	nc,NoRightClip_ASM
 	ld	hl,(_xmax) \.r
 	ld	de,(iy+6)
 	or	a,a
@@ -2121,13 +2119,17 @@ _DrawTilemap:
 ;      }
 ;  }
 ;
+	push	ix
 	ld	hl,-15
-	call	__frameset_ASM \.r
-	ld	iy,(ix+6)
+	ld	ix,0
 	ld	bc,0
+	add	ix,sp
+	add	hl,sp
+	ld	sp,hl
+	ld	iy,(ix+6)
 	ld	c,(iy+7)
 	ld	hl,(ix+9)
-	ld	a,b
+	xor	a,a
 	ld	b,24
 _:	add	hl,hl
 	rla
@@ -2142,7 +2144,7 @@ _:	djnz	--_
 	ld	(_XTileStart),a \.r
 	ld	c,(iy+6)
 	ld	hl,(ix+12)
-	ld	a,b
+	xor	a,a
 	ld	b,24
 _:	add	hl,hl
 	rla
@@ -2236,8 +2238,7 @@ p_3:	ld	de,$800000
 	add	hl,bc
 	ld	(ix+-5),hl
 	
-p_9:	ld	hl,(ix+-5)
-	ld	de,$800000
+p_9:	ld	de,$800000
 	add	hl,de
 	ld	e,240
 	or	a,a

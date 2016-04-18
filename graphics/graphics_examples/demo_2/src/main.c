@@ -64,20 +64,21 @@ void main(void) {
 	while(kb_ScanGroup(kb_group_1) != kb_2nd) {
 		key = kb_ScanGroup(kb_group_7);
 		if (key) {
-			gc_FillScrn(0xFF);
 			gc_DrawTilemap(&tilemap, x_offset, y_offset);
+			gc_SetColorIndex(10);
+			gc_ClipRectangleOutline(0,0,20,20);
 			switch(key) {
 			    case kb_Down:
-				y_offset+=4;
+				y_offset+=8;
 				break;
 			    case kb_Right:
-				x_offset+=4;
+				x_offset+=8;
 				break;
 			    case kb_Up:
-				y_offset-=4;
+				y_offset-=8;
 				break;
 			    case kb_Left:
-				x_offset-=4;
+				x_offset-=8;
 				break;
 			    default:
 				break;
