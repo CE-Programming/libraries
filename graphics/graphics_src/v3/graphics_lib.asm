@@ -927,33 +927,26 @@ _ClipCircle:
 ; Returns:
 ;  None
 	ld	hl,-9
-	call	__frameset
+	call	__frameset_ASM \.r
 	ld	bc,0
 	ld	(ix+-3),bc
 	ld	bc,(ix+12)
 	ld	(ix+-6),bc
-	ld	bc,(ix+12)
 	ld	hl,1
 	or	a,a
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
 b_5:
-	ld	bc,(ix+9)
 	ld	hl,(ix+-3)
-	add	hl,bc
+	add	hl,hl
+	inc	hl
 	push	hl
+	ld	hl,(ix+9)
 	ld	de,(ix+-3)
-	ld	hl,(ix+9)
 	or	a,a
 	sbc	hl,de
-	ex	de,hl
-	pop	hl
-	or	a,a
-	sbc	hl,de
-	inc	hl
 	push	hl
-	push	de
 	ld	bc,(ix+6)
 	ld	hl,(ix+-6)
 	add	hl,bc
@@ -962,21 +955,15 @@ b_5:
 	pop	bc
 	pop	bc
 	pop	bc
-	ld	bc,(ix+9)
 	ld	hl,(ix+-6)
-	add	hl,bc
-	push	hl
-	ld	de,(ix+-6)
-	ld	hl,(ix+9)
-	or	a,a
-	sbc	hl,de
-	ex	de,hl
-	pop	hl
-	or	a,a
-	sbc	hl,de
+	add	hl,hl
 	inc	hl
 	push	hl
-	push	de
+	ld	bc,(ix+-6)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	push	hl
 	ld	bc,(ix+6)
 	ld	hl,(ix+-3)
 	add	hl,bc
@@ -985,21 +972,15 @@ b_5:
 	pop	bc
 	pop	bc
 	pop	bc
-	ld	bc,(ix+9)
 	ld	hl,(ix+-6)
-	add	hl,bc
-	push	hl
-	ld	hl,(ix+9)
-	or	a,a
-	ld	de,(ix+-6)
-	sbc	hl,de
-	ex	de,hl
-	pop	hl
-	or	a,a
-	sbc	hl,de
+	add	hl,hl
 	inc	hl
 	push	hl
-	push	de
+	ld	bc,(ix+-6)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	push	hl
 	ld	bc,(ix+-3)
 	ld	hl,(ix+6)
 	or	a,a
@@ -1009,21 +990,15 @@ b_5:
 	pop	bc
 	pop	bc
 	pop	bc
-	ld	bc,(ix+9)
 	ld	hl,(ix+-3)
-	add	hl,bc
-	push	hl
-	ld	hl,(ix+9)
-	or	a,a
-	ld	de,(ix+-3)
-	sbc	hl,de
-	ex	de,hl
-	pop	hl
-	or	a,a
-	sbc	hl,de
+	add	hl,hl
 	inc	hl
 	push	hl
-	push	de
+	ld	bc,(ix+-3)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	push	hl
 	ld	bc,(ix+-6)
 	ld	hl,(ix+6)
 	or	a,a
@@ -1037,7 +1012,6 @@ b_5:
 	inc	bc
 	ld	(ix+-3),bc
 	ld	bc,(ix+-9)
-	or	a,a
 	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
@@ -2516,6 +2490,22 @@ _SetFontMonospace:
 	ld	(MonoFlag_ASM),a \.r
 	ret
 	
+;-------------------------------------------------------------------------------
+__frameset_ASM:
+; Inits the stack frame using ix
+; Arguments:
+;  HL : Negative, amount of stack space to allocate
+; Returns:
+;  None
+	ex	(sp),ix
+	lea	de,ix
+	ld	ix,0
+	add	ix,sp
+	add	hl,sp
+	ld	sp,hl
+	ex	de,hl
+	jp	(hl)
+  
 ;-------------------------------------------------------------------------------
 MonoFlag_ASM:
 	.db 0
