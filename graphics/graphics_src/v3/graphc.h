@@ -4,8 +4,9 @@
  *
  * @section LICENSE
  *
- * Copyright (c) 2016, Matthew Waltz
- * Sections of this library are derivatives from Patrick Prendergast, aka tr1p1ea
+ * Copyright (c) 2016
+ * Matthew "MateoConLechuga" Waltz
+ * Jacob "jacobly" Young
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +45,43 @@
 typedef struct gc_region {
 	int x_left, y_top, x_right, y_bottom;
 } gc_region_t;
+
+/* Type for tilemapping */
+typedef struct gc_tilemap {
+	uint8_t *map;
+	uint8_t **tiles;
+	uint8_t tile_height;
+	uint8_t tile_width;
+	uint8_t height;
+	uint8_t width;
+	uint8_t y_loc;
+	unsigned x_loc;
+} gc_tilemap_t;
+
+/**
+ * Draws a tilemap given an intialized tilemap structure
+ *  x_offset : offset in pixels from the left of the tilemap
+ *  y_offset : offset in pixels from the top of the tilemap
+ */
+void gc_DrawTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+
+/**
+ * Tile Setting/Getting -- These use absolute pixel offsets from the left and top
+ */
+uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+
+/**
+ * Tile Setting/Getting -- These use mapped offsets from the tile map itself
+ */
+uint8_t *gc_TilePtrMapped(gc_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_offset);
+
+/**
+ * Decompress a block of data using an LZ77 decoder
+ *  in  : Compressed buffer
+ *  out : Decompressed buffer; must be large enough to hold decompressed data
+ *  insize : Number of input bytes
+ */
+void gc_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
 
 /**
  * Initializes the graphics setup.
@@ -162,17 +200,14 @@ void gc_NoClipVertLine(uint16_t x, uint8_t y, uint8_t length);
 
 /**
  * Draws a filled circle measured from the top left origin.
- * No clipping is performed.
- * This routine disasbles interrupts
  */
-void gc_NoClipCircle(uint16_t x, uint8_t y, uint16_t radius);
+void gc_NoClipCircle(uint16_t x, uint8_t y, unsigned radius);
+void gc_ClipCircle(int x, int y, unsigned radius);
 
 /**
  * Draws circle outline measured from the top left origin.
- * Clipping is performed.
- * This routine disasbles interrupts
  */
-void gc_ClipCircleOutline(uint16_t x, uint8_t y, uint16_t radius);
+void gc_ClipCircleOutline(int x, int y, unsigned radius);
 
 /**
  * Forces all graphics routines to write to the offscreen buffer

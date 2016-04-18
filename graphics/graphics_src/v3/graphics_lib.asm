@@ -70,6 +70,7 @@
  .function "gc_DrawTilemap",_DrawTilemap
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
+ .function "gc_LZDecompress",_LZDecompress
  
  .beginDependencies
  .endDependencies
@@ -2716,6 +2717,176 @@ __frameset_ASM:
 	ex	de,hl
 	jp	(hl)
   
+;-------------------------------------------------------------------------------
+_LZ_ReadVarSize:
+; LZ Compression Subroutine
+	ld	hl,-12
+	call	__frameset_ASM \.r
+	ld	bc,0
+	ld	(ix+-3),bc
+	ld	(ix+-6),bc
+_:	ld	de,0
+	ld	hl,(ix+9)
+	ld	a,(hl)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	(ix+-9),hl
+	ld	bc,(ix+9)
+	inc	bc
+	ld	(ix+9),bc
+	ld	a,(ix+-9)
+	res	7,a
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	(ix+-12),hl
+	ld	hl,(ix+-3)
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	push	hl
+	pop	bc
+	ld	hl,(ix+-12)
+	call	__ior
+	ld	(ix+-3),hl
+	ld	bc,(ix+-6)
+	inc	bc
+	ld	(ix+-6),bc
+	ld	a,(ix+-9)
+	and	a,128
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	sbc	hl,de
+	jr	nz,-_
+	ld	hl,(ix+6)
+	ld	bc,(ix+-3)
+	ld	(hl),bc
+	ld	hl,(ix+-6)
+	ld	sp,ix
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_LZDecompress:
+; Decompresses in lz77 format the input data into the output buffer
+; Arguments:
+;  __frame_arg0 : Pointer to Input Buffer
+;  __frame_arg1 : Pointer to Output Buffer
+;  __frame_arg2 : Pointer to Input Buffer Size
+; Returns:
+;  None
+	ld	hl,-20
+	call	__frameset_ASM \.r
+	ld	bc,1
+	ld	hl,(ix+12)
+	or	a,a
+	sbc	hl,bc
+	jp	c,l_19 \.r
+	ld	hl,(ix+6)
+	ld	a,(hl)
+	ld	(ix+-7),a
+	ld	(ix+-3),bc
+	ld	bc,0
+	ld	(ix+-6),bc
+l_17:	ld	bc,(ix+-3)
+	ld	hl,(ix+6)
+	add	hl,bc
+	ld	a,(hl)
+	ld	(ix+-8),a
+	ld	bc,(ix+-3)
+	inc	bc
+	ld	(ix+-3),bc
+	ld	a,(ix+-8)
+	cp	a,(ix+-7)
+	jp	nz,l_16 \.r
+	ld	bc,(ix+-3)
+	ld	hl,(ix+6)
+	add	hl,bc
+	ld	(ix+-14),hl
+	ld	a,(hl)
+	or	a,a
+	jr	nz,l_13
+	ld	bc,(ix+-6)
+	ld	hl,(ix+9)
+	add	hl,bc
+	ld	a,(ix+-7)
+	ld	(hl),a
+	ld	bc,(ix+-6)
+	inc	bc
+	ld	(ix+-6),bc
+	ld	bc,(ix+-3)
+	inc	bc
+	ld	(ix+-3),bc
+	jr	l_18
+l_13:	ld	bc,(ix+-14)
+	push	bc
+	pea	ix+-17
+	call	_LZ_ReadVarSize \.r
+	pop	bc
+	pop	bc
+	ld	bc,(ix+-3)
+	add	hl,bc
+	ld	(ix+-3),hl
+	ld	bc,(ix+6)
+	add	hl,bc
+	push	hl
+	pea	ix+-20
+	call	_LZ_ReadVarSize \.r
+	pop	bc
+	pop	bc
+	ld	bc,(ix+-3)
+	add	hl,bc
+	ld	(ix+-3),hl
+	ld	bc,0
+	ld	(ix+-11),bc
+	jr	l_11
+l_9:	ld	bc,(ix+-20)
+	ld	hl,(ix+-6)
+	or	a,a
+	sbc	hl,bc
+	ld	bc,(ix+9)
+	add	hl,bc
+	ex	de,hl
+	ld	hl,(ix+9)
+	ld	bc,(ix+-6)
+	add	hl,bc
+	ld	a,(de)
+	ld	(hl),a
+	ld	bc,(ix+-6)
+	inc	bc
+	ld	(ix+-6),bc
+	ld	bc,(ix+-11)
+	inc	bc
+	ld	(ix+-11),bc
+l_11:	ld	bc,(ix+-17)
+	ld	hl,(ix+-11)
+	or	a,a
+	sbc	hl,bc
+	jr	c,l_9
+	jr	l_18
+l_16:	ld	bc,(ix+-6)
+	ld	hl,(ix+9)
+	add	hl,bc
+	ld	a,(ix+-8)
+	ld	(hl),a
+	ld	bc,(ix+-6)
+	inc	bc
+	ld	(ix+-6),bc
+l_18:	ld	bc,(ix+12)
+	ld	hl,(ix+-3)
+	or	a,a
+	sbc	hl,bc
+	jp	c,l_17 \.r
+l_19:	ld	sp,ix
+	pop	ix
+	ret
+	
 ;-------------------------------------------------------------------------------
 MonoFlag_ASM:
 	.db 0
