@@ -2,7 +2,7 @@
 #include "..\..\..\include\ti84pce.inc"
 
  .libraryName		"GRAPHC"          ; Name of library
- .libraryVersion	2                 ; Version information (1-255)
+ .libraryVersion	3                 ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
 ; v1 functions -- No longer able to insert or move (Can optimize/fix though)
@@ -64,13 +64,17 @@
  .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
  .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
 ;-------------------------------------------------------------------------------
-
+; v3 functions
+;-------------------------------------------------------------------------------
+ .function "gc_ClipCircle",_ClipCircle
+ .function "gc_NoClipCircleOutline",_NoClipCircleOutline
+ 
  .beginDependencies
  .endDependencies
  
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
-lcdSize                 equ lcdwidth*lcdHeight
+lcdSize                 equ lcdWidth*lcdHeight
 currentDrawingBuffer    equ mpLcdCursorImg+1024-3
 ;-------------------------------------------------------------------------------
 
@@ -283,6 +287,24 @@ color1 =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
+; Sets the color pixel to the global color index
+; Arguments:
+;  bc : X Coord
+;   e : Y Coord
+; Returns:
+;  None
+_NoClipSetPixel_ASM:
+	ld	hl,(currentDrawingBuffer)
+	add	hl,bc
+	ld	d,lcdWidth/2
+	mlt	de
+	add	hl,de
+	add	hl,de
+color5 =$+1
+	ld	(hl),0
+	ret
+	
+;-------------------------------------------------------------------------------
 _ClipRectangle:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
@@ -345,7 +367,7 @@ _NoClipRectangle:
 	ld	hl,(iy+3)
 	ld	e,(iy+6)
 _NoClipRectangle_ASM:
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
@@ -354,7 +376,7 @@ _NoClipRectangle_ASM:
 	ex	de,hl
 NoClipRectangle_Loop:
 	push	bc
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	add	hl,de
 	push	hl
 	ld	hl,color1 \.r
@@ -381,14 +403,12 @@ _ClipRectangleOutline:
 ;  __frame_arg3 : Height
 ; Returns:
 ;  None
-; Comments:
-;  Because I am lazy, I'm just going to send it to the clipped line routines
-	ld	iy,0
-	add	iy,sp
-	ld	hl,(iy+3)
-	ld	de,(iy+6)
-	ld	bc,(iy+9)
-	push	iy
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	hl,(ix+3)
+	ld	de,(ix+6)
+	ld	bc,(ix+9)
 	push	bc
 	push	de
 	push	hl
@@ -396,11 +416,9 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	pop	iy
-	ld	hl,(iy+3)
-	ld	de,(iy+6)
-	ld	bc,(iy+12)
-	push	iy
+	ld	hl,(ix+3)
+	ld	de,(ix+6)
+	ld	bc,(ix+12)
 	push	bc
 	push	de
 	push	hl
@@ -408,14 +426,12 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	pop	iy
-	ld	hl,(iy+3)
-	ld	de,(iy+6)
-	ld	bc,(iy+9)
+	ld	hl,(ix+3)
+	ld	de,(ix+6)
+	ld	bc,(ix+9)
 	add	hl,bc
 	dec	hl
-	ld	bc,(iy+12)
-	push	iy
+	ld	bc,(ix+12)
 	push	bc
 	push	de
 	push	hl
@@ -423,13 +439,12 @@ _ClipRectangleOutline:
 	pop	hl
 	pop	de
 	pop	bc
-	pop	iy
-	ld	de,(iy+3)
-	ld	hl,(iy+6)
-	ld	bc,(iy+12)
+	ld	de,(ix+3)
+	ld	hl,(ix+6)
+	ld	bc,(ix+12)
 	add	hl,bc
 	dec	hl
-	ld	bc,(iy+9)
+	ld	bc,(ix+9)
 	push	bc
 	push	hl
 	push	de
@@ -437,6 +452,7 @@ _ClipRectangleOutline:
 	pop	de
 	pop	hl
 	pop	bc
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------
@@ -538,7 +554,7 @@ _RectOutlineHoriz_ASM:
 	ld	a,b
 	or	a,c
 	ret	z
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
@@ -616,14 +632,14 @@ _NoClipVertLine:
 _NoClipVertLine_ASM:
 	dec	b
 	ret	z
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 _RectOutlineVert_ASM:
-	ld	de,lcdwidth
+	ld	de,lcdWidth
 color4 =$+1
 _:	ld	(hl),0
 	add	hl,de
@@ -726,6 +742,16 @@ _ClipCircleOutline:
 ;  __frame_arg2 : Radius
 ; Returns:
 ;  None
+	ld	hl,_ClipSetPixel_ASM \.r
+	ld	(arg1+1),hl \.r
+	ld	(arg2+1),hl \.r
+	ld	(arg3+1),hl \.r
+	ld	(arg4+1),hl \.r
+	ld	(arg5+1),hl \.r
+	ld	(arg6+1),hl \.r
+	ld	(arg7+1),hl \.r
+	ld	(arg8+1),hl \.r
+_CircleOutline_ASM:
 	ld	iy,0
 	add	iy,sp
 	ld	(ClipCircleOutlineSP),iy \.r
@@ -750,7 +776,7 @@ l_5:	ld	bc,(iy+6)
 	add	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg1:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
@@ -760,7 +786,7 @@ l_5:	ld	bc,(iy+6)
 	add	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg2:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+-3)
 	ld	hl,(iy+6)
 	or	a,a
@@ -771,7 +797,7 @@ l_5:	ld	bc,(iy+6)
 	add	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg3:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+-6)
 	ld	hl,(iy+6)
 	or	a,a
@@ -782,7 +808,7 @@ l_5:	ld	bc,(iy+6)
 	add	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg4:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+6)
 	ld	hl,(iy+-3)
 	add	hl,bc
@@ -793,7 +819,7 @@ l_5:	ld	bc,(iy+6)
 	sbc	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg5:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
@@ -804,7 +830,7 @@ l_5:	ld	bc,(iy+6)
 	sbc	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg6:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+-3)
 	ld	hl,(iy+6)
 	or	a,a
@@ -816,7 +842,7 @@ l_5:	ld	bc,(iy+6)
 	sbc	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg7:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+-6)
 	ld	hl,(iy+6)
 	or	a,a
@@ -828,7 +854,7 @@ l_5:	ld	bc,(iy+6)
 	sbc	hl,bc
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+arg8:	call	_ClipSetPixel_ASM
 	ld	bc,(iy+-3)
 	inc	bc
 	ld	(iy+-3),bc
@@ -872,6 +898,190 @@ _:	ld	sp,0
 	ret
 	
 ;-------------------------------------------------------------------------------
+_NoClipCircleOutline:
+; Draws a clipped circle outline
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Radius
+; Returns:
+;  None
+	ld	hl,_NoClipSetPixel_ASM \.r
+	ld	(arg1+1),hl \.r
+	ld	(arg2+1),hl \.r
+	ld	(arg3+1),hl \.r
+	ld	(arg4+1),hl \.r
+	ld	(arg5+1),hl \.r
+	ld	(arg6+1),hl \.r
+	ld	(arg7+1),hl \.r
+	ld	(arg8+1),hl \.r
+	jp	_CircleOutline_ASM \.r
+
+;-------------------------------------------------------------------------------
+_ClipCircle:
+; Draws an clipped circle
+; Arguments:
+;  __frame_arg0 : X Coord
+;  __frame_arg1 : Y Coord
+;  __frame_arg2 : Radius
+; Returns:
+;  None
+	ld	hl,-9
+	call	__frameset
+	ld	bc,0
+	ld	(ix+-3),bc
+	ld	bc,(ix+12)
+	ld	(ix+-6),bc
+	ld	bc,(ix+12)
+	ld	hl,1
+	or	a,a
+	sbc	hl,bc
+	ld	(ix+-9),hl
+	jp	b_4 \.r
+b_5:
+	ld	bc,(ix+9)
+	ld	hl,(ix+-3)
+	add	hl,bc
+	push	hl
+	ld	de,(ix+-3)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,de
+	ex	de,hl
+	pop	hl
+	or	a,a
+	sbc	hl,de
+	inc	hl
+	push	hl
+	push	de
+	ld	bc,(ix+6)
+	ld	hl,(ix+-6)
+	add	hl,bc
+	push	hl
+	call	_ClipVertLine \.r
+	pop	bc
+	pop	bc
+	pop	bc
+	ld	bc,(ix+9)
+	ld	hl,(ix+-6)
+	add	hl,bc
+	push	hl
+	ld	de,(ix+-6)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,de
+	ex	de,hl
+	pop	hl
+	or	a,a
+	sbc	hl,de
+	inc	hl
+	push	hl
+	push	de
+	ld	bc,(ix+6)
+	ld	hl,(ix+-3)
+	add	hl,bc
+	push	hl
+	call	_ClipVertLine \.r
+	pop	bc
+	pop	bc
+	pop	bc
+	ld	bc,(ix+9)
+	ld	hl,(ix+-6)
+	add	hl,bc
+	push	hl
+	ld	hl,(ix+9)
+	or	a,a
+	ld	de,(ix+-6)
+	sbc	hl,de
+	ex	de,hl
+	pop	hl
+	or	a,a
+	sbc	hl,de
+	inc	hl
+	push	hl
+	push	de
+	ld	bc,(ix+-3)
+	ld	hl,(ix+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	call	_ClipVertLine \.r
+	pop	bc
+	pop	bc
+	pop	bc
+	ld	bc,(ix+9)
+	ld	hl,(ix+-3)
+	add	hl,bc
+	push	hl
+	ld	hl,(ix+9)
+	or	a,a
+	ld	de,(ix+-3)
+	sbc	hl,de
+	ex	de,hl
+	pop	hl
+	or	a,a
+	sbc	hl,de
+	inc	hl
+	push	hl
+	push	de
+	ld	bc,(ix+-6)
+	ld	hl,(ix+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	call	_ClipVertLine \.r
+	pop	bc
+	pop	bc
+	pop	bc
+	ld	bc,(ix+-3)
+	inc	bc
+	ld	(ix+-3),bc
+	ld	bc,(ix+-9)
+	or	a,a
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	jp	m,b__2 \.r
+	jp	pe,b_3 \.r
+	jr	b__3
+b__2:
+	jp	po,b_3 \.r
+b__3:
+	ld	hl,(ix+-3)
+	add	hl,hl
+	inc	hl
+	ld	bc,(ix+-9)
+	add	hl,bc
+	ld	(ix+-9),hl
+	jr	b_4
+b_3:
+	ld	bc,(ix+-6)
+	dec	bc
+	ld	(ix+-6),bc
+	ld	hl,(ix+-3)
+	ld	de,(ix+-9)
+	or	a,a
+	sbc	hl,bc
+	add	hl,hl
+	inc	hl
+	add	hl,de
+	ld	(ix+-9),hl
+b_4:
+	ld	bc,(ix+-3)
+	ld	hl,(ix+-6)
+	or	a,a
+	sbc	hl,bc
+	jp	p,b__4 \.r
+	jp	pe,b_5 \.r
+	jr	b__5
+b__4:
+	jp	po,b_5 \.r
+b__5:
+	ld	sp,ix
+	pop	ix
+	ret
+	
+;-------------------------------------------------------------------------------
 _NoClipCircle:
 ; Draws an unclipped circle
 ; Arguments:
@@ -888,7 +1098,6 @@ _NoClipCircle:
 	ld	sp,hl
 	ld	bc,0
 	ld	(iy+-3),bc
-	ld	(iy+5),0
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
 	ld	hl,1
@@ -1062,13 +1271,12 @@ _:	ld	(dy),hl \.r
 changeXLoop:
 	push	hl
 	ld	l,a
-	ld	h,lcdwidth/2 
+	ld	h,lcdWidth/2 
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-color5 =$+1
 color6 =$+1
 	ld	(hl),0
 	sbc	hl,hl
@@ -1100,7 +1308,7 @@ dx1 =$+1
 changeYLoop:
 	push	hl
 	ld	l,a
-	ld	h,lcdwidth/2 
+	ld	h,lcdWidth/2 
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
@@ -1142,7 +1350,7 @@ _ShiftWindowDown:
 	ld	hl,3
 	add	hl,sp
 	ld	l,(hl)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1192,7 +1400,7 @@ _ShiftWindowUp:
 	ld	hl,3
 	add	hl,sp
 	ld	l,(hl)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1254,7 +1462,7 @@ _PixelPtr_ASM:
 ;   E=Y
 ; Outputs:
 ;  HL->address of pixel
-	ld	hl,-lcdwidth
+	ld	hl,-lcdWidth
 	add	hl,bc
 	ret	c
 	ld	hl,-lcdHeight
@@ -1262,7 +1470,7 @@ _PixelPtr_ASM:
 	ret	c
 	ld	hl,(currentDrawingBuffer)
 	add	hl,bc
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add	hl,de
 	add	hl,de
@@ -1282,7 +1490,7 @@ _UpLeftShiftCalculate_ASM:
 	sbc	hl,de
 	ld	(XDeltaUpLeft_ASM),hl \.r
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetUpLeft_ASM),hl \.r
@@ -1291,7 +1499,7 @@ _UpLeftShiftCalculate_ASM:
 	ld	a,(_ymax) \.r
 	ld	l,c
 _:	sub	a,c
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	pop	de
@@ -1313,7 +1521,7 @@ _DownRightShiftCalculate_ASM:
 	sbc	hl,de
 	ld	(XDeltaDownRight_ASM),hl \.r
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetDownRight_ASM),hl \.r
@@ -1400,7 +1608,7 @@ _SetFullScreenClipping_ASM:
 ;  None
 ; Outputs:
 ;  HL=0
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	(_xmax),hl \.r
 	ld	hl,lcdHeight
 	ld	(_ymax),hl \.r
@@ -1429,12 +1637,12 @@ _NoClipDrawScaledSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	c,(iy+12)
 	ld	b,(iy+18)
 	ld	a,b
@@ -1511,12 +1719,12 @@ _NoClipDrawScaledTransparentSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	c,(ix+__frame_arg3)
 	ld	b,(ix+__frame_arg5)
 	ld	a,b
@@ -1589,7 +1797,7 @@ _ClipDrawTransparentSprite:
 	or	a,a
 	sbc	hl,hl
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	e,(iy+12)
 	ld	a,e
 	sbc	hl,de
@@ -1597,7 +1805,7 @@ _ClipDrawTransparentSprite:
 	ld	(ClipSprTransNextLine),a \.r
 	ld	de,(iy+6)
 	ld	l,(iy+9)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1650,7 +1858,7 @@ _ClipDrawSprite:
 	or	a,a
 	sbc	hl,hl
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	e,(iy+12)
 	ld	a,e
 	sbc	hl,de
@@ -1658,7 +1866,7 @@ _ClipDrawSprite:
 	ld	(ClipSprLineNext),a \.r
 	ld	de,(iy+6)
 	ld	l,(iy+9)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1704,12 +1912,12 @@ _NoClipDrawSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -1748,12 +1956,12 @@ _NoClipGetSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -1791,12 +1999,12 @@ _NoClipDrawTransparentSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -2062,12 +2270,12 @@ _:	ld	(CharWidthChange_ASM),a \.r
 	ld	(TextXPos_ASM),hl \.r
 CharWidthDelta_ASM =$+1
 	ld	de,-1
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	add	hl,de
 	ld	(CharLineDelta_ASM),hl \.r
 TextYPos_ASM = $+1
 	ld	l,0
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	ld	de,(currentDrawingBuffer)
@@ -2469,7 +2677,7 @@ _xmin:
 _ymin:
 	.dl 0
 _xmax:
-	.dl lcdwidth
+	.dl lcdWidth
 _ymax:
 	.dl lcdHeight
 

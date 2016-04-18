@@ -47,7 +47,7 @@
  .echo >> modulename " end"
  .dl funclabel
 
- #define numfunctions eval(numfunctions+1)
+ #define numfunctions numfunctions+1
 #endmacro
 #define .function function(
 
@@ -74,7 +74,7 @@
 ;---------------------------------------------
 
 #macro relocate()
- #define numrelocations eval(numrelocations+1)
+ #define numrelocations numrelocations+1
  
  #define offset eval($-3)
  .echo >> relocation_table " .dl ",offset,"\n"

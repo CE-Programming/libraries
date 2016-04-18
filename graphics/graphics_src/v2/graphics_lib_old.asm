@@ -70,7 +70,7 @@
  
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
-lcdSize                 equ lcdwidth*lcdHeight
+lcdSize                 equ lcdWidth*lcdHeight
 currentDrawingBuffer    equ mpLcdCursorImg+1024-3
 ;-------------------------------------------------------------------------------
 
@@ -345,7 +345,7 @@ _NoClipRectangle:
 	ld	hl,(iy+3)
 	ld	e,(iy+6)
 _NoClipRectangle_ASM:
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
@@ -354,7 +354,7 @@ _NoClipRectangle_ASM:
 	ex	de,hl
 NoClipRectangle_Loop:
 	push	bc
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	add	hl,de
 	push	hl
 	ld	hl,color1 \.r
@@ -538,7 +538,7 @@ _RectOutlineHoriz_ASM:
 	ld	a,b
 	or	a,c
 	ret	z
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
@@ -616,14 +616,14 @@ _NoClipVertLine:
 _NoClipVertLine_ASM:
 	dec	b
 	ret	z
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 _RectOutlineVert_ASM:
-	ld	de,lcdwidth
+	ld	de,lcdWidth
 color4 =$+1
 _:	ld	(hl),0
 	add	hl,de
@@ -1062,7 +1062,7 @@ _:	ld	(dy),hl \.r
 changeXLoop:
 	push	hl
 	ld	l,a
-	ld	h,lcdwidth/2 
+	ld	h,lcdWidth/2 
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
@@ -1100,7 +1100,7 @@ dx1 =$+1
 changeYLoop:
 	push	hl
 	ld	l,a
-	ld	h,lcdwidth/2 
+	ld	h,lcdWidth/2 
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
@@ -1142,7 +1142,7 @@ _ShiftWindowDown:
 	ld	hl,3
 	add	hl,sp
 	ld	l,(hl)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1192,7 +1192,7 @@ _ShiftWindowUp:
 	ld	hl,3
 	add	hl,sp
 	ld	l,(hl)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1254,7 +1254,7 @@ _PixelPtr_ASM:
 ;   E=Y
 ; Outputs:
 ;  HL->address of pixel
-	ld	hl,-lcdwidth
+	ld	hl,-lcdWidth
 	add	hl,bc
 	ret	c
 	ld	hl,-lcdHeight
@@ -1262,7 +1262,7 @@ _PixelPtr_ASM:
 	ret	c
 	ld	hl,(currentDrawingBuffer)
 	add	hl,bc
-	ld	d,lcdwidth/2
+	ld	d,lcdWidth/2
 	mlt	de
 	add	hl,de
 	add	hl,de
@@ -1282,7 +1282,7 @@ _UpLeftShiftCalculate_ASM:
 	sbc	hl,de
 	ld	(XDeltaUpLeft_ASM),hl \.r
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetUpLeft_ASM),hl \.r
@@ -1291,7 +1291,7 @@ _UpLeftShiftCalculate_ASM:
 	ld	a,(_ymax) \.r
 	ld	l,c
 _:	sub	a,c
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	pop	de
@@ -1313,7 +1313,7 @@ _DownRightShiftCalculate_ASM:
 	sbc	hl,de
 	ld	(XDeltaDownRight_ASM),hl \.r
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
 	ld	(PosOffsetDownRight_ASM),hl \.r
@@ -1400,7 +1400,7 @@ _SetFullScreenClipping_ASM:
 ;  None
 ; Outputs:
 ;  HL=0
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	(_xmax),hl \.r
 	ld	hl,lcdHeight
 	ld	(_ymax),hl \.r
@@ -1429,12 +1429,12 @@ _NoClipDrawScaledSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	c,(iy+12)
 	ld	b,(iy+18)
 	ld	a,b
@@ -1511,12 +1511,12 @@ _NoClipDrawScaledTransparentSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	c,(ix+__frame_arg3)
 	ld	b,(ix+__frame_arg5)
 	ld	a,b
@@ -1589,7 +1589,7 @@ _ClipDrawTransparentSprite:
 	or	a,a
 	sbc	hl,hl
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	e,(iy+12)
 	ld	a,e
 	sbc	hl,de
@@ -1597,7 +1597,7 @@ _ClipDrawTransparentSprite:
 	ld	(ClipSprTransNextLine),a \.r
 	ld	de,(iy+6)
 	ld	l,(iy+9)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1650,7 +1650,7 @@ _ClipDrawSprite:
 	or	a,a
 	sbc	hl,hl
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	e,(iy+12)
 	ld	a,e
 	sbc	hl,de
@@ -1658,7 +1658,7 @@ _ClipDrawSprite:
 	ld	(ClipSprLineNext),a \.r
 	ld	de,(iy+6)
 	ld	l,(iy+9)
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	add	hl,de
@@ -1704,12 +1704,12 @@ _NoClipDrawSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -1748,12 +1748,12 @@ _NoClipGetSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -1791,12 +1791,12 @@ _NoClipDrawTransparentSprite:
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
-	ld	b,lcdwidth/2
+	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
 	ex	de,hl
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	ld	bc,0
 	ld	c,(iy+12)
 	ld	a,c
@@ -2062,12 +2062,12 @@ _:	ld	(CharWidthChange_ASM),a \.r
 	ld	(TextXPos_ASM),hl \.r
 CharWidthDelta_ASM =$+1
 	ld	de,-1
-	ld	hl,lcdwidth
+	ld	hl,lcdWidth
 	add	hl,de
 	ld	(CharLineDelta_ASM),hl \.r
 TextYPos_ASM = $+1
 	ld	l,0
-	ld	h,lcdwidth/2
+	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
 	ld	de,(currentDrawingBuffer)
@@ -2469,7 +2469,7 @@ _xmin:
 _ymin:
 	.dl 0
 _xmax:
-	.dl lcdwidth
+	.dl lcdWidth
 _ymax:
 	.dl lcdHeight
 
