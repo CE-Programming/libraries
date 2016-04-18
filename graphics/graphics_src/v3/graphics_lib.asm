@@ -67,7 +67,9 @@
 ; v3 functions
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
- .function "gc_NoClipCircleOutline",_NoClipCircleOutline
+ .function "gc_DrawTilemap",_DrawTilemap
+ .function "gc_TilePtr",_TilePtr
+ .function "gc_TilePtrMapped",_TilePtrMapped
  
  .beginDependencies
  .endDependencies
@@ -683,19 +685,20 @@ _SwapDraw:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,mpLcdRis
-_:	ld	a,(hl)
-	and	a,2
+	ld	hl,vram
+	ld	de,(mpLcdBase)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	nz,+_
+	ld	hl,vram+lcdSize
+_:	ld	(currentDrawingBuffer),de
+	ld	(mpLcdBase),hl
+	ld	hl,mpLcdIcr
+	set	2,(hl)
+	ld	l,mpLcdRis&$ff
+_:	bit	2,(hl)
 	jr	z,-_
-	ld	(hl),a
-	ld	l,mpLcdBase&$ff
-	ld	de,(hl)
-	ld	(currentDrawingBuffer),de
-	cp	d
-	ld	de,vram
-	jr	nc,_
-	ld	de,vram+lcdSize
-_:	ld	(hl),de
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -742,16 +745,6 @@ _ClipCircleOutline:
 ;  __frame_arg2 : Radius
 ; Returns:
 ;  None
-	ld	hl,_ClipSetPixel_ASM \.r
-	ld	(arg1+1),hl \.r
-	ld	(arg2+1),hl \.r
-	ld	(arg3+1),hl \.r
-	ld	(arg4+1),hl \.r
-	ld	(arg5+1),hl \.r
-	ld	(arg6+1),hl \.r
-	ld	(arg7+1),hl \.r
-	ld	(arg8+1),hl \.r
-_CircleOutline_ASM:
 	ld	iy,0
 	add	iy,sp
 	ld	(ClipCircleOutlineSP),iy \.r
@@ -776,7 +769,7 @@ l_5:	ld	bc,(iy+6)
 	add	hl,bc
 	push	hl
 	pop	bc
-arg1:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
@@ -786,7 +779,7 @@ arg1:	call	_ClipSetPixel_ASM
 	add	hl,bc
 	push	hl
 	pop	bc
-arg2:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-3)
 	ld	hl,(iy+6)
 	or	a,a
@@ -797,7 +790,7 @@ arg2:	call	_ClipSetPixel_ASM
 	add	hl,bc
 	push	hl
 	pop	bc
-arg3:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-6)
 	ld	hl,(iy+6)
 	or	a,a
@@ -808,7 +801,7 @@ arg3:	call	_ClipSetPixel_ASM
 	add	hl,bc
 	push	hl
 	pop	bc
-arg4:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+6)
 	ld	hl,(iy+-3)
 	add	hl,bc
@@ -819,7 +812,7 @@ arg4:	call	_ClipSetPixel_ASM
 	sbc	hl,bc
 	push	hl
 	pop	bc
-arg5:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
@@ -830,7 +823,7 @@ arg5:	call	_ClipSetPixel_ASM
 	sbc	hl,bc
 	push	hl
 	pop	bc
-arg6:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-3)
 	ld	hl,(iy+6)
 	or	a,a
@@ -842,7 +835,7 @@ arg6:	call	_ClipSetPixel_ASM
 	sbc	hl,bc
 	push	hl
 	pop	bc
-arg7:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-6)
 	ld	hl,(iy+6)
 	or	a,a
@@ -854,7 +847,7 @@ arg7:	call	_ClipSetPixel_ASM
 	sbc	hl,bc
 	push	hl
 	pop	bc
-arg8:	call	_ClipSetPixel_ASM
+	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-3)
 	inc	bc
 	ld	(iy+-3),bc
@@ -896,26 +889,6 @@ l__4:	jp	po,l_5 \.r
 ClipCircleOutlineSP =$+1
 _:	ld	sp,0
 	ret
-	
-;-------------------------------------------------------------------------------
-_NoClipCircleOutline:
-; Draws a clipped circle outline
-; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Radius
-; Returns:
-;  None
-	ld	hl,_NoClipSetPixel_ASM \.r
-	ld	(arg1+1),hl \.r
-	ld	(arg2+1),hl \.r
-	ld	(arg3+1),hl \.r
-	ld	(arg4+1),hl \.r
-	ld	(arg5+1),hl \.r
-	ld	(arg6+1),hl \.r
-	ld	(arg7+1),hl \.r
-	ld	(arg8+1),hl \.r
-	jp	_CircleOutline_ASM \.r
 
 ;-------------------------------------------------------------------------------
 _ClipCircle:
@@ -1054,7 +1027,7 @@ b__5:
 	ld	sp,ix
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipCircle:
 ; Draws an unclipped circle
@@ -2112,6 +2085,243 @@ tmpSpriteWidth_ASM =$+1
 	ret
 _PopCall:
 	pop	hl
+	ret
+
+;-------------------------------------------------------------------------------
+_DrawTilemap:
+; Draws a tilemap given a tile map structure and some offsets
+; Arguments:
+;  __frame_arg0 : Tilemap Struct
+;  __frame_arg1 : X Pixel Offset (Unsigned)
+;  __frame_arg2 : Y Pixel Offset (Unsigned)
+; Returns:
+;  None
+; C Function:
+;  void gc_DrawTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+;      int y_draw;
+;      int x_draw;
+;      uint8_t x;
+;      uint8_t x_res = x_offset/tilemap->tile_width;  
+;      uint8_t y = y_offset/tilemap->tile_height;
+;
+;      x_offset = x_offset % tilemap->tile_width;
+;      y_offset = y_offset % tilemap->tile_height;
+;  	
+;      for(y_draw = tilemap->y_loc-y_offset; y_draw <= 240; y_draw += tilemap->tile_height) {
+;          x = x_res;
+;          for(x_draw = tilemap->x_loc-x_offset; x_draw <= 320; x_draw += tilemap->tile_width) {
+;              gc_clipdrawsprite(tilemap->tiles[tilemap->map[x+(y*tilemap->width)]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;              x++;
+;          }
+;          y++;
+;          if (y >= tilemap->height) {
+;              break;
+;          }
+;      }
+;  }
+;
+	ld	hl,-15
+	call	__frameset_ASM \.r
+	ld	iy,(ix+6)
+	ld	bc,0
+	ld	c,(iy+7)
+	ld	hl,(ix+9)
+	ld	a,b
+	ld	b,24
+_:	add	hl,hl
+	rla
+	cp	a,c
+	jr	c, +_
+	sub	a,c
+	inc	l
+_:	djnz	--_
+	ld	c,a
+	ld	(ix+9),bc
+	ld	a,l
+	ld	(_XTileStart),a \.r
+	ld	c,(iy+6)
+	ld	hl,(ix+12)
+	ld	a,b
+	ld	b,24
+_:	add	hl,hl
+	rla
+	cp	a,c
+	jr	c, +_
+	sub	a,c
+	inc	l
+_:	djnz	--_
+	ld	(ix+-1),l
+	ld	c,a
+	ld	(ix+12),bc
+	or	a,a
+	sbc	hl,hl
+	ld	l,(iy+10)
+	ld	bc,(ix+12)
+	sbc	hl,bc
+	ld	(ix+-5),hl
+	jp	p_9 \.r
+	
+_XTileStart =$+3
+p_7:	ld	(ix+-2),0
+	ld	hl,(iy+11)
+	ld	bc,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	ld	(ix+-8),hl
+	jp	p_3 \.r
+	
+p_1:	ld	iy,(ix+6)
+	ld	c,(iy+6)
+	ld	b,0
+	push	bc
+	ld	c,(iy+7)
+	push	bc
+	ld	bc,(ix+-5)
+	push	bc
+	ld	bc,(ix+-8)
+	push	bc
+	ld	l,(iy+9)
+	ld	h,(ix+-1)
+	mlt	hl
+	ex	de,hl
+	sbc	hl,hl
+	ld	l,(ix+-2)
+	ld	bc,(iy+0)
+	add	hl,de
+	add	hl,bc
+	ld	a,(hl)
+	sbc	hl,hl
+	ld	l,a
+	ld	de,(iy+3)
+	push	hl
+	pop	bc
+	add	hl,hl
+	add	hl,hl
+	sbc	hl,bc
+	add	hl,de
+	ld	bc,(hl)
+	push	bc
+	call	_ClipDrawSprite \.r
+	pop	bc
+	pop	bc
+	pop	bc
+	pop	bc
+	pop	bc
+	inc	(ix+-2)
+	ld	iy,(ix+6)
+	ld	a,(iy+7)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	bc,(ix+-8)
+	add	hl,bc
+	ld	(ix+-8),hl
+	
+p_3:	ld	de,$800000
+	add	hl,de
+	ld	de,-($800000+320)
+	add	hl,de
+	jp	nc,p_1 \.r
+	inc	(ix+-1)
+	ld	a,(ix+-1)
+	cp	a,(iy+8)
+	jr	nc,p_10
+	ld	iy,(ix+6)
+	ld	a,(iy+6)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	bc,(ix+-5)
+	add	hl,bc
+	ld	(ix+-5),hl
+	
+p_9:	ld	hl,(ix+-5)
+	ld	de,$800000
+	add	hl,de
+	ld	e,240
+	or	a,a
+	sbc	hl,de
+	jp	c,p_7 \.r
+	
+p_10:	ld	sp,ix
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_TilePtr:
+; Returns a pointer to a tile given the pixel offsets
+; Arguments:
+;  __frame_arg0 : Tilemap Struct
+;  __frame_arg1 : X Pixel Offset (Unsigned)
+;  __frame_arg2 : Y Pixel Offset (Unsigned)
+;  __frame_arg3 : New Tile Index
+; Returns:
+;  A pointer to an indexed tile in the tilemap (so it can be looked at or changed)
+; C Function:
+;  uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset, uint8_t tile) {
+;      return &tilemap->map[(x_offset/tilemap->tile_width)+((y_offset/tilemap->tile_height)*tilemap->width)];
+;  }
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	iy,(ix+6)
+	ld	c,(iy+7)
+	ld	hl,(ix+9)
+	xor	a,a
+	ld	b,24
+_:	add	hl,hl
+	rla
+	cp	a,c
+	jr	c, +_
+	sub	a,c
+	inc	l
+_:	djnz	--_
+	push	hl
+	ld	c,(iy+6)
+	ld	hl,(ix+12)
+	xor	a,a
+	ld	b,24
+_:	add	hl,hl
+	rla
+	cp	a,c
+	jr	c, +_
+	sub	a,c
+	inc	l
+_:	djnz	--_
+	ld	h,(iy+9)
+	mlt	hl
+	pop	de
+	add	hl,de
+	ld	de,(iy+0)
+	add	hl,de
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_TilePtrMapped:
+; Returns a direct pointer to the input tile
+; Arguments:
+;  __frame_arg0 : Tilemap Struct
+;  __frame_arg1 : X Map Offset (uint8_t)
+;  __frame_arg2 : Y Map Offset (uint8_t)
+; Returns:
+;  A pointer to the indexed tile in the tilemap (so it can be looked at or changed)
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	iy,(ix+6)
+	ld	h,(ix+12)
+	ld	l,(iy+9)
+	mlt	hl
+	ex	de,hl
+	or	a,a
+	sbc	hl,hl
+	ld	l,(ix+9)
+	ld	bc,(iy+0)
+	add	hl,de
+	add	hl,bc
+	ld	sp,ix
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------

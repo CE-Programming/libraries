@@ -37,6 +37,3 @@ void main(void) {
 	gc_CloseGraph();
 	pgrm_CleanUp();
 }
-
-void rotateSprite(const char *str) {
-}
