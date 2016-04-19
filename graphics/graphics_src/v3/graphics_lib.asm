@@ -1629,36 +1629,31 @@ _ClipDrawSprite:
 	call	_ClipDraw_ASM \.r
 	ret	nc
 	ld	(ClipSprNextAmt),a \.r
-	ld	bc,0
-	ld	hl,lcdWidth
 	ld	a,(iy+12)
 	ld	(ClipSprLineNext),a \.r
-	ld	c,a
 	xor	a,a
-	sbc	hl,bc
-	ld	(ClipSprMoveAmt),hl \.r
 	or	a,(iy+15)
 	ret	z
-	ld	de,(iy+6)
 	ld	l,(iy+9)
 	ld	h,lcdWidth/2
 	mlt	hl
+	ld	bc,(iy+6)
 	add	hl,hl
-	add	hl,de
-	ld	de,(currentDrawingBuffer)
-	add	hl,de
-	ex	de,hl
+	add	hl,bc
+	ld	bc,(currentDrawingBuffer)
+	add	hl,bc
+	push	hl
 	ld	hl,(iy+3)
+	pop	iy
+	ld	bc,0
 ClipSprLineNext =$+1
 _:	ld	c,0
+	lea	de,iy
 	ldir
-	ex	de,hl
-ClipSprMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ex	de,hl
+	ld	de,lcdWidth
+	add	iy,de
 ClipSprNextAmt =$+1
-	ld	bc,0
+	ld	c,0
 	add	hl,bc
 	dec	a
 	jr	nz,-_
@@ -1744,6 +1739,7 @@ NoClipSprGrabMoveAmt =$+1
 	add	hl,bc
 	dec	a
 	jr	nz,-_
+	ld	hl,(iy+3)
 	ret
  
 ;-------------------------------------------------------------------------------
