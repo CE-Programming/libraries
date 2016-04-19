@@ -1571,30 +1571,30 @@ _ClipDrawTransparentSprite:
 ;  None
 	call	_ClipDraw_ASM \.r
 	ret	nc
+	xor	a,a
+	or	a,(iy+15)
+	ret	z
 	ld	(ClipSprTransNextAmt),a \.r
 	ld	bc,0
 	ld	hl,lcdWidth
-	ld	c,(iy+12)
-	ld	a,c
+	ld	a,(iy+12)
 	ld	(ClipSprTransNextLine),a \.r
-	xor	a,a
-	sbc	hl,bc
-	ld	(ClipSprTransMoveAmt),hl \.r
-	or	a,(iy+15)
-	ret	z
-	ld	de,(iy+6)
 	ld	l,(iy+9)
 	ld	h,lcdWidth/2
 	mlt	hl
+	ld	de,(iy+6)
 	add	hl,hl
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
-	ex	de,hl
+	push	hl
 	ld	hl,(iy+3)
-	ld	iyh,a
+	pop	iy
+	push	ix
+	ld	ixh,a
 ClipSprTransNextLine =$+1
 _:	ld	b,0
+	lea	de,iy
 _:	ld	a,(hl)
 ClipSprTransColor =$+1
 	cp	a,0
@@ -1606,13 +1606,11 @@ _:	inc	de
 ClipSprTransNextAmt =$+1
 	ld	c,0
 	add	hl,bc
-	ex	de,hl
-ClipSprTransMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ex	de,hl
-	dec	iyh
+	ld	de,lcdWidth
+	add	iy,de
+	dec	ixh
 	jr	nz,---_
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------
@@ -1755,44 +1753,39 @@ _NoClipDrawTransparentSprite:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+6)
-	ld	c,(iy+9)
-	ex.s	de,hl
-	ld	hl,(currentDrawingBuffer)
-	add	hl,de
-	ld	b,lcdWidth/2
-	mlt	bc
-	add	hl,bc
-	add	hl,bc
-	ex	de,hl
-	ld	hl,lcdWidth
 	ld	bc,0
-	ld	c,(iy+12)
-	ld	a,c
-	sbc	hl,bc
-	ld	(NoClipSprTransMoveAmt),hl \.r
+	ld	hl,lcdWidth
+	ld	a,(iy+12)
 	ld	(NoClipSprTransNextLine),a \.r
-	ld	b,(iy+15)
+	ld	l,(iy+9)
+	ld	h,lcdWidth/2
+	mlt	hl
+	ld	de,(iy+6)
+	add	hl,hl
+	add	hl,de
+	ld	de,(currentDrawingBuffer)
+	add	hl,de
+	push	hl
 	ld	hl,(iy+3)
-NoClipSprTransColor =$+1
-	ld	c,0
-_:	push	bc
+	pop	iy
+	push	ix
+	ld	ixh,a
 NoClipSprTransNextLine =$+1
-	ld	b,0
+_:	ld	b,0
+	lea	de,iy
 _:	ld	a,(hl)
-	cp	a,c
+NoClipSprTransColor =$+1
+	cp	a,0
 	jr	z,+_
 	ld	(de),a
 _:	inc	de
 	inc	hl
 	djnz	--_
-	ex	de,hl
-NoClipSprTransMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ex	de,hl
-	pop	bc
-	djnz	---_
+	ld	de,lcdWidth
+	add	iy,de
+	dec	ixh
+	jr	nz,---_
+	pop	ix
 	ret
 	
 ;-------------------------------------------------------------------------------
