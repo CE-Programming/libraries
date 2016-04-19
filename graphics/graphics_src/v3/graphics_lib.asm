@@ -1571,10 +1571,10 @@ _ClipDrawTransparentSprite:
 ;  None
 	call	_ClipDraw_ASM \.r
 	ret	nc
+	ld	(ClipSprTransNextAmt),a \.r
 	xor	a,a
 	or	a,(iy+15)
 	ret	z
-	ld	(ClipSprTransNextAmt),a \.r
 	ld	bc,0
 	ld	hl,lcdWidth
 	ld	a,(iy+12)
