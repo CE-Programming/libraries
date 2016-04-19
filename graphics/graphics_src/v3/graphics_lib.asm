@@ -1612,7 +1612,7 @@ ClipSprTransNextAmt =$+1
 	jr	nz,---_
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipDrawSprite:
 ; Places an sprite on the screen as fast as possible with clipping
@@ -2126,7 +2126,6 @@ _TilePtrMapped:
 	ld	bc,(iy+0)
 	add	hl,de
 	add	hl,bc
-	ld	sp,ix
 	pop	ix
 	ret
 	

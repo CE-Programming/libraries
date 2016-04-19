@@ -55,7 +55,7 @@ typedef struct gc_tilemap {
 	uint8_t height;
 	uint8_t width;
 	uint8_t y_loc;
-	unsigned x_loc;
+	uint24_t x_loc;
 } gc_tilemap_t;
 
 /**
@@ -63,12 +63,12 @@ typedef struct gc_tilemap {
  *  x_offset : offset in pixels from the left of the tilemap
  *  y_offset : offset in pixels from the top of the tilemap
  */
-void gc_DrawTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+void gc_DrawTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
  * Tile Setting/Getting -- These use absolute pixel offsets from the left and top
  */
-uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
  * Tile Setting/Getting -- These use mapped offsets from the tile map itself
@@ -116,9 +116,18 @@ uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 #define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
 #define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
 #define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
-#define gc_fontHeight()                   8
+#define gc_FontHeight()                   8
 #define gc_lcdWidth                       320
 #define gc_lcdHeight                      240
+
+/**
+ * Checks if we are currently in a rectangular hotspot area
+ */
+#define gc_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
+	  (test_x < master_x + master_width && \
+	   test_x + test_width > master_x && \
+	   test_y < master_y + master_height && \
+	   test_y + test_height > master_y)
 
 /**
  * Sets the color index that drawing routines will use
@@ -299,24 +308,22 @@ uint8_t gc_SetTransparentColor(uint8_t color);
 /**
  * Draws a given sprite to the screen as fast as possible; no transparency, clipping, or anything of the sort.
  * Basically just a direct rectangular data dump onto vram.
- * Note: This routine disables interrupts.
  */
 void gc_NoClipDrawSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
  * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well.
- * Note: This routine disables interrupts.
  */
 void gc_NoClipDrawTransparentSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Quickly grab the background behind a sprite (useful for transparency)
  * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
+ * A pointer to spriteBuffer is also returned for ease of use.
  * spriteBuffer is updated with the screen coordinates given.
- * Note: This routine disables interrupts.
  */
-void *gc_NoClipGetSprite(uint8_t *spriteBuffer, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
+uint8_t *gc_NoClipGetSprite(uint8_t *spriteBuffer, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
 
 /**
  * Set the font routines to use the provided font, formated 8x8
@@ -408,8 +415,8 @@ void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
 void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
 
 /**
- * Scaled sprite routines
- * Scaling factors must be greater than or equal to 1.
+ * Unclipped scaled sprite routines
+ * Scaling factors must be greater than or equal to 1, and an integer factor
  */
 void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
 void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
