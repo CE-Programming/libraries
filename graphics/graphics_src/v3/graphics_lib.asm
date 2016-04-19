@@ -113,11 +113,11 @@ _SetColorIndex:
 	pop	hl
 	pop	de
 	push	de
-	push	hl		; in case we can modify HL :
-	ld	a,(color1) \.r  ; ld hl,color1 \.r
-	ld	d,a		; ld d,(hl)
+	push	hl
+	ld	hl,color1 \.r
+	ld	d,(hl)
 	ld	a,e
-	ld	(color1),a \.r	; ld (hl),a
+	ld	(hl),a
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
