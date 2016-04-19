@@ -842,9 +842,8 @@ _ReturnNULL:
 	sbc	hl,hl
 	ret
 _ReturnNEG1L:
-	xor	a,a
+	scf
 	sbc	hl,hl
-	dec	hl
 	ret
 _CheckIfSlotOpen:
 	push	hl
@@ -861,38 +860,37 @@ _CheckIfSlotOpen:
 	ret
 _GetSlotVATPtr_ASM:
 	ld	a,(CurrentSlot_ASM) \.r
-	dec	a
-	ld	hl,VATPtr0
-	or	a,a
-	ret	z
-	ld	hl,VATPtr1
+	ld	hl,VATPtr0 	; =$D0244E
 	dec	a
 	ret	z
-	ld	hl,VATPtr2
+	inc h
+	ld	l,$7b		; VATPtr1=$D0257B
 	dec	a
 	ret	z
-	ld	hl,VATPtr3
+	ld	l,$7e		; VATPtr2= $D0257E
 	dec	a
 	ret	z
-	ld	hl,VATPtr4
+	ld	l,$81		; VATPtr3=$D02581
+	dec	a
+	ret	z
+	ld	l,$84		; VATPtr4=$D02584
 	ret
 _GetSlotSizePtr_ASM:
 _GetSlotVarPtr_ASM:
 	ld	a,(CurrentSlot_ASM) \.r
-	dec	a
-	ld	hl,varPtr0
-	or	a,a
-	ret	z
-	ld	hl,varPtr1
+	ld	hl,varPtr0	;=$D0067E
 	dec	a
 	ret	z
-	ld	hl,varPtr2
+	ld	l,$81		; varPtr1=$D00681
 	dec	a
 	ret	z
-	ld	hl,varPtr3
+	ld	hl,varPtr2	; =$D01FED
 	dec	a
 	ret	z
-	ld	hl,varPtr4
+	ld	l,$f3		; varPtr3=$D01FF3
+	dec	a
+	ret	z
+	ld	l,$f9		; varPtr4=$D01FF9
 	ret
 _GetSlotOffsetPtr_ASM:
 	push	bc
