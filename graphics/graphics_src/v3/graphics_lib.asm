@@ -112,12 +112,8 @@ _SetColorIndex:
 ;  Previous global color index
 	pop	hl
 	pop	de
-	dec sp
-	dec sp
-	dec sp
-	dec sp
-	dec sp
-	dec sp 			; in case we can modify HL :
+	push	de
+	push	hl		; in case we can modify HL :
 	ld	a,(color1) \.r  ; ld hl,color1 \.r
 	ld	d,a		; ld d,(hl)
 	ld	a,e
