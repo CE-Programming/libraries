@@ -733,7 +733,7 @@ _SetTransparentColor:
 	ld	(TransparentTextColor),a \.r
 	ld	(NoClipSprTransColor),a \.r
 	ld	(ClipSprTransColor),a \.r
-	ld	(ClipSprScaledTransColor),a \.r
+	ld	(NoClipSprTransScaledTransColor),a \.r
 	ld	a,d
 	jp	(hl)
  
@@ -1399,173 +1399,6 @@ _ClipRegion:
 	ret
 
 ;-------------------------------------------------------------------------------
-; Inner library routines
-;-------------------------------------------------------------------------------
-
-;-------------------------------------------------------------------------------
-_PixelPtr_ASM:
-; Gets the address of a pixel
-; Inputs:
-;  BC=X
-;   E=Y
-; Outputs:
-;  HL->address of pixel
-	ld	hl,-lcdWidth
-	add	hl,bc
-	ret	c
-	ld	hl,-lcdHeight
-	add	hl,de
-	ret	c
-	ld	hl,(currentDrawingBuffer)
-	add	hl,bc
-	ld	d,lcdWidth/2
-	mlt	de
-	add	hl,de
-	add	hl,de
-	ret
- 
-;-------------------------------------------------------------------------------
-_UpLeftShiftCalculate_ASM:
-; Calculates the position to shift the window for up/left
-; Inputs:
-;  None
-; Outputs:
-;  HL->Place to draw
-	ld	hl,(_xmax) \.r
-	ld	de,(_xmin) \.r
-	push	de
-	or	a,a
-	sbc	hl,de
-	ld	(XDeltaUpLeft_ASM),hl \.r
-	ex	de,hl
-	ld	hl,lcdWidth
-	or	a,a
-	sbc	hl,de
-	ld	(PosOffsetUpLeft_ASM),hl \.r
-	ld	a,(_ymin) \.r
-	ld	c,a
-	ld	a,(_ymax) \.r
-	ld	l,c
-_:	sub	a,c
-	ld	h,lcdWidth/2
-	mlt	hl
-	add	hl,hl
-	pop	de
-	add	hl,de
-	ld	de,vram
-	add	hl,de
-	ret
-;-------------------------------------------------------------------------------
-_DownRightShiftCalculate_ASM:
-; Calculates the position to shift the window for dowm/right
-; Inputs:
-;  None
-; Outputs:
-;  HL->Place to draw
-	ld	hl,(_xmax) \.r
-	ld	de,(_xmin) \.r
-	push	hl
-	or	a,a
-	sbc	hl,de
-	ld	(XDeltaDownRight_ASM),hl \.r
-	ex	de,hl
-	ld	hl,lcdWidth
-	or	a,a
-	sbc	hl,de
-	ld	(PosOffsetDownRight_ASM),hl \.r
-	ld	a,(_ymin) \.r
-	ld	c,a
-	ld	a,(_ymax) \.r
-	ld	l,a
-	jr	-_
-	
-;-------------------------------------------------------------------------------
-_Max_ASM:
-; Calculate the resut of a signed comparison
-; Inputs:
-;  DE,HL=numbers
-; Oututs:
-;  HL=max number
-	or	a,a
-	sbc	hl,de
-	add	hl,de
-	jp	p,+_ \.r
-	ret	pe
-	ex	de,hl
-_:	ret	po
-	ex	de,hl
-	ret
-	
-;-------------------------------------------------------------------------------
-_Min_ASM:
-; Calculate the resut of a signed comparison
-; Inputs:
-;  DE,HL=numbers
-; Oututs:
-;  HL=min number
-	or	a,a
-	sbc	hl,de
-	ex	de,hl
-	jp	p,_ \.r
-	ret	pe
-	add	hl,de
-_:	ret	po
-	add	hl,de
-	ret
-
-;-------------------------------------------------------------------------------
-_ClipRectangularRegion_ASM:
-; Calculates the new coordinates given the clip window and inputs
-; Inputs:
-;  None
-; Outputs:
-;  Modifies data registers
-;  Sets C flag if offscreen
-	ld	hl,(_xmin) \.r
-	ld	de,(iy+3)
-	call	_Max_ASM \.r
-	ld	(iy+3),hl
-	ld	hl,(_xmax) \.r
-	ld	de,(iy+9)
-	call	_Min_ASM \.r
-	ld	(iy+9),hl
-	ld	de,(iy+3)
-	call	_SignedCompare_ASM \.r
-	ret	c
-	ld	hl,(_ymin) \.r
-	ld	de,(iy+6)
-	call	_Max_ASM \.r
-	ld	(iy+6),hl
-	ld	hl,(_ymax) \.r
-	ld	de,(iy+12)
-	call	_Min_ASM \.r
-	ld	(iy+12),hl
-	ld	de,(iy+6)
-_SignedCompare_ASM:
-	or	a,a
-	sbc	hl,de
-	add	hl,hl
-	ret	po
-	ccf	
-	ret
-	
-;-------------------------------------------------------------------------------
-_SetFullScreenClipping_ASM:
-; Sets the clipping window to the entire screen
-; Inputs:
-;  None
-; Outputs:
-;  HL=0
-	ld	hl,lcdWidth
-	ld	(_xmax),hl \.r
-	ld	hl,lcdHeight
-	ld	(_ymax),hl \.r
-	ld	l,0
-	ld	(_xmin),hl \.r
-	ld	(_ymin),hl \.r
-	ret
-
-;-------------------------------------------------------------------------------
 _NoClipDrawScaledSprite:
 ; Draws a scaled sprite to the screen
 ; Arguments:
@@ -1603,7 +1436,7 @@ _NoClipDrawScaledSprite:
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
 	ld	a,(iy+21)
-	ld	(NoClipHeightScale),a \.r
+	ld	(NoClipSprHeightScale),a \.r
 	ld	b,(iy+15)
 	ld	hl,(iy+3)
 _:	push	bc
@@ -1624,7 +1457,7 @@ NoClipSprScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
-NoClipHeightScale =$+1
+NoClipSprHeightScale =$+1
 	ld	a,0
 	push	hl
 	pop	iy
@@ -1659,11 +1492,10 @@ _NoClipDrawScaledTransparentSprite:
 ;  __frame_arg6 : Height Scale (integer)
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg1)
-	ld	c,(ix+__frame_arg2)
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+6)
+	ld	c,(iy+9)
 	ex.s	de,hl
 	ld	hl,(currentDrawingBuffer)
 	add	hl,de
@@ -1673,33 +1505,33 @@ _NoClipDrawScaledTransparentSprite:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	c,(ix+__frame_arg3)
-	ld	b,(ix+__frame_arg5)
+	ld	c,(iy+12)
+	ld	b,(iy+18)
 	ld	a,b
-	ld	(ClipSprScaledWidth),a \.r
+	ld	(NoClipSprTransScaledWidth),a \.r
 	ld	a,c
 	mlt	bc
 	or	a,a
 	sbc	hl,bc
-	ld	(ClipSprScaledMoveAmt),hl \.r
-	ld	(ClipSprScaledLineNext),a \.r
-	ld	b,(ix+__frame_arg4)
-	ld	hl,(ix+__frame_arg0)
-	ld	a,(ix+__frame_arg6)
-	ld	(ClipHeightScale),a \.r
+	ld	(NoClipSprTransScaledMoveAmt),hl \.r
+	ld	(NoClipSprTransScaledLineNext),a \.r
+	ld	b,(iy+15)
+	ld	hl,(iy+3)
+	ld	a,(iy+21)
+	ld	(NoClipSprTransHeightScale),a \.r
 _:	push	bc
-ClipHeightScale =$+1
+NoClipSprTransHeightScale =$+1
 	ld	a,0
 _:	push	af
 	push	hl
-ClipSprScaledLineNext =$+1
+NoClipSprTransScaledLineNext =$+1
 	ld	c,0
-ClipSprScaledWidth =$+1
+NoClipSprTransScaledWidth =$+1
 _:	ld	b,0
 	ld	a,(hl)
-ClipSprScaledTransColor =$+1
+NoClipSprTransScaledTransColor =$+1
 	cp	a,0
-	jr	z,++++_
+	jr	z,++++_	
 _:	ld	(de),a
 	inc	de
 	djnz	-_
@@ -1707,27 +1539,25 @@ _:	inc	hl
 	dec	c
 	jr	nz,---_
 	ex	de,hl
-ClipSprScaledMoveAmt =$+1
+NoClipSprTransScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
 	push	hl
-	pop	ix
+	pop	iy
 	pop	hl
 	pop	af
 	dec	a
 	jr	z,+_
 	jr	----_
-_:	lea	hl,ix
+_:	lea	hl,iy
 	pop	bc
 	djnz	------_
-	pop	ix
 	ret
 _:	inc	de
 	djnz	-_
 	jr	---_
-	
-	
+
 ;-------------------------------------------------------------------------------
 _ClipDrawTransparentSprite:
 ; Draws a transparent sprite with clipping
@@ -1740,17 +1570,18 @@ _ClipDrawTransparentSprite:
 ; Returns:
 ;  None
 	call	_ClipDraw_ASM \.r
-	sub	a,(iy+12)	; how much to add to the sprite per iterations
+	ret	nc
 	ld	(ClipSprTransNextAmt),a \.r
-	or	a,a
-	sbc	hl,hl
-	ex	de,hl
+	ld	bc,0
 	ld	hl,lcdWidth
-	ld	e,(iy+12)
-	ld	a,e
-	sbc	hl,de
-	ld	(ClipSprTransMoveAmt),hl \.r
+	ld	c,(iy+12)
+	ld	a,c
 	ld	(ClipSprTransNextLine),a \.r
+	xor	a,a
+	sbc	hl,bc
+	ld	(ClipSprTransMoveAmt),hl \.r
+	or	a,(iy+15)
+	ret	z
 	ld	de,(iy+6)
 	ld	l,(iy+9)
 	ld	h,lcdWidth/2
@@ -1760,33 +1591,28 @@ _ClipDrawTransparentSprite:
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 	ex	de,hl
-	ld	a,(iy+15)
-	or	a,a
-	ret	z
-	ld	b,a
 	ld	hl,(iy+3)
-ClipSprTransColor =$+1
-	ld	c,0
-_:	push	bc
+	ld	iyh,a
 ClipSprTransNextLine =$+1
-	ld	b,0
+_:	ld	b,0
 _:	ld	a,(hl)
-	cp	a,c
+ClipSprTransColor =$+1
+	cp	a,0
 	jr	z,+_
 	ld	(de),a
 _:	inc	de
 	inc	hl
 	djnz	--_
+ClipSprTransNextAmt =$+1
+	ld	c,0
+	add	hl,bc
 	ex	de,hl
 ClipSprTransMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
-ClipSprTransNextAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	pop	bc
-	djnz	---_
+	dec	iyh
+	jr	nz,---_
 	ret
 	
 ;-------------------------------------------------------------------------------
@@ -1801,17 +1627,18 @@ _ClipDrawSprite:
 ; Returns:
 ;  None
 	call	_ClipDraw_ASM \.r
-	sub	a,(iy+12)		; how much to add to the sprite per iterations
+	ret	nc
 	ld	(ClipSprNextAmt),a \.r
-	or	a,a
-	sbc	hl,hl
-	ex	de,hl
+	ld	bc,0
 	ld	hl,lcdWidth
-	ld	e,(iy+12)
-	ld	a,e
-	sbc	hl,de
-	ld	(ClipSprMoveAmt),hl \.r
+	ld	a,(iy+12)
 	ld	(ClipSprLineNext),a \.r
+	ld	c,a
+	xor	a,a
+	sbc	hl,bc
+	ld	(ClipSprMoveAmt),hl \.r
+	or	a,(iy+15)
+	ret	z
 	ld	de,(iy+6)
 	ld	l,(iy+9)
 	ld	h,lcdWidth/2
@@ -1821,12 +1648,9 @@ _ClipDrawSprite:
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 	ex	de,hl
-	ld	a,(iy+15)
-	or	a,a
-	ret	z
 	ld	hl,(iy+3)
 ClipSprLineNext =$+1
-_:	ld	bc,0
+_:	ld	c,0
 	ldir
 	ex	de,hl
 ClipSprMoveAmt =$+1
@@ -1990,10 +1814,11 @@ _ClipDraw_ASM:
 ;  __frame_arg3 : Width -- 8bits
 ;  __frame_arg4 : Height -- 8bits
 ; Returns:
-;  None
+;  How much to add to the sprite per iteration, NC if offscreen
 	ld	iy,3
 	add	iy,sp
 	ld	a,(iy+12)
+	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	ld	(iy+12),hl
@@ -2006,13 +1831,11 @@ _ClipDraw_ASM:
 	jp	m,NoTopClipNeeded_ASM \.r
 	jr	z,NoTopClipNeeded_ASM
 	ld	a,l
-	ld	de,(iy+9)
 	ld	hl,(iy+15)
+	or	a,a
 	add	hl,de
 	bit	7,h
-	jp	nz,_PopCall \.r
-	ld	hl,(iy+15)
-	add	hl,de
+	ret	nz
 	ld	(iy+15),hl
 	ld	l,a
 	ld	h,(iy+12)
@@ -2020,20 +1843,20 @@ _ClipDraw_ASM:
 	ld	de,(iy+3)
 	add	hl,de
 	ld	(iy+3),hl
-	ld	hl,(_ymin) \.r
-	ld	(iy+9),hl
+	ld	de,(_ymin) \.r
+	ld	(iy+9),de
 NoTopClipNeeded_ASM:
-	ld	hl,(iy+9)
+	ex	de,hl
 	ld	de,(_ymax) \.r
 	call	_SignedCompare_ASM \.r
-	jp	nc,_PopCall \.r
+	ret	nc
 	ld	de,(iy+9)
 	ld	hl,(iy+15)
 	add	hl,de
 	ld	de,(_ymax) \.r
 	call	_SignedCompare_ASM \.r
 	jr	c,NoBottomClipNeeded_ASM
-	ld	hl,(_ymax) \.r
+	ex	de,hl
 	ld	de,(iy+9)
 	or	a,a
 	sbc	hl,de
@@ -2042,14 +1865,14 @@ NoBottomClipNeeded_ASM:
 	ld	hl,(iy+6)
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	jr	nc,NoLeftClip_ASM
 	ld	hl,(iy+6)
+	jr	nc,NoLeftClip_ASM
 	ld	de,(iy+12)
 	add	hl,de
 	ld	de,(_xmin) \.r
 	ex	de,hl
 	call	_SignedCompare_ASM \.r
-	jr	nc,_PopCall
+	ret	nc
 	ld	de,(iy+6)
 	ld	hl,(iy+3)
 	or	a,a
@@ -2057,15 +1880,13 @@ NoBottomClipNeeded_ASM:
 	ld	(iy+3),hl
 	ld	hl,(iy+12)
 	add	hl,de
-	jp	p,_PopCall \.r
 	ld	(iy+12),hl
-	ld	de,(_xmin) \.r
-	ld	(iy+6),de
+	ld	hl,(_xmin) \.r
+	ld	(iy+6),hl
 NoLeftClip_ASM:
-	ld	hl,(iy+6)
 	ld	de,(_xmax) \.r
 	call	_SignedCompare_ASM \.r
-	jr	nc,_PopCall
+	ret	nc
 	ld	hl,(iy+6)
 	ld	de,(iy+12)
 	add	hl,de
@@ -2081,9 +1902,8 @@ NoLeftClip_ASM:
 NoRightClip_ASM:
 tmpSpriteWidth_ASM =$+1
 	ld	a,0
-	ret
-_PopCall:
-	pop	hl
+	sub	a,(iy+12)
+	scf
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2701,77 +2521,6 @@ _SetFontMonospace:
 	ld	a,e
 	ld	(MonoFlag_ASM),a \.r
 	ret
-	
-;-------------------------------------------------------------------------------
-__frameset_ASM:
-; Inits the stack frame using ix
-; Arguments:
-;  HL : Negative, amount of stack space to allocate
-; Returns:
-;  None
-	ex	(sp),ix
-	lea	de,ix
-	ld	ix,0
-	add	ix,sp
-	add	hl,sp
-	ld	sp,hl
-	ex	de,hl
-	jp	(hl)
-  
-;-------------------------------------------------------------------------------
-_LZ_ReadVarSize:
-; LZ Compression Subroutine
-	ld	hl,-12
-	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
-	ld	(ix+-6),bc
-_:	ld	de,0
-	ld	hl,(ix+9)
-	ld	a,(hl)
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	ld	(ix+-9),hl
-	ld	bc,(ix+9)
-	inc	bc
-	ld	(ix+9),bc
-	ld	a,(ix+-9)
-	res	7,a
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	ld	(ix+-12),hl
-	ld	hl,(ix+-3)
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	push	hl
-	pop	bc
-	ld	hl,(ix+-12)
-	call	__ior
-	ld	(ix+-3),hl
-	ld	bc,(ix+-6)
-	inc	bc
-	ld	(ix+-6),bc
-	ld	a,(ix+-9)
-	and	a,128
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	sbc	hl,de
-	jr	nz,-_
-	ld	hl,(ix+6)
-	ld	bc,(ix+-3)
-	ld	(hl),bc
-	ld	hl,(ix+-6)
-	ld	sp,ix
-	pop	ix
-	ret
 
 ;-------------------------------------------------------------------------------
 _LZDecompress:
@@ -2828,7 +2577,7 @@ l_17:	ld	bc,(ix+-3)
 l_13:	ld	bc,(ix+-14)
 	push	bc
 	pea	ix+-17
-	call	_LZ_ReadVarSize \.r
+	call	_LZ_ReadVarSize_ASM \.r
 	pop	bc
 	pop	bc
 	ld	bc,(ix+-3)
@@ -2838,7 +2587,7 @@ l_13:	ld	bc,(ix+-14)
 	add	hl,bc
 	push	hl
 	pea	ix+-20
-	call	_LZ_ReadVarSize \.r
+	call	_LZ_ReadVarSize_ASM \.r
 	pop	bc
 	pop	bc
 	ld	bc,(ix+-3)
@@ -2888,6 +2637,244 @@ l_19:	ld	sp,ix
 	pop	ix
 	ret
 	
+;-------------------------------------------------------------------------------
+; Inner library routines
+;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+_LZ_ReadVarSize_ASM:
+; LZ Compression Subroutine
+	ld	hl,-12
+	call	__frameset_ASM \.r
+	ld	bc,0
+	ld	(ix+-3),bc
+	ld	(ix+-6),bc
+_:	ld	de,0
+	ld	hl,(ix+9)
+	ld	a,(hl)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	(ix+-9),hl
+	ld	bc,(ix+9)
+	inc	bc
+	ld	(ix+9),bc
+	ld	a,(ix+-9)
+	res	7,a
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	ld	(ix+-12),hl
+	ld	hl,(ix+-3)
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	push	hl
+	pop	bc
+	ld	hl,(ix+-12)
+	call	__ior
+	ld	(ix+-3),hl
+	ld	bc,(ix+-6)
+	inc	bc
+	ld	(ix+-6),bc
+	ld	a,(ix+-9)
+	and	a,128
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	sbc	hl,de
+	jr	nz,-_
+	ld	hl,(ix+6)
+	ld	bc,(ix+-3)
+	ld	(hl),bc
+	ld	hl,(ix+-6)
+	ld	sp,ix
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_PixelPtr_ASM:
+; Gets the address of a pixel
+; Inputs:
+;  BC=X
+;   E=Y
+; Outputs:
+;  HL->address of pixel
+	ld	hl,-lcdWidth
+	add	hl,bc
+	ret	c
+	ld	hl,-lcdHeight
+	add	hl,de
+	ret	c
+	ld	hl,(currentDrawingBuffer)
+	add	hl,bc
+	ld	d,lcdWidth/2
+	mlt	de
+	add	hl,de
+	add	hl,de
+	ret
+ 
+;-------------------------------------------------------------------------------
+_UpLeftShiftCalculate_ASM:
+; Calculates the position to shift the window for up/left
+; Inputs:
+;  None
+; Outputs:
+;  HL->Place to draw
+	ld	hl,(_xmax) \.r
+	ld	de,(_xmin) \.r
+	push	de
+	or	a,a
+	sbc	hl,de
+	ld	(XDeltaUpLeft_ASM),hl \.r
+	ex	de,hl
+	ld	hl,lcdWidth
+	or	a,a
+	sbc	hl,de
+	ld	(PosOffsetUpLeft_ASM),hl \.r
+	ld	a,(_ymin) \.r
+	ld	c,a
+	ld	a,(_ymax) \.r
+	ld	l,c
+_:	sub	a,c
+	ld	h,lcdWidth/2
+	mlt	hl
+	add	hl,hl
+	pop	de
+	add	hl,de
+	ld	de,vram
+	add	hl,de
+	ret
+;-------------------------------------------------------------------------------
+_DownRightShiftCalculate_ASM:
+; Calculates the position to shift the window for dowm/right
+; Inputs:
+;  None
+; Outputs:
+;  HL->Place to draw
+	ld	hl,(_xmax) \.r
+	ld	de,(_xmin) \.r
+	push	hl
+	or	a,a
+	sbc	hl,de
+	ld	(XDeltaDownRight_ASM),hl \.r
+	ex	de,hl
+	ld	hl,lcdWidth
+	or	a,a
+	sbc	hl,de
+	ld	(PosOffsetDownRight_ASM),hl \.r
+	ld	a,(_ymin) \.r
+	ld	c,a
+	ld	a,(_ymax) \.r
+	ld	l,a
+	jr	-_
+	
+;-------------------------------------------------------------------------------
+_Max_ASM:
+; Calculate the resut of a signed comparison
+; Inputs:
+;  DE,HL=numbers
+; Oututs:
+;  HL=max number
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jp	p,+_ \.r
+	ret	pe
+	ex	de,hl
+_:	ret	po
+	ex	de,hl
+	ret
+	
+;-------------------------------------------------------------------------------
+_Min_ASM:
+; Calculate the resut of a signed comparison
+; Inputs:
+;  DE,HL=numbers
+; Oututs:
+;  HL=min number
+	or	a,a
+	sbc	hl,de
+	ex	de,hl
+	jp	p,_ \.r
+	ret	pe
+	add	hl,de
+_:	ret	po
+	add	hl,de
+	ret
+
+;-------------------------------------------------------------------------------
+_ClipRectangularRegion_ASM:
+; Calculates the new coordinates given the clip window and inputs
+; Inputs:
+;  None
+; Outputs:
+;  Modifies data registers
+;  Sets C flag if offscreen
+	ld	hl,(_xmin) \.r
+	ld	de,(iy+3)
+	call	_Max_ASM \.r
+	ld	(iy+3),hl
+	ld	hl,(_xmax) \.r
+	ld	de,(iy+9)
+	call	_Min_ASM \.r
+	ld	(iy+9),hl
+	ld	de,(iy+3)
+	call	_SignedCompare_ASM \.r
+	ret	c
+	ld	hl,(_ymin) \.r
+	ld	de,(iy+6)
+	call	_Max_ASM \.r
+	ld	(iy+6),hl
+	ld	hl,(_ymax) \.r
+	ld	de,(iy+12)
+	call	_Min_ASM \.r
+	ld	(iy+12),hl
+	ld	de,(iy+6)
+_SignedCompare_ASM:
+	or	a,a
+	sbc	hl,de
+	add	hl,hl
+	ret	po
+	ccf
+	ret
+	
+;-------------------------------------------------------------------------------
+_SetFullScreenClipping_ASM:
+; Sets the clipping window to the entire screen
+; Inputs:
+;  None
+; Outputs:
+;  HL=0
+	ld	hl,lcdWidth
+	ld	(_xmax),hl \.r
+	ld	hl,lcdHeight
+	ld	(_ymax),hl \.r
+	ld	l,0
+	ld	(_xmin),hl \.r
+	ld	(_ymin),hl \.r
+	ret
+
+;-------------------------------------------------------------------------------
+__frameset_ASM:
+; Inits the stack frame using ix
+; Arguments:
+;  HL : Negative, amount of stack space to allocate
+; Returns:
+;  None
+	ex	(sp),ix
+	lea	de,ix
+	ld	ix,0
+	add	ix,sp
+	add	hl,sp
+	ld	sp,hl
+	ex	de,hl
+	jp	(hl)
+
 ;-------------------------------------------------------------------------------
 MonoFlag_ASM:
 	.db 0
