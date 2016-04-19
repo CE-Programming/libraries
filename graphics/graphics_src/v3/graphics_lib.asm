@@ -1686,24 +1686,19 @@ _NoClipDrawSprite:
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
-	ex	de,hl
-	ld	hl,lcdWidth
-	ld	bc,0
-	ld	c,(iy+12)
-	ld	a,c
-	sbc	hl,bc
-	ld	(NoClipSprMoveAmt),hl \.r
+	ld	b,0
+	push	hl
+	ld	a,(iy+12)
 	ld	(NoClipSprLineNext),a \.r
 	ld	a,(iy+15)
 	ld	hl,(iy+3)
+	pop	iy
 NoClipSprLineNext =$+1
-_:	ld	bc,0
+_:	ld	c,0
+	lea	de,iy
 	ldir
-	ex	de,hl
-NoClipSprMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ex	de,hl
+	ld	de,lcdWidth
+	add	iy,de
 	dec	a
 	jr	nz,-_
 	ret
