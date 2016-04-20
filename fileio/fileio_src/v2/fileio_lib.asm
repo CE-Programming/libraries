@@ -218,8 +218,7 @@ _:	ld	(varType),a \.r
 	add	hl,de
 	inc	a
 	sbc	hl,de
-	jr	z,+_
-	jp	_ReturnNULL_PopIX \.r
+	jp	nz,_ReturnNULL_PopIX \.r
 _:	ld	(CurrentSlot_ASM),a \.r
 	ld	hl,(ix+__frame_arg0)
 	ld	de,op1+1
