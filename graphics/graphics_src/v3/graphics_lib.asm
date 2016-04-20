@@ -67,11 +67,12 @@
 ; v3 functions
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
+ .function "gc_ClipLine",_ClipLine
  .function "gc_DrawTilemap",_DrawTilemap
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
  .function "gc_LZDecompress",_LZDecompress
- 
+
  .beginDependencies
  .endDependencies
  
@@ -544,13 +545,11 @@ _NoClipHorizLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	e,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	e,(iy+6)
+	ld	bc,(iy+9)
 _RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
@@ -911,8 +910,7 @@ _ClipCircle:
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
-b_5:
-	ld	hl,(ix+-3)
+b_5:	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
 	push	hl
@@ -992,18 +990,15 @@ b_5:
 	jp	m,b__2 \.r
 	jp	pe,b_3 \.r
 	jr	b__3
-b__2:
-	jp	po,b_3 \.r
-b__3:
-	ld	hl,(ix+-3)
+b__2:	jp	po,b_3 \.r
+b__3:	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
 	ld	bc,(ix+-9)
 	add	hl,bc
 	ld	(ix+-9),hl
 	jr	b_4
-b_3:
-	ld	bc,(ix+-6)
+b_3:	ld	bc,(ix+-6)
 	dec	bc
 	ld	(ix+-6),bc
 	ld	hl,(ix+-3)
@@ -1014,18 +1009,15 @@ b_3:
 	inc	hl
 	add	hl,de
 	ld	(ix+-9),hl
-b_4:
-	ld	bc,(ix+-3)
+b_4:	ld	bc,(ix+-3)
 	ld	hl,(ix+-6)
 	or	a,a
 	sbc	hl,bc
 	jp	p,b__4 \.r
 	jp	pe,b_5 \.r
 	jr	b__5
-b__4:
-	jp	po,b_5 \.r
-b__5:
-	ld	sp,ix
+b__4:	jp	po,b_5 \.r
+b__5:	ld	sp,ix
 	pop	ix
 	ret
 
@@ -1143,6 +1135,132 @@ a_4:	ld	bc,(iy+-3)
 a__4:	jp	po,a_5 \.r
 NoClipCircleSP =$+1
 _:	ld	sp,0
+	ret
+
+;-------------------------------------------------------------------------------
+_ClipLine:
+; Draws an arbitrarily clipped line
+; Arguments:
+;  __frame_arg0: x0
+;  __frame_arg0: y0
+;  __frame_arg0: x1
+;  __frame_arg0: y1
+; Returns:
+;  true if drawn, false if offscreen
+	ld	iy,0
+	add	iy,sp
+	ld	(ClipLineSP),iy \.r
+	ld	hl,-10
+	add	hl,sp
+	ld	sp,hl
+	ld	de,(iy+6)
+	ld	hl,(iy+3)
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-1),a
+	ld	de,(iy+12)
+	ld	hl,(iy+9)
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-3),a
+m_28:	ld	a,(iy+-1)
+	and	a,(iy+-3)
+	jp	nz,m_31 \.r
+	or	a,(iy+-1)
+	jr	nz,+_
+	or	a,(iy+-3)
+	jp	z,m_30 \.r
+_:	ld	(iy+-2),a
+	tst	a,8
+	jr	z,m_19
+	ld	hl,(_ymax) \.r
+_ComputeNewX_ASM:
+	ld	(iy+-6),hl
+	ld	bc,(iy+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	ld	hl,(iy+9)
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	pop	hl
+	call	__imuls_ASM \.r
+	ex	de,hl
+	ld	hl,(iy+12)
+	ld	bc,(iy+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	ex	de,hl
+	call	__idivs_ASM \.r
+	ld	bc,(iy+3)
+	add	hl,bc
+	ld	(iy+-9),hl
+	jr	m_22
+m_19:	tst	a,4
+	jr	z,m_17
+	ld	hl,(_ymin) \.r
+	jp	_ComputeNewX_ASM \.r
+	jr	m_22
+m_17:	tst	a,2
+	jr	z,m_15
+	ld	hl,(_xmax) \.r
+_ComputeNewY_ASM:
+	ld	(iy+-9),hl
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	ld	hl,(iy+12)
+	ld	bc,(iy+6)
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	pop	hl
+	call	__imuls_ASM \.r
+	ex	de,hl
+	ld	hl,(iy+9)
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	ex	de,hl
+	call	__idivs_ASM \.r
+	ld	bc,(iy+6)
+	add	hl,bc
+	ld	(iy+-6),hl
+	jr	m_22
+m_15:	tst	a,1
+	jr	z,m_22
+	ld	hl,(_xmin) \.r
+	call	_ComputeNewY_ASM \.r
+m_22:	ld	a,(iy+-2)
+	cp	a,(iy+-1)
+	jr	nz,+_
+	ld	hl,(iy+-9)
+	ld	(iy+3),hl
+	ld	de,(iy+-6)
+	ld	(iy+6),de
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-1),a
+	jr	m_28 \.r
+_:	ld	hl,(iy+-9)
+	ld	(iy+9),hl
+	ld	de,(iy+-6)
+	ld	(iy+12),de
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-3),a
+	jp	m_28 \.r
+m_30:	ld	c,(iy+12)
+	ld	hl,(iy+9)
+	ld	b,(iy+6)
+	ld	de,(iy+3)
+	call	_NoClipLine_ASM \.r
+ClipLineSP =$+1
+m_31:	ld	sp,0
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1353,6 +1471,7 @@ _ShiftWindowUp:
 	add	hl,hl
 	add	hl,de
 	jr	+_
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowLeft:
 ; Shifts whatever is in the clip window left by some pixels
@@ -2840,6 +2959,166 @@ _SetFullScreenClipping_ASM:
 	ld	l,0
 	ld	(_xmin),hl \.r
 	ld	(_ymin),hl \.r
+	ret
+
+;-------------------------------------------------------------------------------
+__idivs_ASM:
+; Performs signed interger division
+; Inputs:
+;  HL : Operand 1
+;  BC : Operand 2
+; Outputs:
+;  HL = HL/BC
+	push	bc
+	push	hl
+	ex	de,hl
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,de
+	jp	m,+_ \.r
+	ex	de,hl
+_:	or	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	jp	m,+_ \.r
+	push	hl
+	pop	bc
+	
+_:	ld	a,24
+	or	a,a
+	sbc	hl,hl
+_:	ex	de,hl
+	add	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	sbc	hl,bc
+	jr	nc,+_
+	add	hl,bc
+	jr	++_
+_:	inc	e
+_:	dec	a
+	jr	nz,---_
+
+	ld	hl,2
+	add	hl,sp
+	ld	a,(hl)
+	inc	hl
+	ld	sp,hl
+	inc	hl
+	inc	hl
+	xor	a,(hl)
+	jp	p,+_ \.r
+	sbc	hl,hl
+	sbc	hl,de
+	ex	de,hl
+_:	ex	de,hl
+	pop	bc
+	ret
+
+;-------------------------------------------------------------------------------
+__imuls_ASM:
+__imulu_ASM:
+; Performs (un)signed integer multiplication
+; Inputs:
+;  HL : Operand 1
+;  BC : Operand 2
+; Outputs:
+;  HL = HL*BC
+	push	bc
+	push	hl
+	ex	de,hl
+	ld	hl,2
+	add	hl,sp
+	ld	b,(hl)
+	mlt	bc
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	a,d
+	ld	d,(hl)
+	mlt	de
+	dec	hl
+	ld	l,(hl)
+	ld	h,a
+	mlt	hl
+	ld	a,l
+	add	a,e
+	add	a,c
+	pop	de
+	pop	bc
+	push	bc
+	or	a,a
+	sbc	hl,hl
+	add.s	hl,de
+	ex	de,hl
+	ld	h,b
+	mlt	hl
+	ld	b,d
+	mlt	bc
+	add	hl,bc
+	add	a,h
+	ld	h,a
+	pop	bc
+	ld	d,c
+	mlt	de
+	push	hl
+	dec	sp
+	pop	hl
+	inc	sp
+	ld	l,0
+	add	hl,de
+	ret
+
+;-------------------------------------------------------------------------------
+_ComputeOutcode_ASM:
+; Compute the bitcode for a point (x, y) using the clip rectangle
+; bounded diagonally by (xmin, ymin), and (xmax, ymax)
+; Inputs:
+;  HL : X Argument
+;  DE : Y Argument
+; Outputs:
+;   A : Bitcode
+	ld	bc,(_xmin) \.r
+	push	hl
+	xor	a,a
+	sbc	hl,bc
+	pop	bc
+	jp	p,m__4 \.r
+	jp	pe,m_2 \.r
+	jr	m__5
+m__4:	jp	po,m_2 \.r
+m__5:	ld	a,1
+	jr	m_6
+m_2:	ld	hl,(_xmax) \.r
+	or	a,a
+	sbc	hl,bc
+	jp	p,m__6 \.r
+	jp	pe,m_6 \.r
+	jr	m__7
+m__6:	jp	po,m_6 \.r
+m__7:	ld	a,2
+m_6:	ld	bc,(_ymin) \.r
+	ex	de,hl
+	push	hl
+	or	a,a
+	sbc	hl,bc
+	pop	bc
+	jp	p,m__8 \.r
+	jp	pe,m_5 \.r
+	set	2,a
+	ret
+m__8:	jp	po,m_5 \.r
+	set	2,a
+	ret
+m_5:	ld	hl,(_ymax) \.r
+	or	a,a
+	sbc	hl,bc
+	jp	p,m__10 \.r
+	ret	pe
+	set	3,a
+	ret
+m__10:	ret	po
+	set	3,a
 	ret
 
 ;-------------------------------------------------------------------------------

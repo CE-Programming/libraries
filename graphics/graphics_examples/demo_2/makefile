@@ -10,7 +10,7 @@
 #----------------------------
 TARGET ?= GRAPHC2
 DESCRIPTION ?= "Graphics C program - Demo 2"
-DEBUGMODE ?= DEBUG
+DEBUGMODE ?= NDEBUG
 ARCHIVED ?= NO
 APPVAR ?= NO
 #----------------------------
@@ -26,7 +26,7 @@ GFXDIR := src/gfx
 
 #Add shared library names to the L varible, for instance:
 # L := graphc fileioc keypadc
-L := graphc keypadc
+L := graphc
 
 #----------------------------
 #Try not to edit anything below these lines unless you know what you are doing
