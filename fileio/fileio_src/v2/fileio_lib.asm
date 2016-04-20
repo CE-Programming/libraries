@@ -89,7 +89,6 @@ _Resize:
 	jp	z,_ReturnNEG1L \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNULL \.r
 	ld	de,$FFFF-30
@@ -161,12 +160,10 @@ _CheckInRAM_ASM:
 	dec hl
 	dec hl
 	dec hl
-	ld	a,(hl)
-	or	a,a
-	sbc	hl,hl
-	cp	a,$D0
-	ret	nc
-	inc	hl
+	ld 	a,$cf
+	cp	(hl)
+	sbc	a,a
+	inc	a
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -408,7 +405,6 @@ _Write:
 	jp	z,_ReturnNULL_PopIX \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNULL_PopIX \.r
 	ld	bc,0
@@ -596,7 +592,6 @@ _PutChar:
 	jp	z,_ReturnNEG1L \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNEG1L \.r
 _PutChar_ASM:
