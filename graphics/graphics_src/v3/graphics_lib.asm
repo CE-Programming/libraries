@@ -1169,12 +1169,12 @@ m_28:	ld	a,(iy+-1)
 	or	a,(iy+-3)
 	jp	z,m_30 \.r
 _:	ld	(iy+-2),a
-	tst	a,8
-	jr	z,m_19
+	rra
+	jr	nc,m_19
 	ld	hl,(_ymax) \.r
 	jr	_ComputeNewX_ASM
-m_19:	tst	a,4
-	jr	z,m_17
+m_19:	rra
+	jr	nc,m_17
 	ld	hl,(_ymin) \.r
 _ComputeNewX_ASM:
 	ld	(iy+-6),hl
@@ -1202,12 +1202,12 @@ _ComputeNewX_ASM:
 	add	hl,bc
 	ld	(iy+-9),hl
 	jr	m_22
-m_17:	tst	a,2
-	jr	z,m_15
+m_17:	rra
+	jr	nc,m_15
 	ld	hl,(_xmax) \.r
 	jr	_ComputeNewY_ASM
-m_15:	tst	a,1
-	jr	z,m_22
+m_15:	rra
+	jr	nc,m_22
 	ld	hl,(_xmin) \.r
 _ComputeNewY_ASM:
 	ld	(iy+-9),hl
