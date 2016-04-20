@@ -1172,6 +1172,10 @@ _:	ld	(iy+-2),a
 	tst	a,8
 	jr	z,m_19
 	ld	hl,(_ymax) \.r
+	jr	_ComputeNewX_ASM
+m_19:	tst	a,4
+	jr	z,m_17
+	ld	hl,(_ymin) \.r
 _ComputeNewX_ASM:
 	ld	(iy+-6),hl
 	ld	bc,(iy+6)
@@ -1182,9 +1186,8 @@ _ComputeNewX_ASM:
 	ld	bc,(iy+3)
 	or	a,a
 	sbc	hl,bc
-	push	hl
+	ex	(sp),hl
 	pop	bc
-	pop	hl
 	call	__imuls_ASM \.r
 	ex	de,hl
 	ld	hl,(iy+12)
@@ -1199,14 +1202,13 @@ _ComputeNewX_ASM:
 	add	hl,bc
 	ld	(iy+-9),hl
 	jr	m_22
-m_19:	tst	a,4
-	jr	z,m_17
-	ld	hl,(_ymin) \.r
-	jp	_ComputeNewX_ASM \.r
-	jr	m_22
 m_17:	tst	a,2
 	jr	z,m_15
 	ld	hl,(_xmax) \.r
+	jr	_ComputeNewY_ASM
+m_15:	tst	a,1
+	jr	z,m_22
+	ld	hl,(_xmin) \.r
 _ComputeNewY_ASM:
 	ld	(iy+-9),hl
 	ld	bc,(iy+3)
@@ -1216,9 +1218,8 @@ _ComputeNewY_ASM:
 	ld	hl,(iy+12)
 	ld	bc,(iy+6)
 	sbc	hl,bc
-	push	hl
+	ex	(sp),hl
 	pop	bc
-	pop	hl
 	call	__imuls_ASM \.r
 	ex	de,hl
 	ld	hl,(iy+9)
@@ -1232,11 +1233,6 @@ _ComputeNewY_ASM:
 	ld	bc,(iy+6)
 	add	hl,bc
 	ld	(iy+-6),hl
-	jr	m_22
-m_15:	tst	a,1
-	jr	z,m_22
-	ld	hl,(_xmin) \.r
-	call	_ComputeNewY_ASM \.r
 m_22:	ld	a,(iy+-2)
 	cp	a,(iy+-1)
 	jr	nz,+_
