@@ -285,11 +285,10 @@ _:	call	_chkfindsym
 	push	de
 	push	hl
 	pop	ix
-	ld	a,10
-	add	a,(ix+9)
-	ld	de,0
-	ld	e,a
+	ld	de,10
 	add	hl,de
+	ld e,(ix+9)
+	add hl,de
 	ex	(sp),hl
 	add	hl,de
 	pop	de
