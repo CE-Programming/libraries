@@ -145,7 +145,7 @@ _:	ld	de,vram
 	ld	l,mpLcdIcr&$FF
 	ld	(hl),4
 	jr	_SetDefaultPalette
- 
+
 ;-------------------------------------------------------------------------------
 _CloseGraph:
 ; Closes the graphics library and sets up for the TI-OS
@@ -156,7 +156,7 @@ _CloseGraph:
 	ld	hl,mpLcdBase
 	ld	a,lcdBpp16
 	jr	-_
- 
+
 ;-------------------------------------------------------------------------------
 _SetDefaultPalette:
 ; Sets up the default palette where H=L
@@ -180,7 +180,7 @@ _:	ld	a,b
 	inc	b
 	jr	nz,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _FillScrn:
 ; Fills the screen with the specified color index
@@ -230,7 +230,7 @@ _GetColor:
 	add	hl,hl
 	ld	hl,(hl)
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetColor:
 ; Sets the color of a given pallete entry
@@ -307,7 +307,7 @@ _NoClipSetPixel_ASM:
 color5 =$+1
 	ld	(hl),0
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipRectangle:
 ; Draws an unclipped rectangle with the global color index
@@ -346,7 +346,7 @@ _ClipRectangle:
 	ld	hl,(iy+3)
 	ret	z
 	jp	_NoClipRectangle_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipRectangle:
 ; Draws an unclipped rectangle with the global color index
@@ -396,7 +396,7 @@ NoClipRectangle_Skip:
 	dec	a
 	jr	nz,NoClipRectangle_Loop
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
@@ -453,12 +453,10 @@ _ClipRectangleOutline:
 	push	hl
 	push	de
 	call	_ClipHorizLine \.r
-	pop	de
-	pop	hl
-	pop	bc
+	ld	sp,ix
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
@@ -490,7 +488,7 @@ _NoClipRectangleOutline:
 	inc	bc
 	dec.s	bc
 	jp	_MemSet_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _ClipHorizLine:
 ; Draws an clipped horizontal line with the global color index
@@ -535,7 +533,7 @@ _ClipHorizLine:
 	ld	e,(iy+6)
 	pop	hl
 	jr	_RectOutlineHoriz_ASM
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
 ; Draws an unclipped horizontal line with the global color index
@@ -573,7 +571,7 @@ _MemSet_ASM:
 	ret	po
 	ldir
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _ClipVertLine:
 ; Draws an clipped horizontal line with the global color index
@@ -647,7 +645,7 @@ _:	ld	(hl),0
 	add	hl,de
 	djnz	-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _DrawBuffer:
 ; Forces drawing routines to operate on the offscreen buffer
@@ -677,7 +675,7 @@ _DrawScreen:
 	sbc	hl,de
 	jr	z,-_
 	jr	--_
- 
+
 ;-------------------------------------------------------------------------------
 _SwapDraw:
 ; Safely swap the vram buffer pointers for double buffered output
@@ -700,7 +698,7 @@ _:	ld	(currentDrawingBuffer),de
 _:	bit	2,(hl)
 	jr	z,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _DrawState:
 ; Gets the current drawing state
@@ -715,7 +713,7 @@ _DrawState:
 	ret	z
 	inc	a
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetTransparentColor:
 ; Sets the transparency color for routines
@@ -735,7 +733,7 @@ _SetTransparentColor:
 	ld	(NoClipSprTransScaledTransColor),a \.r
 	ld	a,d
 	jp	(hl)
- 
+
 ;-------------------------------------------------------------------------------
 _ClipCircleOutline:
 ; Draws a clipped circle outline
@@ -1418,6 +1416,7 @@ _ShiftWindowDown:
 	add	hl,de
 	ex	de,hl
 	jr	+_
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowRight:
 ; Shifts whatever is in the clip window right by some pixels
@@ -1449,7 +1448,7 @@ PosOffsetDownRight_ASM =$+1
 	dec	a
 	jr	nz,-_
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowUp:
 ; Shifts whatever is in the clip window up by some pixels
@@ -1810,7 +1809,7 @@ _:	ld	c,0
 	dec	a
 	jr	nz,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _NoClipGetSprite:
 ; Grabs the data from the current draw buffer and stores it in another buffer
@@ -1854,7 +1853,7 @@ NoClipSprGrabMoveAmt =$+1
 	jr	nz,-_
 	ld	hl,(iy+3)
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _NoClipDrawTransparentSprite:
 ; Draws a transparent sprite to the current buffer
@@ -1902,7 +1901,7 @@ _:	inc	de
 	jr	nz,---_
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipDraw_ASM:
 ; Clipping stuff
@@ -2243,7 +2242,7 @@ _TilePtrMapped:
 	add	hl,bc
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _TextX:
 ; Gets the X position of the text cursor
@@ -2253,7 +2252,7 @@ _TextX:
 ;  X Text cursor posistion
 	ld	hl,(TextXPos_ASM) \.r
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _TextY:
 ; Gets the Y position of the text cursor
@@ -2263,7 +2262,7 @@ _TextY:
 ;  Y Text cursor posistion
 	ld	a,(TextYPos_ASM) \.r
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _SetTextColor:
 ; Sets the transparency text color for text routines
@@ -2297,7 +2296,7 @@ _SetTextXY:
 	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _PrintStringXY:
 ; Places a string at the given coordinates
@@ -2320,7 +2319,7 @@ _PrintStringXY:
 	dec	hl
 	ld	hl,(hl)
 	jr	+_
- 
+
 ;-------------------------------------------------------------------------------
 _PrintString:
 ; Places a string at the current cursor position
@@ -2496,8 +2495,7 @@ _PrintInt:
 	ld	a,'-'
 	call	_PrintChar_ASM \.r
 	pop	bc
-_:
-	jp	_PrintUnsignedInt_ASM \.r
+_:	jp	_PrintUnsignedInt_ASM \.r
 
 ;-------------------------------------------------------------------------------
 _StringWidthC:
@@ -2564,7 +2562,7 @@ _:	or	a,a
 	ld	l,a
 	add	hl,bc
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetCustomFontData:
 ; Sets the font to be custom
@@ -2605,7 +2603,7 @@ _SetCustomFontSpacing:
 _:	ld	(CharSpacing_ASM),hl \.r
 	ret
 
- ;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 _SetFontMonospace:
 ; Sets the font to be monospace
 ; Arguments:
@@ -2734,7 +2732,7 @@ l_18:	ld	bc,(ix+12)
 l_19:	ld	sp,ix
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 ; Inner library routines
 ;-------------------------------------------------------------------------------
@@ -2815,7 +2813,7 @@ _PixelPtr_ASM:
 	add	hl,de
 	add	hl,de
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _UpLeftShiftCalculate_ASM:
 ; Calculates the position to shift the window for up/left
@@ -2847,6 +2845,7 @@ _:	sub	a,c
 	ld	de,vram
 	add	hl,de
 	ret
+
 ;-------------------------------------------------------------------------------
 _DownRightShiftCalculate_ASM:
 ; Calculates the position to shift the window for dowm/right
@@ -2870,7 +2869,7 @@ _DownRightShiftCalculate_ASM:
 	ld	a,(_ymax) \.r
 	ld	l,a
 	jr	-_
-	
+
 ;-------------------------------------------------------------------------------
 _Max_ASM:
 ; Calculate the resut of a signed comparison
@@ -2887,7 +2886,7 @@ _Max_ASM:
 _:	ret	po
 	ex	de,hl
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _Min_ASM:
 ; Calculate the resut of a signed comparison
@@ -2940,7 +2939,7 @@ _SignedCompare_ASM:
 	ret	po
 	ccf
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _SetFullScreenClipping_ASM:
 ; Sets the clipping window to the entire screen
@@ -3072,22 +3071,22 @@ _ComputeOutcode_ASM:
 	sbc	hl,bc
 	pop	bc
 	add	hl,hl
-	jp	po,m__4 \.r
+	jp	po,m__1 \.r
 	ccf
-m__4:	rla
+m__1:	rla
 	ld	hl,(_xmax) \.r
 	sbc	hl,bc
 	add	hl,hl
-	jp	po,m__6 \.r
+	jp	po,m__2 \.r
 	ccf
-m__6:	rla
+m__2:	rla
 	ld	hl,(_ymin) \.r
 	scf
 	sbc	hl,de
 	add	hl,hl
-	jp	pe,m__8 \.r
+	jp	pe,m__3 \.r
 	ccf
-m__8:	rla
+m__3:	rla
 	ld	hl,(_ymax) \.r
 	sbc	hl,de
 	add	hl,hl
