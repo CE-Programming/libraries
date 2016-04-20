@@ -2965,50 +2965,42 @@ __idivs_ASM:
 ;  BC : Operand 2
 ; Outputs:
 ;  HL = HL/BC
-	push	bc
-	push	hl
 	ex	de,hl
+	xor	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	jp	p,+_ \.r
+	push	hl
+	pop	bc
+	inc	a
+_:
 	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	m,+_ \.r
 	ex	de,hl
-_:	or	a,a
-	sbc	hl,hl
-	sbc	hl,bc
-	jp	m,+_ \.r
-	push	hl
-	pop	bc
+	inc	a
 	
-_:	ld	a,24
-	or	a,a
-	sbc	hl,hl
+_:	add	hl,de
+	rra
+	ld	a,24
+	
 _:	ex	de,hl
-	add	hl,hl
+	adc	hl,hl
 	ex	de,hl
 	adc	hl,hl
-	sbc	hl,bc
-	jr	nc,+_
 	add	hl,bc
-	jr	++_
-_:	inc	e
+	jr	c,+_
+	sbc	hl,bc
 _:	dec	a
-	jr	nz,---_
-
-	ld	hl,2
-	add	hl,sp
-	ld	a,(hl)
-	inc	hl
-	ld	sp,hl
-	inc	hl
-	inc	hl
-	xor	a,(hl)
-	jp	p,+_ \.r
+	jr	nz,--_
+	
+	ex	de,hl
+	adc	hl,hl
+	ret	c
+	ex	de,hl
 	sbc	hl,hl
 	sbc	hl,de
-	ex	de,hl
-_:	ex	de,hl
-	pop	bc
 	ret
 
 ;-------------------------------------------------------------------------------
