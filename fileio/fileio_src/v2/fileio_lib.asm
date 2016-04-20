@@ -359,20 +359,22 @@ varTypeArc =$+1
 	ld	(op1),a
 	call	_chkfindsym
 	call	_chkinram
+	push af
 	call	_GetSlotVATPtr_ASM \.r
-	ld		bc,0
-	ld		(hl),bc
-	ld		b,a
-	pop		af
-	push	bc
+	ld	bc,0
+	ld	(hl),bc
+	pop bc
+	pop	af
 	or	a,a
 	jr	z,SetNotArchived
 SetArchived:
-	pop af
+	push bc	
+	pop	af	
 	jp	z,_arc_unarc
 	ret
 SetNotArchived:
-	pop af
+	push bc
+	pop	af
 	jp	nz,_arc_unarc
 	ret
  
