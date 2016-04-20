@@ -156,10 +156,11 @@ _IsArchived:
 _CheckInRAM_ASM:
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
-	push	bc
-	ld	bc,-5
-	add	hl,bc
-	pop	bc
+	dec hl
+	dec hl
+	dec hl
+	dec hl
+	dec hl
 	ld	a,(hl)
 	or	a,a
 	sbc	hl,hl
