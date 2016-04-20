@@ -323,10 +323,7 @@ _SavePtrs_ASM:
 	call	z,_GetSlotSize_ASM \.r
 	call	_SetSlotOffset_ASM \.r
 	pop	ix
-	ld	a,(CurrentSlot_ASM) \.r
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
+	ld	hl,(CurrentSlot_ASM) \.r
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -922,7 +919,7 @@ _SetSlotOffset_ASM:
 ;-------------------------------------------------------------------------------
 
 CurrentSlot_ASM:
-	.db 0
+	.dl 0
 ResizeBytes:
 	.dl 0
 VarOffset0:
