@@ -138,7 +138,7 @@ _GetToken:
 
 ;-------------------------------------------------------------------------------
 _IsArchived:
-; Checks if a varaible is archived
+; Checks if a variable is archived
 ; Arguments:
 ;  __frame_arg0 : Slot number
 ; Returns:
@@ -169,7 +169,7 @@ _CheckInRAM_ASM:
 _OpenVar:
 ; Opens a variable
 ; Arguments:
-;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg0 : Pointer to variable name
 ;  __frame_arg1 : Opening flags
 ;  __frame_arg2 : Varaible Type
 ; Returns:
@@ -184,7 +184,7 @@ _OpenVar:
 _Open:
 ; Opens an AppVar
 ; Arguments:
-;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg0 : Pointer to variable name
 ;  __frame_arg1 : Opening flags
 ; Returns:
 ;  Slot number if no error
@@ -360,19 +360,18 @@ varTypeArc =$+1
 	call	_chkfindsym
 	call	_chkinram
 	call	_GetSlotVATPtr_ASM \.r
-	ld	bc,0
-	ld	(hl),bc
-	ld	b,a
-	pop	af
+	ld		bc,0
+	ld		(hl),bc
+	ld		b,a
+	pop		af
+	push	bc
 	or	a,a
 	jr	z,SetNotArchived
 SetArchived:
-	push	bc
 	pop	af
 	jp	z,_arc_unarc
 	ret
 SetNotArchived:
-	push	bc
 	pop	af
 	jp	nz,_arc_unarc
 	ret
