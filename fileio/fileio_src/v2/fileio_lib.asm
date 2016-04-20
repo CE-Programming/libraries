@@ -349,11 +349,10 @@ _SetArchiveStatus:
 	add	hl,bc
 	ld	b,(hl)
 	ld	de,op1+1
-	dec	hl
-_:	ld	a,(hl)
+_:	dec	hl
+	ld	a,(hl)
 	ld	(de),a
 	inc	de
-	dec	hl
 	djnz	-_
 	xor	a,a
 	ld	(de),a
