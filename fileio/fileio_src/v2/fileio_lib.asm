@@ -349,7 +349,6 @@ _SetArchiveStatus:
 	push	hl
 	call	_CheckIfSlotOpen \.r
 	jp	z,_ReturnNULL \.r
-	ld	a,c
 	push	af
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
@@ -370,11 +369,10 @@ varTypeArc =$+1
 	ld	(op1),a
 	call	_chkfindsym
 	call	_chkinram
-	push	af
-	ld	bc,0
 	call	_GetSlotVATPtr_ASM \.r
+	ld	bc,0
 	ld	(hl),bc
-	pop	bc
+	ld	b,a
 	pop	af
 	or	a,a
 	jr	z,SetNotArchived
@@ -848,31 +846,30 @@ _ReturnNEG1L:
 	ret
 _CheckIfSlotOpen:
 	push	hl
-	push	bc
-	ld	c,a
+	ld	a,c
 	call	_GetSlotVATPtr_ASM \.r
+	ld	c,a
 	ld	hl,(hl)
 	add	hl,de 
 	or	a,a 
 	sbc	hl,de
-	ld	a,c
-	pop	bc
 	pop	hl
 	ret
 _GetSlotVATPtr_ASM:
-	ld	a,(CurrentSlot_ASM) \.r
+	ld	hl,CurrentSlot_Asm \.r
+	ld	c,(hl)
 	ld	hl,VATPtr0 	; =$D0244E
-	dec	a
+	dec	c
 	ret	z
 	inc h
 	ld	l,$7b		; VATPtr1=$D0257B
-	dec	a
+	dec	c
 	ret	z
 	ld	l,$7e		; VATPtr2= $D0257E
-	dec	a
+	dec	c
 	ret	z
 	ld	l,$81		; VATPtr3=$D02581
-	dec	a
+	dec	c
 	ret	z
 	ld	l,$84		; VATPtr4=$D02584
 	ret
