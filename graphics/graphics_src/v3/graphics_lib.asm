@@ -3083,42 +3083,29 @@ _ComputeOutcode_ASM:
 	xor	a,a
 	sbc	hl,bc
 	pop	bc
-	jp	p,m__4 \.r
-	jp	pe,m_2 \.r
-	jr	m__5
-m__4:	jp	po,m_2 \.r
-m__5:	ld	a,1
-	jr	m_6
-m_2:	ld	hl,(_xmax) \.r
-	or	a,a
+	add	hl,hl
+	jp	po,m__4 \.r
+	ccf
+m__4:	rla
+	ld	hl,(_xmax) \.r
 	sbc	hl,bc
-	jp	p,m__6 \.r
-	jp	pe,m_6 \.r
-	jr	m__7
-m__6:	jp	po,m_6 \.r
-m__7:	ld	a,2
-m_6:	ld	bc,(_ymin) \.r
-	ex	de,hl
-	push	hl
-	or	a,a
-	sbc	hl,bc
-	pop	bc
-	jp	p,m__8 \.r
-	jp	pe,m_5 \.r
-	set	2,a
-	ret
-m__8:	jp	po,m_5 \.r
-	set	2,a
-	ret
-m_5:	ld	hl,(_ymax) \.r
-	or	a,a
-	sbc	hl,bc
-	jp	p,m__10 \.r
-	ret	pe
-	set	3,a
-	ret
-m__10:	ret	po
-	set	3,a
+	add	hl,hl
+	jp	po,m__6 \.r
+	ccf
+m__6:	rla
+	ld	hl,(_ymin) \.r
+	scf
+	sbc	hl,de
+	add	hl,hl
+	jp	pe,m__8 \.r
+	ccf
+m__8:	rla
+	ld	hl,(_ymax) \.r
+	sbc	hl,de
+	add	hl,hl
+	rla
+	ret	po
+	xor	1
 	ret
 
 ;-------------------------------------------------------------------------------
