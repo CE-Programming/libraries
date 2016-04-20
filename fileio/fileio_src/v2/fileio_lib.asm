@@ -92,7 +92,6 @@ _Resize:
 	pop	hl
 	jp	z,_ReturnNULL \.r
 	ld	de,$FFFF-30
-	or	a,a
 	sbc	hl,de
 	add	hl,de
 	push	af
@@ -884,11 +883,10 @@ _GetSlotVarPtr_ASM:
 	ret
 _GetSlotOffsetPtr_ASM:
 	push	bc
-	ld 	hl,CurrentSlot_ASM \.r
-	ld	l,(hl)
-	ld	h,3
-	mlt	hl
+	ld 	hl,(CurrentSlot_ASM) \.r
 	ld	bc,VarOffset0-3 \.r
+	add	hl,bc
+	add	hl,bc
 	add	hl,bc
 	pop	bc
 	ret
