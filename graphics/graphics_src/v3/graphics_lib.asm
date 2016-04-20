@@ -1246,7 +1246,7 @@ m_22:	ld	a,(iy+-2)
 	ld	(iy+6),de
 	call	_ComputeOutcode_ASM \.r
 	ld	(iy+-1),a
-	jr	m_28 \.r
+	jp	m_28 \.r
 _:	ld	hl,(iy+-9)
 	ld	(iy+9),hl
 	ld	de,(iy+-6)
