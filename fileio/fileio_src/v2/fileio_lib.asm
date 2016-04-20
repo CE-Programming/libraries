@@ -368,11 +368,11 @@ varTypeArc =$+1
 	or	a,a
 	jr	z,SetNotArchived
 SetArchived:
-	pop	af
+	pop af
 	jp	z,_arc_unarc
 	ret
 SetNotArchived:
-	pop	af
+	pop af
 	jp	nz,_arc_unarc
 	ret
  
