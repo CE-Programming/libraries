@@ -121,6 +121,11 @@ uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 #define gc_lcdHeight                      240
 
 /**
+ * Produces a random integer value
+ */
+#define gc_RandInt(min, max) ((unsigned)rand() % ((max) - (min) + 1) + (min))
+
+/**
  * Checks if we are currently in a rectangular hotspot area
  */
 #define gc_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
@@ -413,6 +418,12 @@ void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
  * Draws a fast vertical line measured from the top left origin.
  */
 void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
+
+/**
+ * Fairly fast clipped line routine
+ * Returns false if offscreen, true if drawn
+ */
+bool gc_ClipLine(int x0, int y0, int x1, int y1);
 
 /**
  * Unclipped scaled sprite routines

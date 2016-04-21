@@ -67,11 +67,12 @@
 ; v3 functions
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
+ .function "gc_ClipLine",_ClipLine
  .function "gc_DrawTilemap",_DrawTilemap
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
  .function "gc_LZDecompress",_LZDecompress
- 
+
  .beginDependencies
  .endDependencies
  
@@ -114,10 +115,10 @@ _SetColorIndex:
 	pop	de
 	push	de
 	push	hl
-	ld	a,(color1) \.r
-	ld	d,a
+	ld	hl,color1 \.r
+	ld	d,(hl)
 	ld	a,e
-	ld	(color1),a \.r
+	ld	(hl),a
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
@@ -144,7 +145,7 @@ _:	ld	de,vram
 	ld	l,mpLcdIcr&$FF
 	ld	(hl),4
 	jr	_SetDefaultPalette
- 
+
 ;-------------------------------------------------------------------------------
 _CloseGraph:
 ; Closes the graphics library and sets up for the TI-OS
@@ -155,7 +156,7 @@ _CloseGraph:
 	ld	hl,mpLcdBase
 	ld	a,lcdBpp16
 	jr	-_
- 
+
 ;-------------------------------------------------------------------------------
 _SetDefaultPalette:
 ; Sets up the default palette where H=L
@@ -179,7 +180,7 @@ _:	ld	a,b
 	inc	b
 	jr	nz,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _FillScrn:
 ; Fills the screen with the specified color index
@@ -229,7 +230,7 @@ _GetColor:
 	add	hl,hl
 	ld	hl,(hl)
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetColor:
 ; Sets the color of a given pallete entry
@@ -306,7 +307,7 @@ _NoClipSetPixel_ASM:
 color5 =$+1
 	ld	(hl),0
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipRectangle:
 ; Draws an unclipped rectangle with the global color index
@@ -345,7 +346,7 @@ _ClipRectangle:
 	ld	hl,(iy+3)
 	ret	z
 	jp	_NoClipRectangle_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipRectangle:
 ; Draws an unclipped rectangle with the global color index
@@ -395,7 +396,7 @@ NoClipRectangle_Skip:
 	dec	a
 	jr	nz,NoClipRectangle_Loop
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
@@ -452,12 +453,10 @@ _ClipRectangleOutline:
 	push	hl
 	push	de
 	call	_ClipHorizLine \.r
-	pop	de
-	pop	hl
-	pop	bc
+	ld	sp,ix
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
@@ -489,7 +488,7 @@ _NoClipRectangleOutline:
 	inc	bc
 	dec.s	bc
 	jp	_MemSet_ASM \.r
-	
+
 ;-------------------------------------------------------------------------------
 _ClipHorizLine:
 ; Draws an clipped horizontal line with the global color index
@@ -534,7 +533,7 @@ _ClipHorizLine:
 	ld	e,(iy+6)
 	pop	hl
 	jr	_RectOutlineHoriz_ASM
-	
+
 ;-------------------------------------------------------------------------------
 _NoClipHorizLine:
 ; Draws an unclipped horizontal line with the global color index
@@ -544,13 +543,11 @@ _NoClipHorizLine:
 ;  __frame_arg2 : Length
 ; Returns:
 ;  None
-	push	ix
-	ld	ix,0
-	add	ix,sp
-	ld	hl,(ix+__frame_arg0)
-	ld	e,(ix+__frame_arg1)
-	ld	bc,(ix+__frame_arg2)
-	pop	ix
+	ld	iy,0
+	add	iy,sp
+	ld	hl,(iy+3)
+	ld	e,(iy+6)
+	ld	bc,(iy+9)
 _RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
@@ -574,7 +571,7 @@ _MemSet_ASM:
 	ret	po
 	ldir
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _ClipVertLine:
 ; Draws an clipped horizontal line with the global color index
@@ -648,7 +645,7 @@ _:	ld	(hl),0
 	add	hl,de
 	djnz	-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _DrawBuffer:
 ; Forces drawing routines to operate on the offscreen buffer
@@ -678,7 +675,7 @@ _DrawScreen:
 	sbc	hl,de
 	jr	z,-_
 	jr	--_
- 
+
 ;-------------------------------------------------------------------------------
 _SwapDraw:
 ; Safely swap the vram buffer pointers for double buffered output
@@ -701,7 +698,7 @@ _:	ld	(currentDrawingBuffer),de
 _:	bit	2,(hl)
 	jr	z,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _DrawState:
 ; Gets the current drawing state
@@ -716,7 +713,7 @@ _DrawState:
 	ret	z
 	inc	a
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetTransparentColor:
 ; Sets the transparency color for routines
@@ -736,7 +733,7 @@ _SetTransparentColor:
 	ld	(NoClipSprTransScaledTransColor),a \.r
 	ld	a,d
 	jp	(hl)
- 
+
 ;-------------------------------------------------------------------------------
 _ClipCircleOutline:
 ; Draws a clipped circle outline
@@ -911,8 +908,7 @@ _ClipCircle:
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
-b_5:
-	ld	hl,(ix+-3)
+b_5:	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
 	push	hl
@@ -992,18 +988,15 @@ b_5:
 	jp	m,b__2 \.r
 	jp	pe,b_3 \.r
 	jr	b__3
-b__2:
-	jp	po,b_3 \.r
-b__3:
-	ld	hl,(ix+-3)
+b__2:	jp	po,b_3 \.r
+b__3:	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
 	ld	bc,(ix+-9)
 	add	hl,bc
 	ld	(ix+-9),hl
 	jr	b_4
-b_3:
-	ld	bc,(ix+-6)
+b_3:	ld	bc,(ix+-6)
 	dec	bc
 	ld	(ix+-6),bc
 	ld	hl,(ix+-3)
@@ -1014,18 +1007,15 @@ b_3:
 	inc	hl
 	add	hl,de
 	ld	(ix+-9),hl
-b_4:
-	ld	bc,(ix+-3)
+b_4:	ld	bc,(ix+-3)
 	ld	hl,(ix+-6)
 	or	a,a
 	sbc	hl,bc
 	jp	p,b__4 \.r
 	jp	pe,b_5 \.r
 	jr	b__5
-b__4:
-	jp	po,b_5 \.r
-b__5:
-	ld	sp,ix
+b__4:	jp	po,b_5 \.r
+b__5:	ld	sp,ix
 	pop	ix
 	ret
 
@@ -1143,6 +1133,128 @@ a_4:	ld	bc,(iy+-3)
 a__4:	jp	po,a_5 \.r
 NoClipCircleSP =$+1
 _:	ld	sp,0
+	ret
+
+;-------------------------------------------------------------------------------
+_ClipLine:
+; Draws an arbitrarily clipped line
+; Arguments:
+;  __frame_arg0: x0
+;  __frame_arg0: y0
+;  __frame_arg0: x1
+;  __frame_arg0: y1
+; Returns:
+;  true if drawn, false if offscreen
+	ld	iy,0
+	add	iy,sp
+	ld	(ClipLineSP),iy \.r
+	ld	hl,-10
+	add	hl,sp
+	ld	sp,hl
+	ld	de,(iy+6)
+	ld	hl,(iy+3)
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-1),a
+	ld	de,(iy+12)
+	ld	hl,(iy+9)
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-3),a
+m_28:	ld	a,(iy+-1)
+	and	a,(iy+-3)
+	jp	nz,m_31 \.r
+	or	a,(iy+-1)
+	jr	nz,+_
+	or	a,(iy+-3)
+	jp	z,m_30 \.r
+_:	ld	(iy+-2),a
+	rra
+	jr	nc,m_19
+	ld	hl,(_ymax) \.r
+	jr	_ComputeNewX_ASM
+m_19:	rra
+	jr	nc,m_17
+	ld	hl,(_ymin) \.r
+_ComputeNewX_ASM:
+	ld	(iy+-6),hl
+	ld	bc,(iy+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	ld	hl,(iy+9)
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	ex	(sp),hl
+	pop	bc
+	call	__imuls_ASM \.r
+	ex	de,hl
+	ld	hl,(iy+12)
+	ld	bc,(iy+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	ex	de,hl
+	call	__idivs_ASM \.r
+	ld	bc,(iy+3)
+	add	hl,bc
+	ld	(iy+-9),hl
+	jr	m_22
+m_17:	rra
+	jr	nc,m_15
+	ld	hl,(_xmax) \.r
+	jr	_ComputeNewY_ASM
+m_15:	rra
+	jr	nc,m_22
+	ld	hl,(_xmin) \.r
+_ComputeNewY_ASM:
+	ld	(iy+-9),hl
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	ld	hl,(iy+12)
+	ld	bc,(iy+6)
+	sbc	hl,bc
+	ex	(sp),hl
+	pop	bc
+	call	__imuls_ASM \.r
+	ex	de,hl
+	ld	hl,(iy+9)
+	ld	bc,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	pop	bc
+	ex	de,hl
+	call	__idivs_ASM \.r
+	ld	bc,(iy+6)
+	add	hl,bc
+	ld	(iy+-6),hl
+m_22:	ld	a,(iy+-2)
+	cp	a,(iy+-1)
+	jr	nz,+_
+	ld	hl,(iy+-9)
+	ld	(iy+3),hl
+	ld	de,(iy+-6)
+	ld	(iy+6),de
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-1),a
+	jp	m_28 \.r
+_:	ld	hl,(iy+-9)
+	ld	(iy+9),hl
+	ld	de,(iy+-6)
+	ld	(iy+12),de
+	call	_ComputeOutcode_ASM \.r
+	ld	(iy+-3),a
+	jp	m_28 \.r
+m_30:	ld	c,(iy+12)
+	ld	hl,(iy+9)
+	ld	b,(iy+6)
+	ld	de,(iy+3)
+	call	_NoClipLine_ASM \.r
+ClipLineSP =$+1
+m_31:	ld	sp,0
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1304,6 +1416,7 @@ _ShiftWindowDown:
 	add	hl,de
 	ex	de,hl
 	jr	+_
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowRight:
 ; Shifts whatever is in the clip window right by some pixels
@@ -1335,7 +1448,7 @@ PosOffsetDownRight_ASM =$+1
 	dec	a
 	jr	nz,-_
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowUp:
 ; Shifts whatever is in the clip window up by some pixels
@@ -1353,6 +1466,7 @@ _ShiftWindowUp:
 	add	hl,hl
 	add	hl,de
 	jr	+_
+
 ;-------------------------------------------------------------------------------
 _ShiftWindowLeft:
 ; Shifts whatever is in the clip window left by some pixels
@@ -1695,7 +1809,7 @@ _:	ld	c,0
 	dec	a
 	jr	nz,-_
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _NoClipGetSprite:
 ; Grabs the data from the current draw buffer and stores it in another buffer
@@ -1739,7 +1853,7 @@ NoClipSprGrabMoveAmt =$+1
 	jr	nz,-_
 	ld	hl,(iy+3)
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _NoClipDrawTransparentSprite:
 ; Draws a transparent sprite to the current buffer
@@ -1787,7 +1901,7 @@ _:	inc	de
 	jr	nz,---_
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _ClipDraw_ASM:
 ; Clipping stuff
@@ -2128,7 +2242,7 @@ _TilePtrMapped:
 	add	hl,bc
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _TextX:
 ; Gets the X position of the text cursor
@@ -2138,7 +2252,7 @@ _TextX:
 ;  X Text cursor posistion
 	ld	hl,(TextXPos_ASM) \.r
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _TextY:
 ; Gets the Y position of the text cursor
@@ -2148,7 +2262,7 @@ _TextY:
 ;  Y Text cursor posistion
 	ld	a,(TextYPos_ASM) \.r
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _SetTextColor:
 ; Sets the transparency text color for text routines
@@ -2182,7 +2296,7 @@ _SetTextXY:
 	ld	a,(hl)
 	ld	(TextYPos_ASM),a \.r
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _PrintStringXY:
 ; Places a string at the given coordinates
@@ -2205,7 +2319,7 @@ _PrintStringXY:
 	dec	hl
 	ld	hl,(hl)
 	jr	+_
- 
+
 ;-------------------------------------------------------------------------------
 _PrintString:
 ; Places a string at the current cursor position
@@ -2381,8 +2495,7 @@ _PrintInt:
 	ld	a,'-'
 	call	_PrintChar_ASM \.r
 	pop	bc
-_:
-	jp	_PrintUnsignedInt_ASM \.r
+_:	jp	_PrintUnsignedInt_ASM \.r
 
 ;-------------------------------------------------------------------------------
 _StringWidthC:
@@ -2449,7 +2562,7 @@ _:	or	a,a
 	ld	l,a
 	add	hl,bc
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _SetCustomFontData:
 ; Sets the font to be custom
@@ -2490,7 +2603,7 @@ _SetCustomFontSpacing:
 _:	ld	(CharSpacing_ASM),hl \.r
 	ret
 
- ;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------
 _SetFontMonospace:
 ; Sets the font to be monospace
 ; Arguments:
@@ -2619,7 +2732,7 @@ l_18:	ld	bc,(ix+12)
 l_19:	ld	sp,ix
 	pop	ix
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 ; Inner library routines
 ;-------------------------------------------------------------------------------
@@ -2700,7 +2813,7 @@ _PixelPtr_ASM:
 	add	hl,de
 	add	hl,de
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _UpLeftShiftCalculate_ASM:
 ; Calculates the position to shift the window for up/left
@@ -2732,6 +2845,7 @@ _:	sub	a,c
 	ld	de,vram
 	add	hl,de
 	ret
+
 ;-------------------------------------------------------------------------------
 _DownRightShiftCalculate_ASM:
 ; Calculates the position to shift the window for dowm/right
@@ -2755,7 +2869,7 @@ _DownRightShiftCalculate_ASM:
 	ld	a,(_ymax) \.r
 	ld	l,a
 	jr	-_
-	
+
 ;-------------------------------------------------------------------------------
 _Max_ASM:
 ; Calculate the resut of a signed comparison
@@ -2772,7 +2886,7 @@ _Max_ASM:
 _:	ret	po
 	ex	de,hl
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _Min_ASM:
 ; Calculate the resut of a signed comparison
@@ -2825,7 +2939,7 @@ _SignedCompare_ASM:
 	ret	po
 	ccf
 	ret
-	
+
 ;-------------------------------------------------------------------------------
 _SetFullScreenClipping_ASM:
 ; Sets the clipping window to the entire screen
@@ -2840,6 +2954,145 @@ _SetFullScreenClipping_ASM:
 	ld	l,0
 	ld	(_xmin),hl \.r
 	ld	(_ymin),hl \.r
+	ret
+
+;-------------------------------------------------------------------------------
+__idivs_ASM:
+; Performs signed interger division
+; Inputs:
+;  HL : Operand 1
+;  BC : Operand 2
+; Outputs:
+;  HL = HL/BC
+	ex	de,hl
+	xor	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	jp	p,+_ \.r
+	push	hl
+	pop	bc
+	inc	a
+_:
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,de
+	jp	m,+_ \.r
+	ex	de,hl
+	inc	a
+	
+_:	add	hl,de
+	rra
+	ld	a,24
+	
+_:	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,+_
+	sbc	hl,bc
+_:	dec	a
+	jr	nz,--_
+	
+	ex	de,hl
+	adc	hl,hl
+	ret	c
+	ex	de,hl
+	sbc	hl,hl
+	sbc	hl,de
+	ret
+
+;-------------------------------------------------------------------------------
+__imuls_ASM:
+__imulu_ASM:
+; Performs (un)signed integer multiplication
+; Inputs:
+;  HL : Operand 1
+;  BC : Operand 2
+; Outputs:
+;  HL = HL*BC
+	push	bc
+	push	hl
+	ex	de,hl
+	ld	hl,2
+	add	hl,sp
+	ld	b,(hl)
+	mlt	bc
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	a,d
+	ld	d,(hl)
+	mlt	de
+	dec	hl
+	ld	l,(hl)
+	ld	h,a
+	mlt	hl
+	ld	a,l
+	add	a,e
+	add	a,c
+	pop	de
+	pop	bc
+	push	bc
+	or	a,a
+	sbc	hl,hl
+	add.s	hl,de
+	ex	de,hl
+	ld	h,b
+	mlt	hl
+	ld	b,d
+	mlt	bc
+	add	hl,bc
+	add	a,h
+	ld	h,a
+	pop	bc
+	ld	d,c
+	mlt	de
+	push	hl
+	dec	sp
+	pop	hl
+	inc	sp
+	ld	l,0
+	add	hl,de
+	ret
+
+;-------------------------------------------------------------------------------
+_ComputeOutcode_ASM:
+; Compute the bitcode for a point (x, y) using the clip rectangle
+; bounded diagonally by (xmin, ymin), and (xmax, ymax)
+; Inputs:
+;  HL : X Argument
+;  DE : Y Argument
+; Outputs:
+;   A : Bitcode
+	ld	bc,(_xmin) \.r
+	push	hl
+	xor	a,a
+	sbc	hl,bc
+	pop	bc
+	add	hl,hl
+	jp	po,m__1 \.r
+	ccf
+m__1:	rla
+	ld	hl,(_xmax) \.r
+	sbc	hl,bc
+	add	hl,hl
+	jp	po,m__2 \.r
+	ccf
+m__2:	rla
+	ld	hl,(_ymin) \.r
+	scf
+	sbc	hl,de
+	add	hl,hl
+	jp	pe,m__3 \.r
+	ccf
+m__3:	rla
+	ld	hl,(_ymax) \.r
+	sbc	hl,de
+	add	hl,hl
+	rla
+	ret	po
+	xor	1
 	ret
 
 ;-------------------------------------------------------------------------------
