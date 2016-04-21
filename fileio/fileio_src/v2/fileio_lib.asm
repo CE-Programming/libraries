@@ -880,8 +880,8 @@ _GetSlotVarPtr_ASM:
 	ret
 _GetSlotOffsetPtr_ASM:
 	push	bc
-	ld 	hl,(CurrentSlot_ASM) \.r
-	ld	bc,VarOffset0-3 \.r
+	ld 	bc,(CurrentSlot_ASM) \.r
+	ld	hl,VarOffset0-3 \.r
 	add	hl,bc
 	add	hl,bc
 	add	hl,bc
