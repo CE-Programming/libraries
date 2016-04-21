@@ -745,12 +745,12 @@ _ClipCircleOutline:
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
-	ld	bc,0
-	ld	(iy+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(iy+-3),hl
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	l_4 \.r
@@ -894,12 +894,12 @@ _ClipCircle:
 ;  None
 	ld	hl,-9
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
 	ld	bc,(ix+12)
 	ld	(ix+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
@@ -917,9 +917,9 @@ b_5:	ld	hl,(ix+-3)
 	add	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
 	inc	hl
@@ -934,9 +934,9 @@ b_5:	ld	hl,(ix+-3)
 	add	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
 	inc	hl
@@ -952,9 +952,9 @@ b_5:	ld	hl,(ix+-3)
 	sbc	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
@@ -970,9 +970,9 @@ b_5:	ld	hl,(ix+-3)
 	sbc	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	bc,(ix+-3)
 	inc	bc
 	ld	(ix+-3),bc
@@ -1029,12 +1029,12 @@ _NoClipCircle:
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
-	ld	bc,0
-	ld	(iy+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(iy+-3),hl
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	a_4 \.r
