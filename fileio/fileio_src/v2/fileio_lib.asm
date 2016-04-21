@@ -496,10 +496,10 @@ _GetChar_ASM:
 	push	bc
 	call	_GetSlotOffset_ASM \.r
 	pop	hl
+	dec	hl
 	or	a,a
 	sbc	hl,bc	; size-offset
 	jp	c,_ReturnNEG1L \.r
-	jp	z,_ReturnNEG1L \.r
 	push	bc
 	call	_GetSlotVarPtr_ASM \.r
 	ld	hl,(hl)
