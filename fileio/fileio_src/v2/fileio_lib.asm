@@ -413,11 +413,11 @@ _:	ld	a,(hl)
 	ld	(charIn),a \.r
 	call	_PutChar_ASM \.r
 	call	_SetAToHLU
-	bit	7,a
+	rla
 	pop	bc
 	pop	de
 	pop	hl
-	jr	nz,+_
+	jr	c,+_
 	inc	hl
 	inc	bc
 	dec	de
@@ -454,12 +454,12 @@ _:	push	hl
 	push	bc
 	call	_GetChar_ASM \.r
 	call	_SetAToHLU
-	bit	7,a
+	rla
 	ld	a,l
 	pop	bc
 	pop	de
 	pop	hl
-	jr	nz,_s
+	jr	c,_s
 	ld	(hl),a
 	inc	hl
 	inc	bc
