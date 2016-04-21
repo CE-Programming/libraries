@@ -90,7 +90,7 @@ _Resize:
 	push	hl
 	call	_CheckInRAM_ASM \.r
 	pop	hl
-	jp	z,_ReturnNULL \.r
+	jp	c,_ReturnNULL \.r
 	ld	de,$FFFF-30
 	sbc	hl,de
 	add	hl,de
@@ -404,7 +404,7 @@ _Write:
 	push	hl
 	call	_CheckInRAM_ASM \.r
 	pop	hl
-	jp	z,_ReturnNULL_PopIX \.r
+	jp	c,_ReturnNULL_PopIX \.r
 	ld	bc,0
 _:	ld	a,(hl)
 	push	hl
@@ -591,7 +591,7 @@ _PutChar:
 	push	hl
 	call	_CheckInRAM_ASM \.r
 	pop	hl
-	jp	z,_ReturnNEG1L \.r
+	jp	c,_ReturnNEG1L \.r
 _PutChar_ASM:
 	call	_GetSlotSize_ASM \.r
 	push	bc
