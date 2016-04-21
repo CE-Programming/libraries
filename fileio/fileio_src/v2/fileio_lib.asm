@@ -779,10 +779,7 @@ AddMemoryToVar:
 	pop hl
 	ld hl,(hl)
 	push hl
-	ex de,hl
-	or a,a
-	sbc hl,hl
-	ex de,hl
+	ld de,0
 	ld e,(hl)
 	inc hl
 	ld d,(hl)
