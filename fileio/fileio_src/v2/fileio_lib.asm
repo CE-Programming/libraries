@@ -161,8 +161,8 @@ _CheckInRAM_ASM:
 	dec hl
 	ld 	a,$cf
 	cp	(hl)
-	sbc	a,a
-	inc	a
+	sbc	hl,hl
+	inc	hl
 	ret
  
 ;-------------------------------------------------------------------------------
