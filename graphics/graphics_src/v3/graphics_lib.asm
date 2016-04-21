@@ -332,17 +332,15 @@ _ClipRectangle:
 	ret	c
 	ld	de,(iy+3)
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ret	z
 	push	hl
 	pop	bc
 	ld	de,(iy+6)
 	ld	hl,(iy+12)
-	or	a,a
+	xor	a,a
 	sbc	hl,de
-	ld	a,l
-	or	a,a
+	add	a,l
 	ld	hl,(iy+3)
 	ret	z
 	jp	_NoClipRectangle_ASM \.r
@@ -526,7 +524,6 @@ _ClipHorizLine:
 	ld	de,(iy+3)
 	push	de
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
@@ -608,7 +605,6 @@ _ClipVertLine:
 	ret	c
 	ld	hl,(iy+9)
 	ld	de,(iy+6)
-	or	a,a
 	sbc	hl,de
 	ld	b,l
 	inc	b
@@ -850,7 +846,6 @@ l_5:	ld	bc,(iy+6)
 	inc	bc
 	ld	(iy+-3),bc
 	ld	bc,(iy+-9)
-	or	a,a
 	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
@@ -1098,7 +1093,6 @@ a_5:	ld	de,(iy+3)
 	ld	(iy+-3),bc
 	ld	bc,(iy+-9)
 	or	a,a
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
 	jp	m,a__2 \.r
@@ -1284,11 +1278,10 @@ _NoClipLine_ASM:
 	sbc	hl,de
 	ld	a,$03
 	jr	nc,+_
-	ld	a,$0B
+	add	a,$08
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
 	ex	de,hl
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1956,7 +1949,6 @@ NoTopClipNeeded_ASM:
 	jr	c,NoBottomClipNeeded_ASM
 	ex	de,hl
 	ld	de,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ld	(iy+15),hl
 NoBottomClipNeeded_ASM:
@@ -2543,8 +2535,7 @@ _CharWidth_ASM:
 	ld	a,(MonoFlag_ASM) \.r
 	or	a,a
 	jr	nz,+_
-	ld	a,l
-	or	a,a
+	add	a,l
 	sbc	hl,hl
 	ld	l,a
 	ld	de,(CharSpacing_ASM) \.r
@@ -2557,8 +2548,7 @@ _CharWidth_ASM:
 	push	hl
 	pop	bc
 	ret
-_:	or	a,a
-	sbc	hl,hl
+_:	sbc	hl,hl
 	ld	l,a
 	add	hl,bc
 	ret
@@ -2756,8 +2746,7 @@ _:	ld	de,0
 	inc	bc
 	ld	(ix+9),bc
 	ld	a,(ix+-9)
-	res	7,a
-	or	a,a
+	and	a,127
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-12),hl
@@ -2779,7 +2768,6 @@ _:	ld	de,0
 	ld	(ix+-6),bc
 	ld	a,(ix+-9)
 	and	a,128
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	sbc	hl,de
