@@ -751,10 +751,7 @@ _Close:
 	push	hl
 	ld	(CurrentSlot_ASM),a \.r
 	call	_GetSlotVATPtr_ASM \.r
-	ex	de,hl
-	xor	a,a
-	sbc	hl,hl
-	ex	de,hl
+	ld	de,0
 	ld	(hl),de
 	ret
  
