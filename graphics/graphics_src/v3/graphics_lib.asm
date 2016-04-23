@@ -2619,17 +2619,20 @@ _LZDecompress:
 ;  None
 	ld	hl,-20
 	call	__frameset_ASM \.r
-	ld	bc,1
-	ld	hl,(ix+12)
-	or	a,a
-	sbc	hl,bc
-	jp	c,l_19 \.r
+	lea	hl,ix+12
+	ld	a,(hl)
+	inc	hl
+	or	a,(hl)
+	inc	hl
+	or	a,(hl)
+	jp	z,l_19 \.r
 	ld	hl,(ix+6)
 	ld	a,(hl)
 	ld	(ix+-7),a
-	ld	(ix+-3),bc
-	ld	bc,0
-	ld	(ix+-6),bc
+	sbc	hl,hl
+	ld	(ix+-6),hl
+	inc	hl
+	ld	(ix+-3),hl
 l_17:	ld	bc,(ix+-3)
 	ld	hl,(ix+6)
 	add	hl,bc
@@ -2679,8 +2682,9 @@ l_13:	ld	bc,(ix+-14)
 	ld	bc,(ix+-3)
 	add	hl,bc
 	ld	(ix+-3),hl
-	ld	bc,0
-	ld	(ix+-11),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-11),hl
 	jr	l_11
 l_9:	ld	bc,(ix+-20)
 	ld	hl,(ix+-6)
