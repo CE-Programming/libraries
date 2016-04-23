@@ -2739,8 +2739,6 @@ _LZ_ReadVarSize_ASM:
 	ld	(ix+-6),hl
 _:	ld	bc,(ix+9)
 	ld	a,(bc)
-	or	a,a
-	sbc	hl,hl
 	ex	de,hl
 	sbc	hl,hl
 	ld	l,a
