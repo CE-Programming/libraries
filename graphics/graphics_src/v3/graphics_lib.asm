@@ -2032,7 +2032,7 @@ _DrawTilemap:
 	push	ix
 	ld	hl,-15
 	ld	ix,0
-	ld	bc,0
+	ld	bc,24*256
 	add	ix,sp
 	add	hl,sp
 	ld	sp,hl
@@ -2040,7 +2040,6 @@ _DrawTilemap:
 	ld	c,(iy+7)
 	ld	hl,(ix+9)
 	xor	a,a
-	ld	b,24
 _:	add	hl,hl
 	rla
 	cp	a,c
@@ -2115,11 +2114,9 @@ p_1:	ld	iy,(ix+6)
 	ld	bc,(hl)
 	push	bc
 	call	_ClipDrawSprite \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,15
+	add	hl,sp
+	ld	sp,hl
 	inc	(ix+-2)
 	ld	iy,(ix+6)
 	ld	a,(iy+7)
