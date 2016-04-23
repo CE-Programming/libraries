@@ -2736,13 +2736,15 @@ _LZ_ReadVarSize_ASM:
 ; LZ Compression Subroutine
 	ld	hl,-12
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
-	ld	(ix+-6),bc
-_:	ld	de,0
-	ld	hl,(ix+9)
-	ld	a,(hl)
 	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
+	ld	(ix+-6),hl
+_:	ld	bc,(ix+9)
+	ld	a,(bc)
+	or	a,a
+	sbc	hl,hl
+	ex	de,hl
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-9),hl
