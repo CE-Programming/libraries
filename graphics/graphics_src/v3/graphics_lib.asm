@@ -115,10 +115,10 @@ _SetColorIndex:
 	pop	de
 	push	de
 	push	hl
-	ld	a,(color1) \.r
-	ld	d,a
+	ld	hl,color1 \.r
+	ld	d,(hl)
 	ld	a,e
-	ld	(color1),a \.r
+	ld	(hl),a
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
@@ -332,17 +332,15 @@ _ClipRectangle:
 	ret	c
 	ld	de,(iy+3)
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ret	z
 	push	hl
 	pop	bc
 	ld	de,(iy+6)
 	ld	hl,(iy+12)
-	or	a,a
+	xor	a,a
 	sbc	hl,de
-	ld	a,l
-	or	a,a
+	add	a,l
 	ld	hl,(iy+3)
 	ret	z
 	jp	_NoClipRectangle_ASM \.r
@@ -526,7 +524,6 @@ _ClipHorizLine:
 	ld	de,(iy+3)
 	push	de
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
@@ -608,7 +605,6 @@ _ClipVertLine:
 	ret	c
 	ld	hl,(iy+9)
 	ld	de,(iy+6)
-	or	a,a
 	sbc	hl,de
 	ld	b,l
 	inc	b
@@ -749,12 +745,12 @@ _ClipCircleOutline:
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
-	ld	bc,0
-	ld	(iy+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(iy+-3),hl
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	l_4 \.r
@@ -851,7 +847,6 @@ l_5:	ld	bc,(iy+6)
 	ld	(iy+-3),bc
 	ld	bc,(iy+-9)
 	or	a,a
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
 	jp	m,l__2 \.r
@@ -899,12 +894,12 @@ _ClipCircle:
 ;  None
 	ld	hl,-9
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
 	ld	bc,(ix+12)
 	ld	(ix+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
@@ -922,9 +917,9 @@ b_5:	ld	hl,(ix+-3)
 	add	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
 	inc	hl
@@ -939,9 +934,9 @@ b_5:	ld	hl,(ix+-3)
 	add	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
 	inc	hl
@@ -957,9 +952,9 @@ b_5:	ld	hl,(ix+-3)
 	sbc	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
@@ -975,9 +970,9 @@ b_5:	ld	hl,(ix+-3)
 	sbc	hl,bc
 	push	hl
 	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	bc,(ix+-3)
 	inc	bc
 	ld	(ix+-3),bc
@@ -1034,12 +1029,12 @@ _NoClipCircle:
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
-	ld	bc,0
-	ld	(iy+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(iy+-3),hl
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	a_4 \.r
@@ -1097,7 +1092,6 @@ a_5:	ld	de,(iy+3)
 	inc	bc
 	ld	(iy+-3),bc
 	ld	bc,(iy+-9)
-	or	a,a
 	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
@@ -1284,11 +1278,10 @@ _NoClipLine_ASM:
 	sbc	hl,de
 	ld	a,$03
 	jr	nc,+_
-	ld	a,$0B
+	add	a,$08
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
 	ex	de,hl
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1956,7 +1949,6 @@ NoTopClipNeeded_ASM:
 	jr	c,NoBottomClipNeeded_ASM
 	ex	de,hl
 	ld	de,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ld	(iy+15),hl
 NoBottomClipNeeded_ASM:
@@ -2040,7 +2032,7 @@ _DrawTilemap:
 	push	ix
 	ld	hl,-15
 	ld	ix,0
-	ld	bc,0
+	ld	bc,24*256
 	add	ix,sp
 	add	hl,sp
 	ld	sp,hl
@@ -2048,7 +2040,6 @@ _DrawTilemap:
 	ld	c,(iy+7)
 	ld	hl,(ix+9)
 	xor	a,a
-	ld	b,24
 _:	add	hl,hl
 	rla
 	cp	a,c
@@ -2123,11 +2114,9 @@ p_1:	ld	iy,(ix+6)
 	ld	bc,(hl)
 	push	bc
 	call	_ClipDrawSprite \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
+	ld	hl,15
+	add	hl,sp
+	ld	sp,hl
 	inc	(ix+-2)
 	ld	iy,(ix+6)
 	ld	a,(iy+7)
@@ -2543,8 +2532,7 @@ _CharWidth_ASM:
 	ld	a,(MonoFlag_ASM) \.r
 	or	a,a
 	jr	nz,+_
-	ld	a,l
-	or	a,a
+	add	a,l
 	sbc	hl,hl
 	ld	l,a
 	ld	de,(CharSpacing_ASM) \.r
@@ -2557,8 +2545,7 @@ _CharWidth_ASM:
 	push	hl
 	pop	bc
 	ret
-_:	or	a,a
-	sbc	hl,hl
+_:	sbc	hl,hl
 	ld	l,a
 	add	hl,bc
 	ret
@@ -2629,17 +2616,20 @@ _LZDecompress:
 ;  None
 	ld	hl,-20
 	call	__frameset_ASM \.r
-	ld	bc,1
-	ld	hl,(ix+12)
-	or	a,a
-	sbc	hl,bc
-	jp	c,l_19 \.r
+	lea	hl,ix+12
+	ld	a,(hl)
+	inc	hl
+	or	a,(hl)
+	inc	hl
+	or	a,(hl)
+	jp	z,l_19 \.r
 	ld	hl,(ix+6)
 	ld	a,(hl)
 	ld	(ix+-7),a
-	ld	(ix+-3),bc
-	ld	bc,0
-	ld	(ix+-6),bc
+	sbc	hl,hl
+	ld	(ix+-6),hl
+	inc	hl
+	ld	(ix+-3),hl
 l_17:	ld	bc,(ix+-3)
 	ld	hl,(ix+6)
 	add	hl,bc
@@ -2689,8 +2679,9 @@ l_13:	ld	bc,(ix+-14)
 	ld	bc,(ix+-3)
 	add	hl,bc
 	ld	(ix+-3),hl
-	ld	bc,0
-	ld	(ix+-11),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-11),hl
 	jr	l_11
 l_9:	ld	bc,(ix+-20)
 	ld	hl,(ix+-6)
@@ -2742,13 +2733,13 @@ _LZ_ReadVarSize_ASM:
 ; LZ Compression Subroutine
 	ld	hl,-12
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
-	ld	(ix+-6),bc
-_:	ld	de,0
-	ld	hl,(ix+9)
-	ld	a,(hl)
 	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
+	ld	(ix+-6),hl
+_:	ld	bc,(ix+9)
+	ld	a,(bc)
+	ex	de,hl
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-9),hl
@@ -2756,8 +2747,7 @@ _:	ld	de,0
 	inc	bc
 	ld	(ix+9),bc
 	ld	a,(ix+-9)
-	res	7,a
-	or	a,a
+	and	a,127
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-12),hl
@@ -2779,7 +2769,6 @@ _:	ld	de,0
 	ld	(ix+-6),bc
 	ld	a,(ix+-9)
 	and	a,128
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	sbc	hl,de
