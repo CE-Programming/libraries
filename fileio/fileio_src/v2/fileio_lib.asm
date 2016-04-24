@@ -89,11 +89,9 @@ _Resize:
 	jp	z,_ReturnNEG1L \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNULL \.r
 	ld	de,$FFFF-30
-	or	a,a
 	sbc	hl,de
 	add	hl,de
 	push	af
@@ -140,7 +138,7 @@ _GetToken:
 
 ;-------------------------------------------------------------------------------
 _IsArchived:
-; Checks if a varaible is archived
+; Checks if a variable is archived
 ; Arguments:
 ;  __frame_arg0 : Slot number
 ; Returns:
@@ -156,23 +154,22 @@ _IsArchived:
 _CheckInRAM_ASM:
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
-	push	bc
-	ld	bc,-5
-	add	hl,bc
-	pop	bc
-	ld	a,(hl)
-	or	a,a
-	sbc	hl,hl
-	cp	a,$D0
-	ret	nc
-	inc	hl
+	dec hl
+	dec hl
+	dec hl
+	dec hl
+	dec hl
+	ld 	a,$cf
+	cp	(hl)
+	sbc	a,a
+	inc	a
 	ret
  
 ;-------------------------------------------------------------------------------
 _OpenVar:
 ; Opens a variable
 ; Arguments:
-;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg0 : Pointer to variable name
 ;  __frame_arg1 : Opening flags
 ;  __frame_arg2 : Varaible Type
 ; Returns:
@@ -187,7 +184,7 @@ _OpenVar:
 _Open:
 ; Opens an AppVar
 ; Arguments:
-;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg0 : Pointer to variable name
 ;  __frame_arg1 : Opening flags
 ; Returns:
 ;  Slot number if no error
@@ -221,8 +218,7 @@ _:	ld	(varType),a \.r
 	add	hl,de
 	inc	a
 	sbc	hl,de
-	jr	z,+_
-	jp	_ReturnNULL_PopIX \.r
+	jp	nz,_ReturnNULL_PopIX \.r
 _:	ld	(CurrentSlot_ASM),a \.r
 	ld	hl,(ix+__frame_arg0)
 	ld	de,op1+1
@@ -289,11 +285,10 @@ _:	call	_chkfindsym
 	push	de
 	push	hl
 	pop	ix
-	ld	a,10
-	add	a,(ix+9)
-	ld	de,0
-	ld	e,a
+	ld	de,10
 	add	hl,de
+	ld e,(ix+9)
+	add hl,de
 	ex	(sp),hl
 	add	hl,de
 	pop	de
@@ -322,10 +317,7 @@ _SavePtrs_ASM:
 	call	z,_GetSlotSize_ASM \.r
 	call	_SetSlotOffset_ASM \.r
 	pop	ix
-	ld	a,(CurrentSlot_ASM) \.r
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
+	ld	hl,(CurrentSlot_ASM) \.r
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -356,11 +348,10 @@ _SetArchiveStatus:
 	add	hl,bc
 	ld	b,(hl)
 	ld	de,op1+1
-	dec	hl
-_:	ld	a,(hl)
+_:	dec	hl
+	ld	a,(hl)
 	ld	(de),a
 	inc	de
-	dec	hl
 	djnz	-_
 	xor	a,a
 	ld	(de),a
@@ -378,12 +369,12 @@ varTypeArc =$+1
 	or	a,a
 	jr	z,SetNotArchived
 SetArchived:
-	push	bc
-	pop	af
+	push bc	
+	pop	af	
 	jp	z,_arc_unarc
 	ret
 SetNotArchived:
-	push	bc
+	push bc
 	pop	af
 	jp	nz,_arc_unarc
 	ret
@@ -412,7 +403,6 @@ _Write:
 	jp	z,_ReturnNULL_PopIX \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNULL_PopIX \.r
 	ld	bc,0
@@ -423,11 +413,11 @@ _:	ld	a,(hl)
 	ld	(charIn),a \.r
 	call	_PutChar_ASM \.r
 	call	_SetAToHLU
-	bit	7,a
+	rla
 	pop	bc
 	pop	de
 	pop	hl
-	jr	nz,+_
+	jr	c,+_
 	inc	hl
 	inc	bc
 	dec	de
@@ -464,12 +454,12 @@ _:	push	hl
 	push	bc
 	call	_GetChar_ASM \.r
 	call	_SetAToHLU
-	bit	7,a
+	rla
 	ld	a,l
 	pop	bc
 	pop	de
 	pop	hl
-	jr	nz,_s
+	jr	c,_s
 	ld	(hl),a
 	inc	hl
 	inc	bc
@@ -506,10 +496,10 @@ _GetChar_ASM:
 	push	bc
 	call	_GetSlotOffset_ASM \.r
 	pop	hl
+	dec	hl
 	or	a,a
 	sbc	hl,bc	; size-offset
 	jp	c,_ReturnNEG1L \.r
-	jp	z,_ReturnNEG1L \.r
 	push	bc
 	call	_GetSlotVarPtr_ASM \.r
 	ld	hl,(hl)
@@ -600,7 +590,6 @@ _PutChar:
 	jp	z,_ReturnNEG1L \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
-	ld	a,l
 	pop	hl
 	jp	z,_ReturnNEG1L \.r
 _PutChar_ASM:
@@ -790,10 +779,7 @@ AddMemoryToVar:
 	pop hl
 	ld hl,(hl)
 	push hl
-	ex de,hl
-	or a,a
-	sbc hl,hl
-	ex de,hl
+	ld de,0
 	ld e,(hl)
 	inc hl
 	ld d,(hl)
@@ -842,66 +828,62 @@ _ReturnNULL:
 	sbc	hl,hl
 	ret
 _ReturnNEG1L:
-	xor	a,a
+	scf
 	sbc	hl,hl
-	dec	hl
 	ret
 _CheckIfSlotOpen:
 	push	hl
 	push	bc
-	ld	c,a
+-	ld	c,a
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
 	add	hl,de 
 	or	a,a 
 	sbc	hl,de
 	ld	a,c
-	pop	bc
+-	pop	bc
 	pop	hl
 	ret
 _GetSlotVATPtr_ASM:
 	ld	a,(CurrentSlot_ASM) \.r
-	dec	a
-	ld	hl,VATPtr0
-	or	a,a
-	ret	z
-	ld	hl,VATPtr1
+	ld	hl,VATPtr0 	; =$D0244E
 	dec	a
 	ret	z
-	ld	hl,VATPtr2
+	inc h
+	ld	l,$7b		; VATPtr1=$D0257B
 	dec	a
 	ret	z
-	ld	hl,VATPtr3
+	ld	l,$7e		; VATPtr2= $D0257E
 	dec	a
 	ret	z
-	ld	hl,VATPtr4
+	ld	l,$81		; VATPtr3=$D02581
+	dec	a
+	ret	z
+	ld	l,$84		; VATPtr4=$D02584
 	ret
 _GetSlotSizePtr_ASM:
 _GetSlotVarPtr_ASM:
 	ld	a,(CurrentSlot_ASM) \.r
-	dec	a
-	ld	hl,varPtr0
-	or	a,a
-	ret	z
-	ld	hl,varPtr1
+	ld	hl,varPtr0	;=$D0067E
 	dec	a
 	ret	z
-	ld	hl,varPtr2
+	ld	l,$81		; varPtr1=$D00681
 	dec	a
 	ret	z
-	ld	hl,varPtr3
+	ld	hl,varPtr2	; =$D01FED
 	dec	a
 	ret	z
-	ld	hl,varPtr4
+	ld	l,$f3		; varPtr3=$D01FF3
+	dec	a
+	ret	z
+	ld	l,$f9		; varPtr4=$D01FF9
 	ret
 _GetSlotOffsetPtr_ASM:
 	push	bc
-	ld	a,(CurrentSlot_ASM) \.r
-	dec	a
-	ld	l,a
-	ld	h,3
-	mlt	hl
-	ld	bc,VarOffset0 \.r
+	ld 	hl,(CurrentSlot_ASM) \.r
+	ld	bc,VarOffset0-3 \.r
+	add	hl,bc
+	add	hl,bc
 	add	hl,bc
 	pop	bc
 	ret
@@ -927,7 +909,7 @@ _SetSlotOffset_ASM:
 ;-------------------------------------------------------------------------------
 
 CurrentSlot_ASM:
-	.db 0
+	.dl 0
 ResizeBytes:
 	.dl 0
 VarOffset0:
