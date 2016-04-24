@@ -41,48 +41,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-/* Type for the clip region */
-typedef struct gc_region {
-	int x_left, y_top, x_right, y_bottom;
-} gc_region_t;
-
-/* Type for tilemapping */
-typedef struct gc_tilemap {
-	uint8_t *map;
-	uint8_t **tiles;
-	uint8_t tile_height;
-	uint8_t tile_width;
-	uint8_t height;
-	uint8_t width;
-	uint8_t y_loc;
-	uint24_t x_loc;
-} gc_tilemap_t;
-
-/**
- * Draws a tilemap given an intialized tilemap structure
- *  x_offset : offset in pixels from the left of the tilemap
- *  y_offset : offset in pixels from the top of the tilemap
- */
-void gc_DrawTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
-
-/**
- * Tile Setting/Getting -- These use absolute pixel offsets from the left and top
- */
-uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
-
-/**
- * Tile Setting/Getting -- These use mapped offsets from the tile map itself
- */
-uint8_t *gc_TilePtrMapped(gc_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_offset);
-
-/**
- * Decompress a block of data using an LZ77 decoder
- *  in  : Compressed buffer
- *  out : Decompressed buffer; must be large enough to hold decompressed data
- *  insize : Number of input bytes
- */
-void gc_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
-
 /**
  * Initializes the graphics setup.
  * This includes setting the LCD into 8bpp mode and
@@ -108,6 +66,47 @@ uint16_t gc_paletteArray[256] _At 0xE30200;
 uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 
 /**
+ * Produces a random integer value
+ */
+#define gc_RandInt(min, max) ((unsigned)rand() % ((max) - (min) + 1) + (min))
+
+/**
+ * Checks if we are currently in a rectangular hotspot area
+ */
+#define gc_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
+	  (test_x < master_x + master_width && \
+	   test_x + test_width > master_x && \
+	   test_y < master_y + master_height && \
+	   test_y + test_height > master_y)
+	   
+/* Type for the clip region */
+typedef struct gc_region {
+	int x_left, y_top, x_right, y_bottom;
+} gc_region_t;
+
+/* Type for tilemapping */
+typedef struct gc_tilemap {
+	uint8_t *map;
+	uint8_t **tiles;
+	uint8_t tile_height;
+	uint8_t tile_width;
+	uint8_t height;
+	uint8_t width;
+	uint8_t y_loc;
+	uint24_t x_loc;
+	uint8_t type_width;
+	uint8_t type_height;
+} gc_tilemap_t;
+
+#define gc_tilemap_type_2	1 /* Set when using 2 pixel tiles */
+#define gc_tilemap_type_4	2 /* Set when using 4 pixel tiles */
+#define gc_tilemap_type_8	3 /* Set when using 8 pixel tiles */
+#define gc_tilemap_type_16	4 /* Set when using 16 pixel tiles */
+#define gc_tilemap_type_32	5 /* Set when using 32 pixel tiles */
+#define gc_tilemap_type_64	6 /* Set when using 64 pixel tiles */
+#define gc_tilemap_type_128	7 /* Set when using 128 pixel tiles */
+
+/**
  * Quickly set and get pixels.
  * No clipping is performed.
  */
@@ -121,18 +120,36 @@ uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 #define gc_lcdHeight                      240
 
 /**
- * Produces a random integer value
+ * Draws a tilemap given an intialized tilemap structure
+ *  x_offset : offset in pixels from the left of the tilemap
+ *  y_offset : offset in pixels from the top of the tilemap
  */
-#define gc_RandInt(min, max) ((unsigned)rand() % ((max) - (min) + 1) + (min))
+void gc_DrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
- * Checks if we are currently in a rectangular hotspot area
+ * Draws a transparent tilemap given an intialized tilemap structure
+ *  x_offset : offset in pixels from the left of the tilemap
+ *  y_offset : offset in pixels from the top of the tilemap
  */
-#define gc_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
-	  (test_x < master_x + master_width && \
-	   test_x + test_width > master_x && \
-	   test_y < master_y + master_height && \
-	   test_y + test_height > master_y)
+void gc_DrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+
+/**
+ * Tile Setting/Getting -- These use absolute pixel offsets from the left and top
+ */
+uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+
+/**
+ * Tile Setting/Getting -- These use mapped offsets from the tile map itself
+ */
+uint8_t *gc_TilePtrMapped(gc_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_offset);
+
+/**
+ * Decompress a block of data using an LZ77 decoder
+ *  in  : Compressed buffer
+ *  out : Decompressed buffer; must be large enough to hold decompressed data
+ *  insize : Number of input bytes
+ */
+void gc_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
 
 /**
  * Sets the color index that drawing routines will use

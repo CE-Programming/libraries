@@ -68,18 +68,19 @@
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
  .function "gc_ClipLine",_ClipLine
- .function "gc_DrawTilemap",_DrawTilemap
+ .function "gc_DrawBGTilemap",_DrawBGTilemap
+ .function "gc_DrawFGTilemap",_DrawFGTilemap
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
  .function "gc_LZDecompress",_LZDecompress
 
  .beginDependencies
  .endDependencies
- 
+
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
-currentDrawingBuffer    equ mpLcdCursorImg+1024-3
+currentDrawingBuffer    equ 0E30014h
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -332,18 +333,16 @@ _ClipRectangle:
 	ret	c
 	ld	de,(iy+3)
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ret	z
 	push	hl
-	pop	bc
 	ld	de,(iy+6)
 	ld	hl,(iy+12)
 	or	a,a
 	sbc	hl,de
 	ld	a,l
-	or	a,a
 	ld	hl,(iy+3)
+	pop	bc
 	ret	z
 	jp	_NoClipRectangle_ASM \.r
 
@@ -378,11 +377,10 @@ _NoClipRectangle_ASM:
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
 	ex	de,hl
+	ld	iy,0
+	add	iy,de
 NoClipRectangle_Loop:
 	push	bc
-	ld	hl,lcdWidth
-	add	hl,de
-	push	hl
 	ld	hl,color1 \.r
 	ldi
 	jp	po,NoClipRectangle_Skip \.r
@@ -391,7 +389,9 @@ NoClipRectangle_Loop:
 	add	hl,de
 	ldir
 NoClipRectangle_Skip:
-	pop	de
+	ld	de,lcdWidth
+	add	iy,de
+	lea	de,iy
 	pop	bc
 	dec	a
 	jr	nz,NoClipRectangle_Loop
@@ -399,7 +399,7 @@ NoClipRectangle_Skip:
 
 ;-------------------------------------------------------------------------------
 _ClipRectangleOutline:
-; Draws an unclipped rectangle outline with the global color index
+; Draws an clipped rectangle outline with the global color index
 ; Arguments:
 ;  __frame_arg0 : X Coord
 ;  __frame_arg1 : Y Coord
@@ -417,9 +417,9 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipHorizLine \.r
-	pop	hl
-	pop	de
-	pop	bc
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+15)
@@ -427,9 +427,9 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	pop	hl
-	pop	de
-	pop	bc
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
@@ -440,9 +440,9 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	pop	hl
-	pop	de
-	pop	bc
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
@@ -506,7 +506,6 @@ _ClipHorizLine:
 	ret	c
 	ld	hl,(_ymax) \.r
 	ld	de,(iy+6)
-	dec	hl
 	call	_SignedCompare_ASM \.r
 	ret	c
 	ld	hl,(iy+9)
@@ -523,15 +522,13 @@ _ClipHorizLine:
 	ld	de,(iy+3)
 	call	_SignedCompare_ASM \.r
 	ret	c
-	ld	de,(iy+3)
-	push	de
 	ld	hl,(iy+9)
 	or	a,a
 	sbc	hl,de
 	ld	b,h
 	ld	c,l
 	ld	e,(iy+6)
-	pop	hl
+	ld	hl,(iy+3)
 	jr	_RectOutlineHoriz_ASM
 
 ;-------------------------------------------------------------------------------
@@ -545,18 +542,20 @@ _NoClipHorizLine:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+3)
-	ld	e,(iy+6)
+	ld	de,(iy+3)
+	ld	l,(iy+6)
 	ld	bc,(iy+9)
+	ex.s	de,hl
 _RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
+_NoClipHorizLine_ASM:
 	ld	a,b
 	or	a,c
 	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
-	add.s	hl,de
+	add	hl,de
 	add	hl,de
 	ld	de,(currentDrawingBuffer)
 	add	hl,de
@@ -745,7 +744,6 @@ _ClipCircleOutline:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	(ClipCircleOutlineSP),iy \.r
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
@@ -758,34 +756,27 @@ _ClipCircleOutline:
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	l_4 \.r
-l_5:	ld	bc,(iy+6)
-	ld	hl,(iy+-3)
-	add	hl,bc
-	ex	de,hl
-	ld	bc,(iy+3)
+l_5:	ld	bc,(iy+3)
 	ld	hl,(iy+-6)
 	add	hl,bc
 	push	hl
+	push	hl
 	pop	bc
+	ld	de,(iy+6)
+	ld	hl,(iy+-3)
+	add	hl,de
+	ex	de,hl
+	push	de
 	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
 	ex	de,hl
+	push	de
 	ld	bc,(iy+3)
 	ld	hl,(iy+-3)
 	add	hl,bc
 	push	hl
-	pop	bc
-	call	_ClipSetPixel_ASM \.r
-	ld	bc,(iy+-3)
-	ld	hl,(iy+6)
-	or	a,a
-	sbc	hl,bc
-	ex	de,hl
-	ld	bc,(iy+3)
-	ld	hl,(iy+-6)
-	add	hl,bc
 	push	hl
 	pop	bc
 	call	_ClipSetPixel_ASM \.r
@@ -794,31 +785,27 @@ l_5:	ld	bc,(iy+6)
 	or	a,a
 	sbc	hl,bc
 	ex	de,hl
-	ld	bc,(iy+3)
-	ld	hl,(iy+-3)
-	add	hl,bc
+	pop	bc
+	push	de
+	call	_ClipSetPixel_ASM \.r
+	pop	de
+	ld	bc,(iy+-3)
+	ld	hl,(iy+3)
+	or	a,a
+	sbc	hl,bc
+	push	hl
 	push	hl
 	pop	bc
 	call	_ClipSetPixel_ASM \.r
-	ld	bc,(iy+6)
-	ld	hl,(iy+-3)
-	add	hl,bc
-	ex	de,hl
+	pop	bc
+	pop	de
+	call	_ClipSetPixel_ASM \.r
+	pop	de
 	ld	bc,(iy+-6)
 	ld	hl,(iy+3)
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	pop	bc
-	call	_ClipSetPixel_ASM \.r
-	ld	bc,(iy+6)
-	ld	hl,(iy+-6)
-	add	hl,bc
-	ex	de,hl
-	ld	bc,(iy+-3)
-	ld	hl,(iy+3)
-	or	a,a
-	sbc	hl,bc
 	push	hl
 	pop	bc
 	call	_ClipSetPixel_ASM \.r
@@ -827,23 +814,10 @@ l_5:	ld	bc,(iy+6)
 	or	a,a
 	sbc	hl,bc
 	ex	de,hl
-	ld	bc,(iy+-6)
-	ld	hl,(iy+3)
-	or	a,a
-	sbc	hl,bc
-	push	hl
 	pop	bc
+	push	de
 	call	_ClipSetPixel_ASM \.r
-	ld	bc,(iy+-6)
-	ld	hl,(iy+6)
-	or	a,a
-	sbc	hl,bc
-	ex	de,hl
-	ld	bc,(iy+-3)
-	ld	hl,(iy+3)
-	or	a,a
-	sbc	hl,bc
-	push	hl
+	pop	de
 	pop	bc
 	call	_ClipSetPixel_ASM \.r
 	ld	bc,(iy+-3)
@@ -884,8 +858,7 @@ l_4:	ld	bc,(iy+-3)
 	jp	pe,l_5 \.r
 	jr	+_
 l__4:	jp	po,l_5 \.r
-ClipCircleOutlineSP =$+1
-_:	ld	sp,0
+_:	ld	sp,iy
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -908,43 +881,25 @@ _ClipCircle:
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
-b_5:	ld	hl,(ix+-3)
+_ClipCircleSectors:
+	ld	hl,(ix+-3)
 	add	hl,hl
-	inc	hl
-	push	hl
-	ld	hl,(ix+9)
-	ld	de,(ix+-3)
-	or	a,a
-	sbc	hl,de
-	push	hl
-	ld	bc,(ix+6)
-	ld	hl,(ix+-6)
-	add	hl,bc
-	push	hl
-	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	ld	hl,(ix+-6)
-	add	hl,hl
-	inc	hl
 	push	hl
 	ld	bc,(ix+-6)
 	ld	hl,(ix+9)
+	add	hl,bc
+	push	hl
+	ld	bc,(ix+-3)
+	ld	hl,(ix+6)
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	ld	bc,(ix+6)
+	call	_ClipHorizLine \.r
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+-3)
-	add	hl,bc
-	push	hl
-	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	ld	hl,(ix+-6)
 	add	hl,hl
-	inc	hl
 	push	hl
 	ld	bc,(ix+-6)
 	ld	hl,(ix+9)
@@ -956,13 +911,28 @@ b_5:	ld	hl,(ix+-3)
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	ld	hl,(ix+-3)
+	call	_ClipHorizLine \.r
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
+	ld	hl,(ix+-6)
 	add	hl,hl
-	inc	hl
+	push	hl
+	ld	bc,(ix+-3)
+	ld	hl,(ix+9)
+	add	hl,bc
+	push	hl
+	ld	bc,(ix+-6)
+	ld	hl,(ix+6)
+	or	a,a
+	sbc	hl,bc
+	push	hl
+	call	_ClipHorizLine \.r
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
+	ld	hl,(ix+-6)
+	add	hl,hl
 	push	hl
 	ld	bc,(ix+-3)
 	ld	hl,(ix+9)
@@ -970,14 +940,14 @@ b_5:	ld	hl,(ix+-3)
 	sbc	hl,bc
 	push	hl
 	ld	bc,(ix+-6)
-	ld	hl,(ix+6)
+	ld	hl,(ix+-18)
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipVertLine \.r
-	pop	bc
-	pop	bc
-	pop	bc
+	call	_ClipHorizLine \.r
+	ld	hl,-9
+	add	hl,sp
+	ld	sp,hl
 	ld	bc,(ix+-3)
 	inc	bc
 	ld	(ix+-3),bc
@@ -1011,11 +981,13 @@ b_4:	ld	bc,(ix+-3)
 	ld	hl,(ix+-6)
 	or	a,a
 	sbc	hl,bc
-	jp	p,b__4 \.r
-	jp	pe,b_5 \.r
-	jr	b__5
-b__4:	jp	po,b_5 \.r
-b__5:	ld	sp,ix
+	jp	p,+_ \.r
+	jp	pe,_ClipCircleSectors \.r
+	ld	sp,ix
+	pop	ix
+	ret
+_:	jp	po,_ClipCircleSectors \.r
+	ld	sp,ix
 	pop	ix
 	ret
 
@@ -1028,111 +1000,107 @@ _NoClipCircle:
 ;  __frame_arg2 : Radius
 ; Returns:
 ;  None
-	ld	iy,0
-	add	iy,sp
-	ld	(NoClipCircleSP),iy \.r
 	ld	hl,-9
-	add	hl,sp
-	ld	sp,hl
+	call	__frameset_ASM \.r
 	ld	bc,0
-	ld	(iy+-3),bc
-	ld	bc,(iy+9)
-	ld	(iy+-6),bc
+	ld.s	(ix+7),bc
+	ld.s	(ix+10),bc
+	ld	(ix+-3),bc
+	ld	bc,(ix+12)
+	ld	(ix+-6),bc
 	ld	hl,1
 	or	a,a
 	sbc	hl,bc
-	ld	(iy+-9),hl
-	jp	a_4 \.r
-a_5:	ld	de,(iy+3)
-	ld	hl,(iy+-6)
-	add	hl,de
-	ld	a,(iy+6)
-	sub	a,(iy+-3)
-	ld	e,a
-	ld	a,(iy+-3)
-	add	a,(iy+6)
-	sub	a,e
-	add	a,2
-	ld	b,a
-	call	_NoClipVertLine_ASM \.r
-	ld	de,(iy+3)
-	ld	hl,(iy+-3)
-	add	hl,de
-	ld	a,(iy+6)
-	sub	a,(iy+-6)
-	ld	e,a
-	ld	a,(iy+-6)
-	add	a,(iy+6)
-	sub	a,e
-	add	a,2
-	ld	b,a
-	call	_NoClipVertLine_ASM \.r
-	ld	hl,(iy+3)
-	ld	bc,(iy+-3)
+	ld	(ix+-9),hl
+	jp	k_4 \.r
+_NoClipCircleSectors:
+	ld	hl,(ix+-3)
+	add	hl,hl
+	push	hl
+	ld	hl,(ix+9)
+	ld	bc,(ix+-6)
+	add	hl,bc
+	ld	e,l
+	ld	hl,(ix+6)
+	ld	bc,(ix+-3)
 	or	a,a
 	sbc	hl,bc
-	ld	a,(iy+6)
-	sub	a,(iy+-6)
-	ld	e,a
-	ld	a,(iy+-6)
-	add	a,(iy+6)
-	sub	a,e
-	add	a,2
-	ld	b,a
-	call	_NoClipVertLine_ASM \.r
-	ld	hl,(iy+3)
-	ld	bc,(iy+-6)
+	pop	bc
+	push	bc
+	push	hl
+	call	_NoClipHorizLine_ASM \.r
+	ld	hl,(ix+-6)
+	add	hl,hl
+	push	hl
+	ld	bc,(ix+-3)
+	ld	hl,(ix+9)
+	add	hl,bc
+	ld	e,l
+	ld	bc,(ix+-6)
+	ld	hl,(ix+6)
 	or	a,a
 	sbc	hl,bc
-	ld	a,(iy+6)
-	sub	a,(iy+-3)
-	ld	e,a
-	ld	a,(iy+-3)
-	add	a,(iy+6)
-	sub	a,e
-	add	a,2
-	ld	b,a
-	call	_NoClipVertLine_ASM \.r
-	ld	bc,(iy+-3)
+	pop	bc
+	push	bc
+	push	hl
+	call	_NoClipHorizLine_ASM \.r
+	ld	bc,(ix+-3)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	ld	e,l
+	pop	hl
+	pop	bc
+	call	_NoClipHorizLine_ASM \.r
+	ld	bc,(ix+-6)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	ld	e,l
+	pop	hl
+	pop	bc
+	call	_NoClipHorizLine_ASM \.r
+	ld	bc,(ix+-3)
 	inc	bc
-	ld	(iy+-3),bc
-	ld	bc,(iy+-9)
-	or	a,a
+	ld	(ix+-3),bc
+	ld	bc,(ix+-9)
 	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
-	jp	m,a__2 \.r
-	jp	pe,a_3 \.r
-	jr	a__3
-a__2:	jp	po,a_3 \.r
-a__3:	ld	hl,(iy+-3)
+	jp	m,k__2 \.r
+	jp	pe,k_3 \.r
+	jr	k__3
+k__2:	jp	po,k_3 \.r
+k__3:	ld	hl,(ix+-3)
 	add	hl,hl
 	inc	hl
-	ld	bc,(iy+-9)
+	ld	bc,(ix+-9)
 	add	hl,bc
-	ld	(iy+-9),hl
-	jr	a_4
-a_3:	ld	bc,(iy+-6)
+	ld	(ix+-9),hl
+	jr	k_4
+k_3:	ld	bc,(ix+-6)
 	dec	bc
-	ld	(iy+-6),bc
-	ld	hl,(iy+-3)
-	ld	de,(iy+-9)
+	ld	(ix+-6),bc
+	ld	hl,(ix+-3)
+	ld	de,(ix+-9)
 	or	a,a
 	sbc	hl,bc
 	add	hl,hl
 	inc	hl
 	add	hl,de
-	ld	(iy+-9),hl
-a_4:	ld	bc,(iy+-3)
-	ld	hl,(iy+-6)
+	ld	(ix+-9),hl
+k_4:	ld	bc,(ix+-3)
+	ld	hl,(ix+-6)
 	or	a,a
 	sbc	hl,bc
-	jp	p,a__4 \.r
-	jp	pe,a_5 \.r
-	jr	+_
-a__4:	jp	po,a_5 \.r
-NoClipCircleSP =$+1
-_:	ld	sp,0
+	jp	p,+_ \.r
+	jp	pe,_NoClipCircleSectors \.r
+	ld	sp,ix
+	pop	ix
+	ret
+_:	jp	po,_NoClipCircleSectors \.r
+	ld	sp,ix
+	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1147,7 +1115,6 @@ _ClipLine:
 ;  true if drawn, false if offscreen
 	ld	iy,0
 	add	iy,sp
-	ld	(ClipLineSP),iy \.r
 	ld	hl,-10
 	add	hl,sp
 	ld	sp,hl
@@ -1253,8 +1220,7 @@ m_30:	ld	c,(iy+12)
 	ld	b,(iy+6)
 	ld	de,(iy+3)
 	call	_NoClipLine_ASM \.r
-ClipLineSP =$+1
-m_31:	ld	sp,0
+m_31:	ld	sp,iy
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1285,10 +1251,10 @@ _NoClipLine_ASM:
 	ld	a,$03
 	jr	nc,+_
 	ld	a,$0B
+	or	a,a
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
 	ex	de,hl
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1298,20 +1264,14 @@ _:	ld	(dx),hl \.r
 	add	hl,hl
 	ld	(dx1),hl \.r
 	ld	(dx12),hl \.r
-	or	a,a
-	sbc	hl,hl
-	ex	de,hl
-	sbc	hl,hl
-	ld	e,b
-	ld	l,c
-	or	a,a
-	sbc	hl,de
+	ld	a,c
+	sub	a,b
+	ld	de,0
+	ld	e,a
 	ld	a,30
 	adc	a,a
 	ld	(yStep),a \.r
 	ld	(yStep2),a \.r
-	ex	de,hl
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1339,13 +1299,11 @@ changeXLoop:
 	add	hl,de
 color6 =$+1
 	ld	(hl),0
-	sbc	hl,hl
 	ld	h,b
 	ld	l,c
-	or	a,a
 nde =$+1
 	ld	de,0
-	sbc	hl,de
+	sbc.s	hl,de
 	pop	hl
 	ret	z
 xStep	nop
@@ -1356,7 +1314,6 @@ dy1 =$+1
 	jp	m,changeXLoop \.r
 dx =$+1
 	ld	de,0
-	or	a,a
 	sbc	hl,de
 	add	hl,de
 	jr	c,changeXLoop
@@ -1388,7 +1345,6 @@ dx12 =$+1
 	jp	m,changeYLoop \.r
 dy =$+1
 	ld	de,0
-	or	a,a
 	sbc	hl,de
 	add	hl,de
 	jr	c,changeYLoop
@@ -1743,8 +1699,8 @@ _ClipDrawSprite:
 	ld	(ClipSprNextAmt),a \.r
 	ld	a,(iy+12)
 	ld	(ClipSprLineNext),a \.r
-	xor	a,a
-	or	a,(iy+15)
+	ld	a,(iy+15)
+	or	a,a
 	ret	z
 	ld	l,(iy+9)
 	ld	h,lcdWidth/2
@@ -1784,6 +1740,7 @@ _NoClipDrawSprite:
 ;  None
 	ld	iy,0
 	add	iy,sp
+_NoClipDrawSprite_ASM:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
@@ -2005,7 +1962,12 @@ tmpSpriteWidth_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawTilemap:
+_DrawFGTilemap:
+	ld	hl,_ClipDrawTransparentSprite \.r
+	ld	(_DrawFGTile_SMC),hl \.r
+	jr	+_
+;-------------------------------------------------------------------------------
+_DrawBGTilemap:
 ; Draws a tilemap given a tile map structure and some offsets
 ; Arguments:
 ;  __frame_arg0 : Tilemap Struct
@@ -2014,20 +1976,22 @@ _DrawTilemap:
 ; Returns:
 ;  None
 ; C Function:
-;  void gc_DrawTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
+;  void gc_DrawBGTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
 ;      int y_draw;
 ;      int x_draw;
 ;      uint8_t x;
 ;      uint8_t x_res = x_offset/tilemap->tile_width;  
 ;      uint8_t y = y_offset/tilemap->tile_height;
+;      uint8_t y_next;
 ;
 ;      x_offset = x_offset % tilemap->tile_width;
 ;      y_offset = y_offset % tilemap->tile_height;
 ;  	
 ;      for(y_draw = tilemap->y_loc-y_offset; y_draw <= 240; y_draw += tilemap->tile_height) {
 ;          x = x_res;
+;		   y_next = y*tilemap->width;
 ;          for(x_draw = tilemap->x_loc-x_offset; x_draw <= 320; x_draw += tilemap->tile_width) {
-;              gc_clipdrawsprite(tilemap->tiles[tilemap->map[x+(y*tilemap->width)]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;              gc_clipdrawsprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
 ;              x++;
 ;          }
 ;          y++;
@@ -2037,6 +2001,9 @@ _DrawTilemap:
 ;      }
 ;  }
 ;
+	ld	hl,_ClipDrawSprite \.r
+	ld	(_DrawFGTile_SMC),hl \.r
+_:
 	push	ix
 	ld	hl,-15
 	ld	ix,0
@@ -2045,34 +2012,26 @@ _DrawTilemap:
 	add	hl,sp
 	ld	sp,hl
 	ld	iy,(ix+6)
-	ld	c,(iy+7)
+	ld	b,(iy+14)
 	ld	hl,(ix+9)
-	xor	a,a
-	ld	b,24
-_:	add	hl,hl
-	rla
-	cp	a,c
-	jr	c, +_
-	sub	a,c
-	inc	l
-_:	djnz	--_
+	ld	a,l
+	and	a,7
+_:	srl	h
+	rr	l
+	djnz	-_
 	ld	c,a
 	ld	(ix+9),bc
 	ld	a,l
 	ld	(_XTileStart),a \.r
-	ld	c,(iy+6)
+	ld	b,(iy+15)
 	ld	hl,(ix+12)
-	xor	a,a
-	ld	b,24
-_:	add	hl,hl
-	rla
-	cp	a,c
-	jr	c, +_
-	sub	a,c
-	inc	l
-_:	djnz	--_
-	ld	(ix+-1),l
+	ld	a,l
+	and	a,7
+_:	srl	h
+	rr	l
+	djnz	-_
 	ld	c,a
+	ld	(ix+-1),l
 	ld	(ix+12),bc
 	or	a,a
 	sbc	hl,hl
@@ -2084,16 +2043,39 @@ _:	djnz	--_
 	
 _XTileStart =$+3
 p_7:	ld	(ix+-2),0
+	ld	l,(iy+9)
+	ld	h,(ix+-1)
+	mlt	hl
+	ld	(_Y_Next_SMC),hl \.r
 	ld	hl,(iy+11)
 	ld	bc,(ix+9)
 	or	a,a
 	sbc	hl,bc
 	ld	(ix+-8),hl
 	jp	p_3 \.r
-	
-p_1:	ld	iy,(ix+6)
+
+p_1:	sbc	hl,hl
+	ld	l,(ix+-2)
+	ld	bc,(iy+0)
+	add	hl,bc
+_Y_Next_SMC =$+1
+	ld	bc,0
+	add	hl,bc
+	ld	a,(hl)
+	sbc	hl,hl
+	cp	a,$FF
+	jr	z,_BlankTile
+	ld	l,a
+	push	hl
+	pop	de
+	ld	bc,(iy+3)
+	add	hl,hl
+	add	hl,hl
+	sbc	hl,de
+	add	hl,bc
+	ld	de,(hl)
+	ld	bc,0
 	ld	c,(iy+6)
-	ld	b,0
 	push	bc
 	ld	c,(iy+7)
 	push	bc
@@ -2101,33 +2083,13 @@ p_1:	ld	iy,(ix+6)
 	push	bc
 	ld	bc,(ix+-8)
 	push	bc
-	ld	l,(iy+9)
-	ld	h,(ix+-1)
-	mlt	hl
-	ex	de,hl
-	sbc	hl,hl
-	ld	l,(ix+-2)
-	ld	bc,(iy+0)
-	add	hl,de
-	add	hl,bc
-	ld	a,(hl)
-	sbc	hl,hl
-	ld	l,a
-	ld	de,(iy+3)
-	push	hl
-	pop	bc
-	add	hl,hl
-	add	hl,hl
-	sbc	hl,bc
-	add	hl,de
-	ld	bc,(hl)
-	push	bc
-	call	_ClipDrawSprite \.r
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
-	pop	bc
+	push	de
+_DrawFGTile_SMC =$+1
+	call	0
+	ld	hl,-15
+	add	hl,sp
+	ld	sp,hl
+_BlankTile:
 	inc	(ix+-2)
 	ld	iy,(ix+6)
 	ld	a,(iy+7)
@@ -2138,10 +2100,10 @@ p_1:	ld	iy,(ix+6)
 	add	hl,bc
 	ld	(ix+-8),hl
 	
-p_3:	ld	de,$800000
-	add	hl,de
-	ld	de,-($800000+320)
-	add	hl,de
+p_3:	ld	bc,$800000
+	add	hl,bc
+	ld	bc,-($800000+320)
+	add	hl,bc
 	jp	nc,p_1 \.r
 	inc	(ix+-1)
 	ld	a,(ix+-1)
@@ -2156,11 +2118,11 @@ p_3:	ld	de,$800000
 	add	hl,bc
 	ld	(ix+-5),hl
 	
-p_9:	ld	de,$800000
-	add	hl,de
-	ld	e,240
+p_9:	ld	bc,$800000
+	add	hl,bc
+	ld	c,240
 	or	a,a
-	sbc	hl,de
+	sbc	hl,bc
 	jp	c,p_7 \.r
 	
 p_10:	ld	sp,ix
@@ -2185,32 +2147,19 @@ _TilePtr:
 	ld	ix,0
 	add	ix,sp
 	ld	iy,(ix+6)
-	ld	c,(iy+7)
+	ld	b,(iy+14)
 	ld	hl,(ix+9)
-	xor	a,a
-	ld	b,24
-_:	add	hl,hl
-	rla
-	cp	a,c
-	jr	c, +_
-	sub	a,c
-	inc	l
-_:	djnz	--_
-	push	hl
-	ld	c,(iy+6)
+_:	srl	h
+	rr	l
+	djnz	-_
+	ex	de,hl
+	ld	b,(iy+15)
 	ld	hl,(ix+12)
-	xor	a,a
-	ld	b,24
-_:	add	hl,hl
-	rla
-	cp	a,c
-	jr	c, +_
-	sub	a,c
-	inc	l
-_:	djnz	--_
+_:	srl	h
+	rr	l
+	djnz	-_
 	ld	h,(iy+9)
 	mlt	hl
-	pop	de
 	add	hl,de
 	ld	de,(iy+0)
 	add	hl,de
