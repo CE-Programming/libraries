@@ -86,36 +86,40 @@ typedef struct gc_region {
 
 /* Type for tilemapping */
 typedef struct gc_tilemap {
-	uint8_t *map;
-	uint8_t **tiles;
-	uint8_t tile_height;
-	uint8_t tile_width;
-	uint8_t height;
-	uint8_t width;
-	uint8_t y_loc;
-	uint24_t x_loc;
-	uint8_t type_width;
-	uint8_t type_height;
+	uint8_t *map;             /* pointer to indexed map array */
+	uint8_t **tiles;          /* pointer to tiles */
+	uint8_t tile_height;      /* individual tile height */
+	uint8_t tile_width;       /* individual tile width */
+	uint8_t draw_height;      /* number of rows to draw in the tilemap */
+	uint8_t draw_width;       /* number of cols to draw tilemap */
+	uint8_t type_width;       /* 2^type_width = tile_width */
+	uint8_t type_height;      /* 2^type_height = tile_height */
+	uint8_t height;           /* total number of rows in the tilemap */
+	uint8_t width;            /* total number of cols in the tilemap */
+	uint8_t y_loc;            /* y pixel location to begin drawing at */
+	uint24_t x_loc;           /* x pixel location to begin drawing at */
 } gc_tilemap_t;
 
-#define gc_tilemap_type_2	1 /* Set when using 2 pixel tiles */
-#define gc_tilemap_type_4	2 /* Set when using 4 pixel tiles */
-#define gc_tilemap_type_8	3 /* Set when using 8 pixel tiles */
-#define gc_tilemap_type_16	4 /* Set when using 16 pixel tiles */
-#define gc_tilemap_type_32	5 /* Set when using 32 pixel tiles */
-#define gc_tilemap_type_64	6 /* Set when using 64 pixel tiles */
-#define gc_tilemap_type_128	7 /* Set when using 128 pixel tiles */
+typedef enum gc_tilemap_type {
+	gc_tile_2_pixel = 1,      /* Set when using 2 pixel tiles */
+	gc_tile_4_pixel,          /* Set when using 4 pixel tiles */
+	gc_tile_8_pixel,          /* Set when using 8 pixel tiles */
+	gc_tile_16_pixel,         /* Set when using 16 pixel tiles */
+	gc_tile_32_pixel,         /* Set when using 32 pixel tiles */
+	gc_tile_64_pixel,         /* Set when using 64 pixel tiles */
+	gc_tile_128_pixel,        /* Set when using 128 pixel tiles */
+} gc_tilemap_type_t;
 
 /**
  * Quickly set and get pixels.
  * No clipping is performed.
  */
-#define gc_drawingBuffer                  (*(uint8_t**)(0xE30014))
 #define gc_NoClipPixelPtr(x, y)           ((uint8_t*)(gc_drawingBuffer + (uint16_t)x + ((uint8_t)y)*320))
-#define gc_NoClipSetPixelColor(x, y, c)   (*(gc_NoClipPixelPtr(x,y)) = c)
+#define gc_NoClipSetPixel(x, y, c)        (*(gc_NoClipPixelPtr(x,y)) = c)
 #define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
 #define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
 #define gc_FontHeight()                   8
+#define gc_drawingBuffer                  (*(uint8_t**)(0xE30014))
 #define gc_lcdWidth                       320
 #define gc_lcdHeight                      240
 
@@ -124,14 +128,16 @@ typedef struct gc_tilemap {
  *  x_offset : offset in pixels from the left of the tilemap
  *  y_offset : offset in pixels from the top of the tilemap
  */
-void gc_DrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gc_ClipDrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gc_NoClipDrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
  * Draws a transparent tilemap given an intialized tilemap structure
  *  x_offset : offset in pixels from the left of the tilemap
  *  y_offset : offset in pixels from the top of the tilemap
  */
-void gc_DrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gc_ClipDrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gc_NoClipDrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
  * Tile Setting/Getting -- These use absolute pixel offsets from the left and top

@@ -68,8 +68,10 @@
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
  .function "gc_ClipLine",_ClipLine
- .function "gc_DrawBGTilemap",_DrawBGTilemap
- .function "gc_DrawFGTilemap",_DrawFGTilemap
+ .function "gc_ClipDrawBGTilemap",_ClipDrawBGTilemap
+ .function "gc_ClipDrawFGTilemap",_ClipDrawFGTilemap
+ .function "gc_NoClipDrawBGTilemap",_NoClipDrawBGTilemap
+ .function "gc_NoClipDrawFGTilemap",_NoClipDrawFGTilemap
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
  .function "gc_LZDecompress",_LZDecompress
@@ -1962,12 +1964,22 @@ tmpSpriteWidth_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawFGTilemap:
-	ld	hl,_ClipDrawTransparentSprite \.r
-	ld	(_DrawFGTile_SMC),hl \.r
+_NoClipDrawFGTilemap:
+; Tilemapping subsection
+	ld	hl,_NoClipDrawTransparentSprite \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_DrawBGTilemap:
+_NoClipDrawBGTilemap:
+; Tilemapping subsection
+    ld	hl,_NoClipDrawSprite \.r
+    jr	+_
+;-------------------------------------------------------------------------------
+_ClipDrawFGTilemap:
+; Tilemapping subsection
+	ld	hl,_ClipDrawTransparentSprite \.r
+	jr	+_
+;-------------------------------------------------------------------------------
+_ClipDrawBGTilemap:
 ; Draws a tilemap given a tile map structure and some offsets
 ; Arguments:
 ;  __frame_arg0 : Tilemap Struct
@@ -1976,156 +1988,151 @@ _DrawBGTilemap:
 ; Returns:
 ;  None
 ; C Function:
-;  void gc_DrawBGTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset);
-;      int y_draw;
-;      int x_draw;
-;      uint8_t x;
-;      uint8_t x_res = x_offset/tilemap->tile_width;  
+;  void DrawBGTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset) {
+;      int x_draw, y_draw;
+;      uint8_t x, x_tile, y_tile, y_next;
+;      uint8_t x_res = x_offset/tilemap->tile_width;
 ;      uint8_t y = y_offset/tilemap->tile_height;
-;      uint8_t y_next;
-;
+;  
 ;      x_offset = x_offset % tilemap->tile_width;
 ;      y_offset = y_offset % tilemap->tile_height;
 ;  	
-;      for(y_draw = tilemap->y_loc-y_offset; y_draw <= 240; y_draw += tilemap->tile_height) {
+;      y_draw = tilemap->y_loc-y_offset;
+;      for(y_tile = 0; y_tile <= tilemap->draw_height; y_tile++) {
 ;          x = x_res;
-;		   y_next = y*tilemap->width;
-;          for(x_draw = tilemap->x_loc-x_offset; x_draw <= 320; x_draw += tilemap->tile_width) {
-;              gc_clipdrawsprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;          y_next = y*tilemap->width;
+;          x_draw = tilemap->x_loc-x_offset;
+;          for(x_tile = 0; x_tile <= tilemap->draw_width; x_tile++) {
+;              gc_ClipDrawSprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;              x_draw += tilemap->tile_width;
 ;              x++;
 ;          }
+;          y_draw += tilemap->tile_height;
 ;          y++;
-;          if (y >= tilemap->height) {
-;              break;
-;          }
 ;      }
 ;  }
 ;
 	ld	hl,_ClipDrawSprite \.r
-	ld	(_DrawFGTile_SMC),hl \.r
-_:
+_:	ld	(_DrawFGTile_SMC),hl \.r
 	push	ix
-	ld	hl,-15
+	ld	hl,-12
 	ld	ix,0
-	ld	bc,0
 	add	ix,sp
 	add	hl,sp
 	ld	sp,hl
 	ld	iy,(ix+6)
-	ld	b,(iy+14)
-	ld	hl,(ix+9)
-	ld	a,l
-	and	a,7
-_:	srl	h
-	rr	l
-	djnz	-_
-	ld	c,a
-	ld	(ix+9),bc
-	ld	a,l
-	ld	(_XTileStart),a \.r
-	ld	b,(iy+15)
+	
+	ld	b,(iy+11)
 	ld	hl,(ix+12)
+	ld	c,(iy+6)
+	dec	c
 	ld	a,l
-	and	a,7
+	and	a,c
+	ld	c,a
 _:	srl	h
 	rr	l
 	djnz	-_
+	ld	(ix+-4),l   ; y = y_offset / tilemap->tile_height
+	ld	(ix+12),bc  ; y_offset = y_offset % tilemap->tile_height;
+	
+	ld	b,(iy+10)
+	ld	hl,(ix+9)
+	ld	c,(iy+7)
+	dec	c
+	ld	a,l
+	and	a,c
 	ld	c,a
-	ld	(ix+-1),l
-	ld	(ix+12),bc
+_:	srl	h
+	rr	l
+	djnz	-_
+	ld	a,l
+	ld	(_X_Res_ASM),a \.r
+	ld	hl,(iy+15)
+	sbc	hl,bc
+	ld	(_X_Draw_ASM),hl \.r ; x_draw = tilemap->x_loc-x_offset;
+	
 	or	a,a
 	sbc	hl,hl
-	ld	l,(iy+10)
+	ld	l,(iy+14)
 	ld	bc,(ix+12)
 	sbc	hl,bc
-	ld	(ix+-5),hl
-	jp	p_9 \.r
-	
-_XTileStart =$+3
-p_7:	ld	(ix+-2),0
-	ld	l,(iy+9)
-	ld	h,(ix+-1)
+	ld	(ix+-12),hl
+	ld	(ix+-3),0
+	jp	_Y_Loop_ASM \.r
+
+_X_Res_ASM =$+3
+n_8:	ld	(ix+-1),0
+	ld	(ix+-2),0
+_X_Draw_ASM =$+1
+	ld	hl,0
+	ld	(ix+-7),hl
+	ld	l,(iy+13)
+	ld	h,(ix+-4)
 	mlt	hl
 	ld	(_Y_Next_SMC),hl \.r
-	ld	hl,(iy+11)
-	ld	bc,(ix+9)
-	or	a,a
-	sbc	hl,bc
-	ld	(ix+-8),hl
-	jp	p_3 \.r
+	jr	_X_Loop_ASM
 
-p_1:	sbc	hl,hl
-	ld	l,(ix+-2)
+_InLoop_ASM:
+	sbc	hl,hl
+	ld	l,(ix+-1)
 	ld	bc,(iy+0)
 	add	hl,bc
 _Y_Next_SMC =$+1
 	ld	bc,0
 	add	hl,bc
 	ld	a,(hl)
-	sbc	hl,hl
-	cp	a,$FF
-	jr	z,_BlankTile
+	cp	a,255
+	jr	z,_BlankTile_ASM
+	ld	h,3
 	ld	l,a
-	push	hl
-	pop	de
-	ld	bc,(iy+3)
-	add	hl,hl
-	add	hl,hl
-	sbc	hl,de
-	add	hl,bc
-	ld	de,(hl)
-	ld	bc,0
+	mlt	hl
+	ld	de,(iy+3)
+	add	hl,de
+	ld	b,0
 	ld	c,(iy+6)
 	push	bc
 	ld	c,(iy+7)
 	push	bc
-	ld	bc,(ix+-5)
+	ld	bc,(ix+-12)
 	push	bc
-	ld	bc,(ix+-8)
+	ld	bc,(ix+-7)
 	push	bc
-	push	de
+	ld	bc,(hl)
+	push	bc
 _DrawFGTile_SMC =$+1
 	call	0
 	ld	hl,-15
 	add	hl,sp
 	ld	sp,hl
-_BlankTile:
-	inc	(ix+-2)
 	ld	iy,(ix+6)
-	ld	a,(iy+7)
+_BlankTile_ASM:
 	or	a,a
 	sbc	hl,hl
-	ld	l,a
-	ld	bc,(ix+-8)
+	ld	l,(iy+7)
+	ld	bc,(ix+-7)
 	add	hl,bc
-	ld	(ix+-8),hl
-	
-p_3:	ld	bc,$800000
-	add	hl,bc
-	ld	bc,-($800000+320)
-	add	hl,bc
-	jp	nc,p_1 \.r
+	ld	(ix+-7),hl
 	inc	(ix+-1)
-	ld	a,(ix+-1)
-	cp	a,(iy+8)
-	jr	nc,p_10
-	ld	iy,(ix+6)
-	ld	a,(iy+6)
+	inc	(ix+-2)
+
+_X_Loop_ASM:
+	ld	a,(iy+9)
+	cp	a,(ix+-2)
+	jr	nz,_InLoop_ASM
 	or	a,a
 	sbc	hl,hl
-	ld	l,a
-	ld	bc,(ix+-5)
+	ld	l,(iy+6)
+	ld	bc,(ix+-12)
 	add	hl,bc
-	ld	(ix+-5),hl
-	
-p_9:	ld	bc,$800000
-	add	hl,bc
-	ld	c,240
-	or	a,a
-	sbc	hl,bc
-	jp	c,p_7 \.r
-	
-p_10:	ld	sp,ix
+	ld	(ix+-12),hl
+	inc	(ix+-4)
+	inc	(ix+-3)
+
+_Y_Loop_ASM:
+	ld	a,(iy+8)
+	cp	a,(ix+-3)
+	jp	nz,n_8 \.r
+	ld	sp,ix
 	pop	ix
 	ret
 
@@ -2312,8 +2319,8 @@ TextXPos_ASM = $+1
 	add	hl,de
 	ld	a,(hl)
 	inc	a
-	push	bc
-_:	ld	(CharWidthChange_ASM),a \.r
+_:	push	bc
+	ld	(CharWidthChange_ASM),a \.r
 	sbc	hl,hl
 	ld	l,a
 	neg
