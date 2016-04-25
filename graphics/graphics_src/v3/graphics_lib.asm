@@ -1253,10 +1253,10 @@ _NoClipLine_ASM:
 	ld	a,$03
 	jr	nc,+_
 	ld	a,$0B
-	or	a,a
 _:	ld	(xStep),a \.r
 	ld	(xStep2),a \.r
 	ex	de,hl
+	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1266,14 +1266,20 @@ _:	ld	(dx),hl \.r
 	add	hl,hl
 	ld	(dx1),hl \.r
 	ld	(dx12),hl \.r
-	ld	a,c
-	sub	a,b
-	ld	de,0
-	ld	e,a
+	or	a,a
+	sbc	hl,hl
+	ex	de,hl
+	sbc	hl,hl
+	ld	e,b
+	ld	l,c
+	or	a,a
+	sbc	hl,de
 	ld	a,30
 	adc	a,a
 	ld	(yStep),a \.r
 	ld	(yStep2),a \.r
+	ex	de,hl
+	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	p,+_ \.r
@@ -1301,11 +1307,13 @@ changeXLoop:
 	add	hl,de
 color6 =$+1
 	ld	(hl),0
+	sbc	hl,hl
 	ld	h,b
 	ld	l,c
+	or	a,a
 nde =$+1
 	ld	de,0
-	sbc.s	hl,de
+	sbc	hl,de
 	pop	hl
 	ret	z
 xStep	nop
@@ -1316,6 +1324,7 @@ dy1 =$+1
 	jp	m,changeXLoop \.r
 dx =$+1
 	ld	de,0
+	or	a,a
 	sbc	hl,de
 	add	hl,de
 	jr	c,changeXLoop
@@ -1347,6 +1356,7 @@ dx12 =$+1
 	jp	m,changeYLoop \.r
 dy =$+1
 	ld	de,0
+	or	a,a
 	sbc	hl,de
 	add	hl,de
 	jr	c,changeYLoop
@@ -1661,6 +1671,7 @@ _ClipDrawTransparentSprite:
 	add	hl,de
 	push	hl
 	ld	hl,(iy+3)
+	ld	a,(iy+15)
 	pop	iy
 	push	ix
 	ld	ixh,a
@@ -1840,6 +1851,7 @@ _NoClipDrawTransparentSprite:
 	add	hl,de
 	push	hl
 	ld	hl,(iy+3)
+	ld	a,(iy+15)
 	pop	iy
 	push	ix
 	ld	ixh,a
