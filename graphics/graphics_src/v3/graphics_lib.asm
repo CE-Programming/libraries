@@ -2848,10 +2848,8 @@ _Max_ASM:
 	or	a,a
 	sbc	hl,de
 	add	hl,de
-	jp	p,+_ \.r
 	ret	pe
-	ex	de,hl
-_:	ret	po
+	ret	p
 	ex	de,hl
 	ret
 
@@ -2865,10 +2863,8 @@ _Min_ASM:
 	or	a,a
 	sbc	hl,de
 	ex	de,hl
-	jp	p,_ \.r
 	ret	pe
-	add	hl,de
-_:	ret	po
+	ret	p
 	add	hl,de
 	ret
 
@@ -3016,11 +3012,14 @@ __imulu_ASM:
 	pop	bc
 	ld	d,c
 	mlt	de
-	push	hl
-	dec	sp
-	pop	hl
-	inc	sp
-	ld	l,0
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
 	add	hl,de
 	ret
 
