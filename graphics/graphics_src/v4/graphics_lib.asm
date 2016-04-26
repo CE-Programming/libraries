@@ -103,15 +103,13 @@ _SpriteFlipHoriz:
 ;  __frame_arg0 : Pointer to 2D array output
 	ld	iy,0
 	add	iy,sp
-	ld	a,(iy+9)
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	push	hl
+	ld	hl,(iy+9)
+	ld	a,l
 	ld	(_FlipHorizWidth_ASM),a \.r
 	add	hl,hl
 	ld	(_FlipHorizDelta_ASM),hl \.r
-	pop	hl
+	srl	h
+	ld	l,a
 	ld	de,(iy+3)
 	add	hl,de
 	ld	de,(iy+6)
@@ -218,10 +216,10 @@ _SetColorIndex:
 	pop	de
 	push	de
 	push	hl
-	ld	a,(color1) \.r
-	ld	d,a
+	ld	hl,color1 \.r
+	ld	d,(hl)
 	ld	a,e
-	ld	(color1),a \.r
+	ld	(hl),a
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
