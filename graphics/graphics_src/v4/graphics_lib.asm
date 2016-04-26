@@ -117,52 +117,27 @@ _SpriteFlipVert:
 ;  __frame_arg0 : Pointer to 2D array output
 	ld	iy,0
 	add	iy,sp
-	ld	a,(iy+9)
-	ld	(_FlipVertWidth_ASM),a \.r
-	ld	(_FlipVertWidth_ASM_2),a \.r
-	neg
+	xor	a,a
+	sub	a,(iy+9)
 	ld	(_FlipVertDelta_ASM),a \.r
-	ld	(_FlipVertDelta_ASM_2),a \.r
 	neg
+	ld	(_FlipVertWidth_ASM),a \.r
 	ld	l,(iy+12)
 	dec	l
 	ld	h,a
 	mlt	hl
-	sra	a
 	ld	de,(iy+3)
-	push	de
-	push	hl
 	add	hl,de
 	ld	de,(iy+6)
-	push	hl
-	pop	iy
-	push	af
 	push	de
 _FlipVertWidth_ASM =$+1
 _:	ld	bc,0
-	lea	hl,iy
 	ldir
 _FlipVertDelta_ASM =$+1
 	ld	bc,-1
-	add	iy,bc
-	dec	a
-	jr	nz,-_
-	pop	de
-	pop	af
-	pop	hl
-	add	hl,de
-	push	hl
-	pop	iy
-	pop	hl
-	push	de
-_FlipVertWidth_ASM_2 =$+1
-_:	ld	bc,0
-	lea	de,iy
-	ldir
-_FlipVertDelta_ASM_2 =$+1
-	ld	bc,-1
-	add	iy,bc
-	dec	a
+	add	hl,bc
+	add	hl,bc
+	dec 	a
 	jr	nz,-_
 	pop	hl
 	ret
@@ -175,7 +150,7 @@ _SpriteRotate:
 ;  __frame_arg1 : Pointer to 2D byte array output
 ;  __frame_arg2 : Width
 ;  __frame_arg3 : Height
-;  __frame_arg4 : Rotation angle (Probably will only support 180/90/-90 for now)
+;  __frame_arg4 : Rotation angle (Only supports 180 & +-90 for now)
 ; Returns:
 ;  __frame_arg0 : Pointer to 2D array output
 	ld	iy,0
