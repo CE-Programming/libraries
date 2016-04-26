@@ -282,10 +282,13 @@ _ClipGetPixel:
 ; Returns:
 ;  None
 _ClipSetPixel:
-	ld	iy,0
-	add	iy,sp
-	ld	bc,(iy+3)
-	ld	de,(iy+6)
+	ld	hl,3
+	add	hl,sp
+	ld	bc,(hl)
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	de,(hl)
 _ClipSetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
@@ -342,11 +345,11 @@ _ClipRectangle:
 	ld	hl,(iy+12)
 	or	a,a
 	sbc	hl,de
-	ld	a,l
-	ld	hl,(iy+3)
 	pop	bc
 	ret	z
-	jp	_NoClipRectangle_ASM \.r
+	ld	a,l
+	ld	hl,(iy+3)
+	jr	_NoClipRectangle_ASM
 
 ;-------------------------------------------------------------------------------
 _NoClipRectangle:
@@ -376,11 +379,10 @@ _NoClipRectangle_ASM:
 	mlt	de
 	add.s	hl,de
 	add	hl,de
-	ld	de,(currentDrawingBuffer)
-	add	hl,de
+	ld	iy,(currentDrawingBuffer)
 	ex	de,hl
-	ld	iy,0
 	add	iy,de
+	lea	de,iy
 NoClipRectangle_Loop:
 	push	bc
 	ld	hl,color1 \.r
