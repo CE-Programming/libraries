@@ -103,6 +103,34 @@ _SpriteFlipHoriz:
 ;  __frame_arg0 : Pointer to 2D array output
 	ld	iy,0
 	add	iy,sp
+	ld	a,(iy+9)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	push	hl
+	ld	(_FlipHorizWidth_ASM),a \.r
+	add	hl,hl
+	ld	(_FlipHorizDelta_ASM),hl \.r
+	pop	hl
+	ld	de,(iy+3)
+	add	hl,de
+	ld	de,(iy+6)
+	push	de
+	ld	a,(iy+12)
+	ld	iyl,a
+_FlipHorizWidth_ASM =$+1
+_:	ld	b,0
+_:	ld	a,(hl)
+	ld	(de),a
+	dec	hl
+	inc	de
+	djnz	-_
+_FlipHorizDelta_ASM =$+1
+	ld	bc,0
+	add	hl,bc
+	dec 	iyl
+	jr	nz,--_
+	pop	hl
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -491,9 +519,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+15)
@@ -501,9 +527,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	ld	hl,-9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
@@ -514,9 +538,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	ld	hl,-9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
