@@ -2,7 +2,7 @@
 #include "..\..\..\include\ti84pce.inc"
 
  .libraryName		"GRAPHC"          ; Name of library
- .libraryVersion	3                 ; Version information (1-255)
+ .libraryVersion	4                 ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
 ; v1 functions -- No longer able to insert or move (Can optimize/fix though)
@@ -47,7 +47,7 @@
  .function "gc_SetCustomFontSpacing",_SetCustomFontSpacing
  .function "gc_SetFontMonospace",_SetFontMonospace
 ;-------------------------------------------------------------------------------
-; v2 functions
+; v2 functions -- No longer able to insert or move (Can optimize/fix though)
 ;-------------------------------------------------------------------------------
  .function "gc_SetClipWindow",_SetClipWindow
  .function "gc_ClipRegion",_ClipRegion
@@ -64,7 +64,7 @@
  .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
  .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
 ;-------------------------------------------------------------------------------
-; v3 functions
+; v3 functions -- No longer able to insert or move (Can optimize/fix though)
 ;-------------------------------------------------------------------------------
  .function "gc_ClipCircle",_ClipCircle
  .function "gc_ClipLine",_ClipLine
@@ -75,6 +75,12 @@
  .function "gc_TilePtr",_TilePtr
  .function "gc_TilePtrMapped",_TilePtrMapped
  .function "gc_LZDecompress",_LZDecompress
+;-------------------------------------------------------------------------------
+; v4 functions
+;-------------------------------------------------------------------------------
+ .function "gc_SpriteFlipHoriz",_FlipHoriz
+ .function "gc_SpriteFlipVert",_FlipVert
+ .function "gc_SpriteRotate",_SpriteRotate
 
  .beginDependencies
  .endDependencies
@@ -86,6 +92,43 @@ currentDrawingBuffer    equ 0E30014h
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
+_SpriteFlipHoriz:
+; Flips an array horizontally about the center vertical axis
+; Arguments:
+;  __frame_arg0 : Pointer to 2D byte array input
+;  __frame_arg1 : Pointer to 2D byte array output
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  __frame_arg0 : Pointer to 2D array output
+	ret
+
+;-------------------------------------------------------------------------------
+_SpriteFlipVert:
+; Flip an array vertically about the center horizontal axis
+; Arguments:
+;  __frame_arg0 : Pointer to 2D byte array input
+;  __frame_arg1 : Pointer to 2D byte array output
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+; Returns:
+;  __frame_arg0 : Pointer to 2D array output
+	ret
+
+;-------------------------------------------------------------------------------
+_SpriteRotate:
+; Rotates an array
+; Arguments:
+;  __frame_arg0 : Pointer to 2D byte array input
+;  __frame_arg1 : Pointer to 2D byte array output
+;  __frame_arg2 : Width
+;  __frame_arg3 : Height
+;  __frame_arg4 : Rotation angle (Probably will only support 180/90/-90 for now)
+; Returns:
+;  __frame_arg0 : Pointer to 2D array output	
+	ret
+
+;-------------------------------------------------------------------------------
 _SetClipWindow:
 ; Sets the clipping window for clipped routines
 ; Arguments:
@@ -93,7 +136,7 @@ _SetClipWindow:
 ;  __frame_arg1 : Ymin
 ;  __frame_arg2 : Xmax
 ;  __frame_arg3 : Ymax
-;  Must be within (0,0,319,239)
+;  Must be within (0,0,320,240)
 ; Returns:
 ;  None
 	call	_SetFullScreenClipping_ASM \.r
