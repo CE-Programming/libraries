@@ -118,10 +118,10 @@ _SetColorIndex:
 	pop	de
 	push	de
 	push	hl
-	ld	hl,color1 \.r
-	ld	d,(hl)
+	ld	a,(color1) \.r
+	ld	d,a
 	ld	a,e
-	ld	(hl),a
+	ld	(color1),a \.r
 	ld	(color3),a \.r
 	ld	(color4),a \.r
 	ld	(color5),a \.r
@@ -275,13 +275,13 @@ _ClipGetPixel:
 	ret
 
 ;-------------------------------------------------------------------------------
+_ClipSetPixel:
 ; Sets the color pixel to the global color index
 ; Arguments:
 ;  __frame_arg0 : X Coord
 ;  __frame_arg1 : Y Coord
 ; Returns:
 ;  None
-_ClipSetPixel:
 	ld	iy,0
 	add	iy,sp
 	ld	bc,(iy+3)
@@ -294,13 +294,13 @@ color1 =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
+_NoClipSetPixel_ASM:
 ; Sets the color pixel to the global color index
 ; Arguments:
 ;  bc : X Coord
 ;   e : Y Coord
 ; Returns:
 ;  None
-_NoClipSetPixel_ASM:
 	ld	hl,(currentDrawingBuffer)
 	add	hl,bc
 	ld	d,lcdWidth/2
@@ -1983,8 +1983,8 @@ _NoClipDrawFGTilemap:
 ;-------------------------------------------------------------------------------
 _NoClipDrawBGTilemap:
 ; Tilemapping subsection
-    ld	hl,_NoClipDrawSprite \.r
-    jr	+_
+	ld	hl,_NoClipDrawSprite \.r
+	jr	+_
 ;-------------------------------------------------------------------------------
 _ClipDrawFGTilemap:
 ; Tilemapping subsection
@@ -2093,10 +2093,10 @@ _Y_Next_SMC =$+1
 	ld	bc,0
 	add	hl,bc
 	ld	a,(hl)
-	cp	a,255
+	ld	l,a
+	inc	a
 	jr	z,_BlankTile_ASM
 	ld	h,3
-	ld	l,a
 	mlt	hl
 	ld	de,(iy+3)
 	add	hl,de
