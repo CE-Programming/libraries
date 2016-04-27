@@ -92,107 +92,13 @@ currentDrawingBuffer    equ 0E30014h
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-_SpriteFlipHoriz:
-; Flips an array horizontally about the center vertical axis
-; Arguments:
-;  __frame_arg0 : Pointer to 2D byte array input
-;  __frame_arg1 : Pointer to 2D byte array output
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
-; Returns:
-;  __frame_arg0 : Pointer to 2D array output
-	ld	iy,0
-	add	iy,sp
-	ld	a,(iy+9)
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	push	hl
-	ld	(_FlipHorizWidth_ASM),a \.r
-	add	hl,hl
-	ld	(_FlipHorizDelta_ASM),hl \.r
-	pop	hl
-	ld	de,(iy+3)
-	add	hl,de
-	ld	de,(iy+6)
-	push	de
-	ld	a,(iy+12)
-	ld	iyl,a
-_FlipHorizWidth_ASM =$+1
-_:	ld	b,0
-_:	ld	a,(hl)
-	ld	(de),a
-	dec	hl
-	inc	de
-	djnz	-_
-_FlipHorizDelta_ASM =$+1
-	ld	bc,0
-	add	hl,bc
-	dec 	iyl
-	jr	nz,--_
-	pop	hl
-	ret
-
-;-------------------------------------------------------------------------------
-_SpriteFlipVert:
-; Flip an array vertically about the center horizontal axis
-; Arguments:
-;  __frame_arg0 : Pointer to 2D byte array input
-;  __frame_arg1 : Pointer to 2D byte array output
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
-; Returns:
-;  __frame_arg0 : Pointer to 2D array output
-	ld	iy,0
-	add	iy,sp
-	xor	a,a
-	sub	a,(iy+9)
-	ld	(_FlipVertDelta_ASM),a \.r
-	neg
-	ld	(_FlipVertWidth_ASM),a \.r
-	ld	l,(iy+12)
-	dec	l
-	ld	h,a
-	mlt	hl
-	ld	de,(iy+3)
-	add	hl,de
-	ld	de,(iy+6)
-	push	de
-_FlipVertWidth_ASM =$+1
-_:	ld	bc,0
-	ldir
-_FlipVertDelta_ASM =$+1
-	ld	bc,-1
-	add	hl,bc
-	add	hl,bc
-	dec 	a
-	jr	nz,-_
-	pop	hl
-	ret
-
-;-------------------------------------------------------------------------------
-_SpriteRotate:
-; Rotates an array
-; Arguments:
-;  __frame_arg0 : Pointer to 2D byte array input
-;  __frame_arg1 : Pointer to 2D byte array output
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
-;  __frame_arg4 : Rotation angle (Only supports 180 & +-90 for now)
-; Returns:
-;  __frame_arg0 : Pointer to 2D array output
-	ld	iy,0
-	add	iy,sp
-	ret
-
-;-------------------------------------------------------------------------------
 _SetClipWindow:
 ; Sets the clipping window for clipped routines
 ; Arguments:
-;  __frame_arg0 : Xmin
-;  __frame_arg1 : Ymin
-;  __frame_arg2 : Xmax
-;  __frame_arg3 : Ymax
+;  arg0 : Xmin
+;  arg1 : Ymin
+;  arg2 : Xmax
+;  arg3 : Ymax
 ;  Must be within (0,0,320,240)
 ; Returns:
 ;  None
@@ -211,7 +117,7 @@ _SetClipWindow:
 _SetColorIndex:
 ; Sets the global color index for all routines
 ; Arguments:
-;  __frame_arg0 : Color Index
+;  arg0 : Color Index
 ; Returns:
 ;  Previous global color index
 	pop	hl
@@ -288,7 +194,7 @@ _:	ld	a,b
 _FillScrn:
 ; Fills the screen with the specified color index
 ; Arguments:
-;  __frame_arg0 : Color Index
+;  arg0 : Color Index
 ; Returns:
 ;  None
 	pop	hl
@@ -304,8 +210,8 @@ _FillScrn:
 _SetPalette:
 ; Sets the palette starting at 0x00 index and onward
 ; Arguments:
-;  __frame_arg0 : Pointer to palette
-;  __frame_arg1 : Size of palette in bytes
+;  arg0 : Pointer to palette
+;  arg1 : Size of palette in bytes
 ; Returns:
 ;  None
 	pop	de
@@ -322,7 +228,7 @@ _SetPalette:
 _GetColor:
 ; Gets the color of a given pallete entry
 ; Arguments:
-;  __frame_arg0 : Color index
+;  arg0 : Color index
 ; Returns:
 ;  16 bit color palette entry
 	ld	hl,3
@@ -338,8 +244,8 @@ _GetColor:
 _SetColor:
 ; Sets the color of a given pallete entry
 ; Arguments:
-;  __frame_arg0 : Palette index
-;  __frame_arg1 : 1555 color entry
+;  arg0 : Palette index
+;  arg1 : 1555 color entry
 ; Returns:
 ;  None
 	ld	hl,3
@@ -360,8 +266,8 @@ _SetColor:
 _ClipGetPixel:
 ; Gets the color index of a pixel
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
+;  arg0 : X Coord
+;  arg1 : Y Coord
 ; Returns:
 ;  Color index of X,Y Coord
 	ld	iy,0
@@ -378,8 +284,8 @@ _ClipGetPixel:
 _ClipSetPixel:
 ; Sets the color pixel to the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
+;  arg0 : X Coord
+;  arg1 : Y Coord
 ; Returns:
 ;  None
 	ld	hl,3
@@ -418,10 +324,10 @@ color5 =$+1
 _ClipRectangle:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Width
+;  arg3 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -455,10 +361,10 @@ _ClipRectangle:
 _NoClipRectangle:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Width
+;  arg3 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -505,10 +411,10 @@ NoClipRectangle_Skip:
 _ClipRectangleOutline:
 ; Draws an clipped rectangle outline with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Width
+;  arg3 : Height
 ; Returns:
 ;  None
 	push	ix
@@ -559,10 +465,10 @@ _ClipRectangleOutline:
 _NoClipRectangleOutline:
 ; Draws an unclipped rectangle outline with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Width
-;  __frame_arg3 : Height
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Width
+;  arg3 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -591,9 +497,9 @@ _NoClipRectangleOutline:
 _ClipHorizLine:
 ; Draws an clipped horizontal line with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Length
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Length
 ; Returns:
 ;  None
 	ld	iy,0
@@ -633,9 +539,9 @@ _ClipHorizLine:
 _NoClipHorizLine:
 ; Draws an unclipped horizontal line with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Length
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Length
 ; Returns:
 ;  None
 	ld	iy,0
@@ -673,9 +579,9 @@ _MemSet_ASM:
 _ClipVertLine:
 ; Draws an clipped horizontal line with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Length
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Length
 ; Returns:
 ;  None
 	ld	iy,0
@@ -716,9 +622,9 @@ _ClipVertLine:
 _NoClipVertLine:
 ; Draws an unclipped vertical line with the global color index
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Length
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Length
 ; Returns:
 ;  None
 	ld	iy,0
@@ -815,7 +721,7 @@ _DrawState:
 _SetTransparentColor:
 ; Sets the transparency color for routines
 ; Arguments:
-;  __frame_arg0 : Transparent color index
+;  arg0 : Transparent color index
 ; Returns:
 ;  Previous transparent color index
 	pop	hl
@@ -835,9 +741,9 @@ _SetTransparentColor:
 _ClipCircleOutline:
 ; Draws a clipped circle outline
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Radius
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Radius
 ; Returns:
 ;  None
 	ld	iy,0
@@ -963,9 +869,9 @@ _:	ld	sp,iy
 _ClipCircle:
 ; Draws an clipped circle
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Radius
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Radius
 ; Returns:
 ;  None
 	ld	hl,-9
@@ -1093,9 +999,9 @@ _:	jp	po,_ClipCircleSectors \.r
 _NoClipCircle:
 ; Draws an unclipped circle
 ; Arguments:
-;  __frame_arg0 : X Coord
-;  __frame_arg1 : Y Coord
-;  __frame_arg2 : Radius
+;  arg0 : X Coord
+;  arg1 : Y Coord
+;  arg2 : Radius
 ; Returns:
 ;  None
 	ld	hl,-9
@@ -1205,10 +1111,10 @@ _:	jp	po,_NoClipCircleSectors \.r
 _ClipLine:
 ; Draws an arbitrarily clipped line
 ; Arguments:
-;  __frame_arg0: x0
-;  __frame_arg0: y0
-;  __frame_arg0: x1
-;  __frame_arg0: y1
+;  arg0: x0
+;  arg0: y0
+;  arg0: x1
+;  arg0: y1
 ; Returns:
 ;  true if drawn, false if offscreen
 	ld	iy,0
@@ -1325,10 +1231,10 @@ m_31:	ld	sp,iy
 _NoClipLine:
 ; Draws an unclipped arbitrary line
 ; Arguments:
-;  __frame_arg0 : X0 Coord (hl)
-;  __frame_arg1 : Y0 Coord (b)
-;  __frame_arg2 : X1 Coord (de)
-;  __frame_arg3 : Y1 Coord (c)
+;  arg0 : X0 Coord (hl)
+;  arg1 : Y0 Coord (b)
+;  arg2 : X1 Coord (de)
+;  arg3 : Y1 Coord (c)
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1466,7 +1372,7 @@ dy12 =$+1
 _ShiftWindowDown:
 ; Shifts whatever is in the clip window down by some pixels
 ; Arguments:
-;  __frame_arg0 : Amount to shift by
+;  arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_DownRightShiftCalculate_ASM \.r
@@ -1485,7 +1391,7 @@ _ShiftWindowDown:
 _ShiftWindowRight:
 ; Shifts whatever is in the clip window right by some pixels
 ; Arguments:
-;  __frame_arg0 : Amount to shift by
+;  arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_DownRightShiftCalculate_ASM \.r
@@ -1517,7 +1423,7 @@ PosOffsetDownRight_ASM =$+1
 _ShiftWindowUp:
 ; Shifts whatever is in the clip window up by some pixels
 ; Arguments:
-;  __frame_arg0 : Amount to shift by
+;  arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_UpLeftShiftCalculate_ASM \.r
@@ -1535,7 +1441,7 @@ _ShiftWindowUp:
 _ShiftWindowLeft:
 ; Shifts whatever is in the clip window left by some pixels
 ; Arguments:
-;  __frame_arg0 : Amount to shift by
+;  arg0 : Amount to shift by
 ; Returns:
 ;  None
 	call	_UpLeftShiftCalculate_ASM \.r
@@ -1580,13 +1486,13 @@ _ClipRegion:
 _NoClipDrawScaledSprite:
 ; Draws a scaled sprite to the screen
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width -- 8bits
-;  __frame_arg4 : Height -- 8bits
-;  __frame_arg5 : Width Scale (integer)
-;  __frame_arg6 : Height Scale (integer)
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width -- 8bits
+;  arg4 : Height -- 8bits
+;  arg5 : Width Scale (integer)
+;  arg6 : Height Scale (integer)
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1661,13 +1567,13 @@ _:	lea	hl,iy
 _NoClipDrawScaledTransparentSprite:
 ; Draws a scaled sprite to the screen with transparency
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width -- 8bits
-;  __frame_arg4 : Height -- 8bits
-;  __frame_arg5 : Width Scale (integer)
-;  __frame_arg6 : Height Scale (integer)
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width -- 8bits
+;  arg4 : Height -- 8bits
+;  arg5 : Width Scale (integer)
+;  arg6 : Height Scale (integer)
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1740,11 +1646,11 @@ _:	inc	de
 _ClipDrawTransparentSprite:
 ; Draws a transparent sprite with clipping
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width -- 8bits
-;  __frame_arg4 : Height -- 8bits
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width -- 8bits
+;  arg4 : Height -- 8bits
 ; Returns:
 ;  None
 	call	_ClipDraw_ASM \.r
@@ -1796,11 +1702,11 @@ ClipSprTransNextAmt =$+1
 _ClipDrawSprite:
 ; Places an sprite on the screen as fast as possible with clipping
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width -- 8bits
-;  __frame_arg4 : Height -- 8bits
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width -- 8bits
+;  arg4 : Height -- 8bits
 ; Returns:
 ;  None
 	call	_ClipDraw_ASM \.r
@@ -1840,11 +1746,11 @@ ClipSprNextAmt =$+1
 _NoClipDrawSprite:
 ; Places an sprite on the screen as fast as possible
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width
-;  __frame_arg4 : Height
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width
+;  arg4 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1880,11 +1786,11 @@ _:	ld	c,0
 _NoClipGetSprite:
 ; Grabs the data from the current draw buffer and stores it in another buffer
 ; Arguments:
-;  __frame_arg0 : Pointer to storage buffer
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width
-;  __frame_arg4 : Height
+;  arg0 : Pointer to storage buffer
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width
+;  arg4 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1924,11 +1830,11 @@ NoClipSprGrabMoveAmt =$+1
 _NoClipDrawTransparentSprite:
 ; Draws a transparent sprite to the current buffer
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width
-;  __frame_arg4 : Height
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width
+;  arg4 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1973,11 +1879,11 @@ _:	inc	de
 _ClipDraw_ASM:
 ; Clipping stuff
 ; Arguments:
-;  __frame_arg0 : Pointer to sprite
-;  __frame_arg1 : X Coord
-;  __frame_arg2 : Y Coord
-;  __frame_arg3 : Width -- 8bits
-;  __frame_arg4 : Height -- 8bits
+;  arg0 : Pointer to sprite
+;  arg1 : X Coord
+;  arg2 : Y Coord
+;  arg3 : Width -- 8bits
+;  arg4 : Height -- 8bits
 ; Returns:
 ;  How much to add to the sprite per iteration, NC if offscreen
 	ld	iy,3
@@ -2090,9 +1996,9 @@ _ClipDrawFGTilemap:
 _ClipDrawBGTilemap:
 ; Draws a tilemap given a tile map structure and some offsets
 ; Arguments:
-;  __frame_arg0 : Tilemap Struct
-;  __frame_arg1 : X Pixel Offset (Unsigned)
-;  __frame_arg2 : Y Pixel Offset (Unsigned)
+;  arg0 : Tilemap Struct
+;  arg1 : X Pixel Offset (Unsigned)
+;  arg2 : Y Pixel Offset (Unsigned)
 ; Returns:
 ;  None
 ; C Function:
@@ -2248,10 +2154,10 @@ _Y_Loop_ASM:
 _TilePtr:
 ; Returns a pointer to a tile given the pixel offsets
 ; Arguments:
-;  __frame_arg0 : Tilemap Struct
-;  __frame_arg1 : X Pixel Offset (Unsigned)
-;  __frame_arg2 : Y Pixel Offset (Unsigned)
-;  __frame_arg3 : New Tile Index
+;  arg0 : Tilemap Struct
+;  arg1 : X Pixel Offset (Unsigned)
+;  arg2 : Y Pixel Offset (Unsigned)
+;  arg3 : New Tile Index
 ; Returns:
 ;  A pointer to an indexed tile in the tilemap (so it can be looked at or changed)
 ; C Function:
@@ -2285,9 +2191,9 @@ _:	srl	h
 _TilePtrMapped:
 ; Returns a direct pointer to the input tile
 ; Arguments:
-;  __frame_arg0 : Tilemap Struct
-;  __frame_arg1 : X Map Offset (uint8_t)
-;  __frame_arg2 : Y Map Offset (uint8_t)
+;  arg0 : Tilemap Struct
+;  arg1 : X Map Offset (uint8_t)
+;  arg2 : Y Map Offset (uint8_t)
 ; Returns:
 ;  A pointer to the indexed tile in the tilemap (so it can be looked at or changed)
 	push	ix
@@ -2331,7 +2237,7 @@ _TextY:
 _SetTextColor:
 ; Sets the transparency text color for text routines
 ; Arguments:
-;  __frame_arg0 : High 8 bits is background, Low 8 bits is foreground
+;  arg0 : High 8 bits is background, Low 8 bits is foreground
 ;  These refer to color palette indexes
 ; Returns:
 ;  Previous text color palette indexes
@@ -2347,8 +2253,8 @@ _SetTextColor:
 _SetTextXY:
 ; Sets the transparency text color for text routines
 ; Arguments:
-;  __frame_arg0 : Text X Pos
-;  __frame_arg1 : Text Y Pos
+;  arg0 : Text X Pos
+;  arg1 : Text Y Pos
 ; Returns:
 ;  None
 	ld	hl,3
@@ -2365,9 +2271,9 @@ _SetTextXY:
 _PrintStringXY:
 ; Places a string at the given coordinates
 ; Arguments:
-;  __frame_arg0 : Pointer to string
-;  __frame_arg1 : Text X Pos
-;  __frame_arg2 : Text Y Pos
+;  arg0 : Pointer to string
+;  arg1 : Text X Pos
+;  arg2 : Text Y Pos
 ; Returns:
 ;  None
 	ld	hl,9
@@ -2388,7 +2294,7 @@ _PrintStringXY:
 _PrintString:
 ; Places a string at the current cursor position
 ; Arguments:
-;  __frame_arg0 : Pointer to string
+;  arg0 : Pointer to string
 ; Returns:
 ;  None
 	pop	de
@@ -2406,7 +2312,7 @@ _:	ld	a,(hl)
 _PrintChar:
 ; Places a character at the current cursor position
 ; Arguments:
-;  __frame_arg0 : Character to draw
+;  arg0 : Character to draw
 ; Returns:
 ;  None
 	ld	iy,0
@@ -2494,8 +2400,8 @@ CharLineDelta_ASM =$+1
 _PrintUnsignedInt:
 ; Places an unsigned int at the current cursor position
 ; Arguments:
-;  __frame_arg0 : Number to print
-;  __frame_arg1 : Number of characters to print
+;  arg0 : Number to print
+;  arg1 : Number of characters to print
 ; Returns:
 ;  None
 	ld	iy,0
@@ -2539,8 +2445,8 @@ Num2:	inc	a
 _PrintInt:
 ; Places an int at the current cursor position
 ; Arguments:
-;  __frame_arg0 : Number to print
-;  __frame_arg1 : Number of characters to print
+;  arg0 : Number to print
+;  arg1 : Number of characters to print
 ; Returns:
 ;  None
 	ld	iy,0
@@ -2565,7 +2471,7 @@ _:	jp	_PrintUnsignedInt_ASM \.r
 _StringWidthC:
 ; Gets the width of a string
 ; Arguments:
-;  __frame_arg0 : Pointer to string
+;  arg0 : Pointer to string
 ; Returns:
 ;  Width of string in pixels
 	pop	de
@@ -2593,7 +2499,7 @@ _:	push	bc
 _CharWidth:
 ; Gets the width of a character
 ; Arguments:
-;  __frame_arg0 : Character
+;  arg0 : Character
 ; Returns:
 ;  Width of character in pixels
 	pop	de
@@ -2631,7 +2537,7 @@ _:	or	a,a
 _SetCustomFontData:
 ; Sets the font to be custom
 ; Arguments:
-;  __frame_arg0 : Pointer to font data
+;  arg0 : Pointer to font data
 ;  Set Pointer to NULL to use default font
 ; Returns:
 ;  None
@@ -2651,7 +2557,7 @@ _:	ld	(TextData_ASM),hl \.r
 _SetCustomFontSpacing:
 ; Sets the font to be custom spacing
 ; Arguments:
-;  __frame_arg0 : Pointer to font spacing
+;  arg0 : Pointer to font spacing
 ;  Set Pointer to NULL to use default font spacing
 ; Returns:
 ;  None
@@ -2671,7 +2577,7 @@ _:	ld	(CharSpacing_ASM),hl \.r
 _SetFontMonospace:
 ; Sets the font to be monospace
 ; Arguments:
-;  __frame_arg0 : Monospace spacing amount
+;  arg0 : Monospace spacing amount
 ; Returns:
 ;  None
 	pop	hl
@@ -2686,9 +2592,9 @@ _SetFontMonospace:
 _LZDecompress:
 ; Decompresses in lz77 format the input data into the output buffer
 ; Arguments:
-;  __frame_arg0 : Pointer to Input Buffer
-;  __frame_arg1 : Pointer to Output Buffer
-;  __frame_arg2 : Pointer to Input Buffer Size
+;  arg0 : Pointer to Input Buffer
+;  arg1 : Pointer to Output Buffer
+;  arg2 : Pointer to Input Buffer Size
 ; Returns:
 ;  None
 	ld	hl,-20
@@ -2795,6 +2701,169 @@ l_18:	ld	bc,(ix+12)
 	jp	c,l_17 \.r
 l_19:	ld	sp,ix
 	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_SpriteFlipHoriz:
+; Flips an array horizontally about the center vertical axis
+; Arguments:
+;  arg0 : Pointer to 2D byte array input
+;  arg1 : Pointer to 2D byte array output
+;  arg2 : Width
+;  arg3 : Height
+; Returns:
+;  arg1 : Pointer to 2D array output
+	ld	iy,0
+	add	iy,sp
+	ld	a,(iy+9)
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
+	push	hl
+	ld	(_FlipHorizWidth_ASM),a \.r
+	add	hl,hl
+	ld	(_FlipHorizDelta_ASM),hl \.r
+	pop	hl
+	ld	de,(iy+3)
+	add	hl,de
+	ld	de,(iy+6)
+	push	de
+	ld	a,(iy+12)
+	ld	iyl,a
+_FlipHorizWidth_ASM =$+1
+_:	ld	b,0
+_:	ld	a,(hl)
+	ld	(de),a
+	dec	hl
+	inc	de
+	djnz	-_
+_FlipHorizDelta_ASM =$+1
+	ld	bc,0
+	add	hl,bc
+	dec 	iyl
+	jr	nz,--_
+	pop	hl
+	ret
+
+;-------------------------------------------------------------------------------
+_SpriteFlipVert:
+; Flip an array vertically about the center horizontal axis
+; Arguments:
+;  arg0 : Pointer to 2D byte array input
+;  arg1 : Pointer to 2D byte array output
+;  arg2 : Width
+;  arg3 : Height
+; Returns:
+;  arg1 : Pointer to 2D array output
+	ld	iy,0
+	add	iy,sp
+	xor	a,a
+	sub	a,(iy+9)
+	ld	(_FlipVertDelta_ASM),a \.r
+	neg
+	ld	(_FlipVertWidth_ASM),a \.r
+	ld	l,(iy+12)
+	dec	l
+	ld	h,a
+	mlt	hl
+	ld	de,(iy+3)
+	add	hl,de
+	ld	de,(iy+6)
+	push	de
+_FlipVertWidth_ASM =$+1
+_:	ld	bc,0
+	ldir
+_FlipVertDelta_ASM =$+1
+	ld	bc,-1
+	add	hl,bc
+	add	hl,bc
+	dec 	a
+	jr	nz,-_
+	pop	hl
+	ret
+
+;-------------------------------------------------------------------------------
+_SpriteRotate:
+; Rotates an array
+; Arguments:
+;  arg0 : Pointer to 2D byte array input
+;  arg1 : Pointer to 2D byte array output
+;  arg2 : Width
+;  arg3 : Height
+;  arg4 : Rotation angle (Only supports 180 & +-90 for now)
+; Returns:
+;  arg1 : Pointer to 2D array output
+	ld	iy,0
+	add	iy,sp
+	or	a,a
+	sbc	hl,hl
+	ld	a,(iy+15)
+	cp	a,180
+	jr	z,_SpriteRotate180
+	cp	a,-90
+	jr	z,_SpriteRotateN90
+_SpriteRotate90:
+	ld	a,(iy+9) ; width
+	ld	l,a
+	ld	(_Rotate90Delta_ASM),a \.r
+	ld	(_Rotate90Width_ASM),a \.r
+	ld	de,(iy+6)
+	add	hl,de
+	push	de
+	ld	c,(iy+12)
+	push	hl
+	ld	hl,(iy+3)
+	pop	iy
+_Rotate90Width_ASM =$+1
+_:	ld	b,0
+	push	iy
+_:	lea	de,iy
+	ld	a,(hl)
+	ld	(de),a
+_Rotate90Delta_ASM =$+1
+	ld	de,0
+	add	iy,de
+	inc	hl
+	djnz	-_
+	pop	iy
+	dec	iy
+	dec 	c
+	jr	nz,--_
+	pop	hl
+	ret
+
+_SpriteRotateN90:
+	ld	a,(iy+9) ; width
+	ld	l,a
+	ld	(_RotateN90Delta_ASM),a \.r
+	ld	(_RotateN90Width_ASM),a \.r
+	ld	de,(iy+3)
+	add	hl,de
+	push	hl
+	ld	c,(iy+12)
+	ld	hl,(iy+6)
+	pop	iy
+	push	hl
+_RotateN90Width_ASM =$+1
+_:	ld	b,0
+	push	iy
+_:	lea	de,iy
+	ld	a,(de)
+	ld	(hl),a
+_RotateN90Delta_ASM =$+1
+	ld	de,0
+	add	iy,de
+	inc	hl
+	djnz	-_
+	pop	iy
+	dec	iy
+	dec 	c
+	jr	nz,--_
+	pop	hl
+	ret
+
+_SpriteRotate180:
+	ld	hl,(iy+3)
 	ret
 
 ;-------------------------------------------------------------------------------
