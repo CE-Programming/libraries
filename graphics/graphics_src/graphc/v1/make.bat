@@ -17,7 +17,7 @@ set BIN=%CEDEV%\bin
 set ASM=%BIN%\ez80asm.exe
 set LIB=%BIN%\ez80lib.exe
 set ASM_FLG=-genobj -NOigcase -NOlist -NOlistmac -pagelen:56 -pagewidth:100 -quiet -sdiopt -cpu:EZ80F91 -NOdebug
-..\..\..\include\spasm -E %LIB_SRC% %LIB_NAME%.8xv
+..\..\..\..\include\spasm -E %LIB_SRC% %LIB_NAME%.8xv
 echo Building library...
 if exist *.obj del *.obj
 if exist %LIB_LIB% del %LIB_LIB%

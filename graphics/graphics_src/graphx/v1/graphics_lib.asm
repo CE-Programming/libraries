@@ -1,86 +1,76 @@
-#include "..\..\..\include\relocation.inc"
-#include "..\..\..\include\ti84pce.inc"
+#include "..\..\..\..\include\relocation.inc"
+#include "..\..\..\..\include\ti84pce.inc"
 
- .libraryName		"GRAPHC"          ; Name of library
- .libraryVersion	4                 ; Version information (1-255)
+ .libraryName		"GRAPHX"          ; Name of library
+ .libraryVersion	1                 ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
-; v1 functions -- No longer able to insert or move (Can optimize/fix though)
+; v1 functions
 ;-------------------------------------------------------------------------------
- .function "gc_InitGraph",_InitGraph
- .function "gc_CloseGraph",_CloseGraph
- .function "gc_SetColorIndex",_SetColorIndex
- .function "gc_SetDefaultPalette",_SetDefaultPalette
- .function "gc_SetPalette",_SetPalette
- .function "gc_FillScrn",_FillScrn
- .function "gc_ClipSetPixel",_ClipSetPixel
- .function "gc_ClipGetPixel",_ClipGetPixel
- .function "gc_GetColor",_GetColor
- .function "gc_SetColor",_SetColor
- .function "gc_NoClipLine",_NoClipLine
- .function "gc_NoClipRectangle",_NoClipRectangle
- .function "gc_NoClipRectangleOutline",_NoClipRectangleOutline
- .function "gc_NoClipHorizLine",_NoClipHorizLine
- .function "gc_NoClipVertLine",_NoClipVertLine
- .function "gc_NoClipCircle",_NoClipCircle
- .function "gc_ClipCircleOutline",_ClipCircleOutline
- .function "gc_DrawBuffer",_DrawBuffer
- .function "gc_DrawScreen",_DrawScreen
- .function "gc_SwapDraw",_SwapDraw
- .function "gc_DrawState",_DrawState
- .function "gc_PrintChar",_PrintChar
- .function "gc_PrintInt",_PrintInt
- .function "gc_PrintUnsignedInt",_PrintUnsignedInt
- .function "gc_PrintString",_PrintString
- .function "gc_PrintStringXY",_PrintStringXY
- .function "gc_StringWidth",_StringWidthC
- .function "gc_CharWidth",_CharWidth
- .function "gc_TextX",_TextX
- .function "gc_TextY",_TextY
- .function "gc_SetTextXY",_SetTextXY
- .function "gc_SetTextColor",_SetTextColor
- .function "gc_SetTransparentColor",_SetTransparentColor
- .function "gc_NoClipDrawSprite",_NoClipDrawSprite
- .function "gc_NoClipDrawTransparentSprite",_NoClipDrawTransparentSprite
- .function "gc_NoClipGetSprite",_NoClipGetSprite
- .function "gc_SetCustomFontData",_SetCustomFontData
- .function "gc_SetCustomFontSpacing",_SetCustomFontSpacing
- .function "gc_SetFontMonospace",_SetFontMonospace
-;-------------------------------------------------------------------------------
-; v2 functions -- No longer able to insert or move (Can optimize/fix though)
-;-------------------------------------------------------------------------------
- .function "gc_SetClipWindow",_SetClipWindow
- .function "gc_ClipRegion",_ClipRegion
- .function "gc_ShiftWindowDown",_ShiftWindowDown
- .function "gc_ShiftWindowUp",_ShiftWindowUp
- .function "gc_ShiftWindowLeft",_ShiftWindowLeft
- .function "gc_ShiftWindowRight",_ShiftWindowRight
- .function "gc_ClipRectangle",_ClipRectangle
- .function "gc_ClipRectangleOutline",_ClipRectangleOutline
- .function "gc_ClipHorizLine",_ClipHorizLine
- .function "gc_ClipVertLine",_ClipVertLine
- .function "gc_ClipDrawSprite",_ClipDrawSprite
- .function "gc_ClipDrawTransparentSprite",_ClipDrawTransparentSprite
- .function "gc_NoClipDrawScaledSprite",_NoClipDrawScaledSprite
- .function "gc_NoClipDrawScaledTransparentSprite",_NoClipDrawScaledTransparentSprite
-;-------------------------------------------------------------------------------
-; v3 functions -- No longer able to insert or move (Can optimize/fix though)
-;-------------------------------------------------------------------------------
- .function "gc_ClipCircle",_ClipCircle
- .function "gc_ClipLine",_ClipLine
- .function "gc_ClipDrawBGTilemap",_ClipDrawBGTilemap
- .function "gc_ClipDrawFGTilemap",_ClipDrawFGTilemap
- .function "gc_NoClipDrawBGTilemap",_NoClipDrawBGTilemap
- .function "gc_NoClipDrawFGTilemap",_NoClipDrawFGTilemap
- .function "gc_TilePtr",_TilePtr
- .function "gc_TilePtrMapped",_TilePtrMapped
- .function "gc_LZDecompress",_LZDecompress
-;-------------------------------------------------------------------------------
-; v4 functions
-;-------------------------------------------------------------------------------
- .function "gc_SpriteFlipHoriz",_SpriteFlipHoriz
- .function "gc_SpriteFlipVert",_SpriteFlipVert
- .function "gc_SpriteRotate",_SpriteRotate
+ .function "gfx_Begin",_Begin
+ .function "gfx_End",_End
+ .function "gfx_SetColor",_SetColor
+ .function "gfx_SetDefaultPalette",_SetDefaultPalette
+ .function "gfx_SetPalette",_SetPalette
+ .function "gfx_FillScreen",_FillScreen
+ .function "gfx_SetPixel",_SetPixel
+ .function "gfx_GetPixel",_GetPixel
+ .function "gfx_GetDrawState",_GetDrawState
+ .function "gfx_DrawToBuffer",_DrawToBuffer
+ .function "gfx_DrawToScreen",_DrawToScreen
+ .function "gfx_SwapDraw",_SwapDraw
+ .function "gfx_PrintChar",_PrintChar
+ .function "gfx_PrintInt",_PrintInt
+ .function "gfx_PrintUInt",_PrintUInt
+ .function "gfx_PrintString",_PrintString
+ .function "gfx_PrintStringXY",_PrintStringXY
+ .function "gfx_SetTextXY",_SetTextXY
+ .function "gfx_SetTextBGColor",_SetTextBGColorC
+ .function "gfx_SetTextFGColor",_SetTextFGColorC
+ .function "gfx_SetCustomFontData",_SetCustomFontData
+ .function "gfx_SetCustomFontSpacing",_SetCustomFontSpacing
+ .function "gfx_SetFontMonospace",_SetFontMonospace
+ .function "gfx_GetStringWidth",_GetStringWidth
+ .function "gfx_GetCharWidth",_GetCharWidth
+ .function "gfx_GetTextX",_GetTextX
+ .function "gfx_GetTextY",_GetTextY
+ .function "gfx_Line",_Line
+ .function "gfx_HorizLine",_HorizLine
+ .function "gfx_VertLine",_VertLine
+ .function "gfx_Circle",_Circle
+ .function "gfx_FillCircle",_FillCircle
+ .function "gfx_Rectangle",_Rectangle
+ .function "gfx_FillRectangle",_FillRectangle
+ .function "gfx_Line_NoClip",_Line_NoClip
+ .function "gfx_HorizLine_NoClip",_HorizLine_NoClip
+ .function "gfx_VertLine_NoClip",_VertLine_NoClip
+ .function "gfx_FillCircle_NoClip",_FillCircle_NoClip
+ .function "gfx_Rectangle_NoClip",_Rectangle_NoClip
+ .function "gfx_FillRectangle_NoClip",_FillRectangle_NoClip
+ .function "gfx_SetClipRegion",_SetClipRegion
+ .function "gfx_GetClipRegion",_GetClipRegion
+ .function "gfx_ShiftDown",_ShiftDown
+ .function "gfx_ShiftUp",_ShiftUp
+ .function "gfx_ShiftLeft",_ShiftLeft
+ .function "gfx_ShiftRight",_ShiftRight
+ .function "gfx_BGTilemap",_BGTilemap
+ .function "gfx_BGTilemap_NoClip",_BGTilemap_NoClip
+ .function "gfx_FGTilemap",_FGTilemap
+ .function "gfx_FGTilemap_NoClip",_FGTilemap_NoClip
+ .function "gfx_TilePtr",_TilePtr
+ .function "gfx_TilePtrMapped",_TilePtrMapped
+ .function "gfx_LZDecompress",_LZDecompress
+ .function "gfx_AllocSprite",_AllocSprite
+ .function "gfx_Sprite",_Sprite
+ .function "gfx_TransparentSprite",_TransparentSprite
+ .function "gfx_Sprite_NoClip",_Sprite_NoClip
+ .function "gfx_TransparentSprite_NoClip",_TransparentSprite_NoClip
+ .function "gfx_GetSprite_NoClip",_GetSprite_NoClip
+ .function "gfx_ScaledSprite_NoClip",_ScaledSprite_NoClip
+ .function "gfx_ScaledTransparentSprite_NoClip",_ScaledTransparentSprite_NoClip
+ .function "gfx_SpriteFlipY",_SpriteFlipY
+ .function "gfx_SpriteFlipX",_SpriteFlipX
+ .function "gfx_SpriteRotate",_SpriteRotate
 
  .beginDependencies
  .endDependencies
@@ -92,8 +82,30 @@ currentDrawingBuffer    equ 0E30014h
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-_SetClipWindow:
-; Sets the clipping window for clipped routines
+_AllocSprite:
+; Allocates space for a new sprite
+; Arguments:
+;  arg0 : width
+;  arg1 : height
+	ld	iy,0
+	add	iy,sp
+	ld	l,(iy+3)
+	ld	h,(iy+6)
+	push	hl
+	mlt	hl
+	inc	hl
+	inc	hl
+	;call	_malloc ; idk how? I wish that we had OS routines to do this properly... Oh wait, we can \o/
+	pop	de
+	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	dec	hl
+	ret
+
+;-------------------------------------------------------------------------------
+_SetClipRegion:
+; Sets the clipping  for clipped routines
 ; Arguments:
 ;  arg0 : Xmin
 ;  arg1 : Ymin
@@ -114,7 +126,7 @@ _SetClipWindow:
 	ret
 
 ;-------------------------------------------------------------------------------
-_SetColorIndex:
+_SetColor:
 ; Sets the global color index for all routines
 ; Arguments:
 ;  arg0 : Color Index
@@ -137,14 +149,13 @@ _SetColorIndex:
 	ret
 
 ;-------------------------------------------------------------------------------
-_InitGraph:
+_Begin:
 ; Sets up the graphics canvas (8bpp, default palette)
 ; Arguments:
 ;  None
 ; Returns:
 ;  None
-	call	$000374
-	call	_SetFullScreenClipping_ASM \.r
+	call	_boot_ClearVRAM
 	ld	hl,currentDrawingBuffer
 	ld	a,lcdBpp8
 _:	ld	de,vram
@@ -156,7 +167,7 @@ _:	ld	de,vram
 	jr	_SetDefaultPalette
 
 ;-------------------------------------------------------------------------------
-_CloseGraph:
+_End:
 ; Closes the graphics library and sets up for the TI-OS
 ; Arguments:
 ;  None
@@ -191,7 +202,7 @@ _:	ld	a,b
 	ret
 
 ;-------------------------------------------------------------------------------
-_FillScrn:
+_FillScreen:
 ; Fills the screen with the specified color index
 ; Arguments:
 ;  arg0 : Color Index
@@ -225,45 +236,7 @@ _SetPalette:
 	ret
 
 ;-------------------------------------------------------------------------------
-_GetColor:
-; Gets the color of a given pallete entry
-; Arguments:
-;  arg0 : Color index
-; Returns:
-;  16 bit color palette entry
-	ld	hl,3
-	add	hl,sp
-	ld	de,mpLcdPalette/2
-	ld	e,(hl)
-	ex	de,hl
-	add	hl,hl
-	ld	hl,(hl)
-	ret
-
-;-------------------------------------------------------------------------------
-_SetColor:
-; Sets the color of a given pallete entry
-; Arguments:
-;  arg0 : Palette index
-;  arg1 : 1555 color entry
-; Returns:
-;  None
-	ld	hl,3
-	add	hl,sp
-	ld	de,mpLcdPalette/2
-	ld	e,(hl)
-	inc	hl
-	inc	hl
-	inc	hl
-	ex	de,hl
-	add	hl,hl
-	ex	de,hl
-	ldi
-	ldi
-	ret
-
-;-------------------------------------------------------------------------------
-_ClipGetPixel:
+_GetPixel:
 ; Gets the color index of a pixel
 ; Arguments:
 ;  arg0 : X Coord
@@ -271,9 +244,10 @@ _ClipGetPixel:
 ; Returns:
 ;  Color index of X,Y Coord
 	ld	iy,0
+	lea	de,iy
 	add	iy,sp
 	ld	bc,(iy+3)
-	ld	de,(iy+6)
+	ld	e,(iy+6)
 	xor	a,a
 	call	_PixelPtr_ASM \.r
 	ret	c
@@ -281,7 +255,7 @@ _ClipGetPixel:
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipSetPixel:
+_SetPixel:
 ; Sets the color pixel to the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -294,8 +268,9 @@ _ClipSetPixel:
 	inc	hl
 	inc	hl
 	inc	hl
-	ld	de,(hl)
-_ClipSetPixel_ASM:
+	ld	de,0
+	ld	e,(hl)
+_SetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
 color1 =$+1
@@ -321,7 +296,7 @@ color5 =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipRectangle:
+_FillRectangle:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -355,10 +330,10 @@ _ClipRectangle:
 	ret	z
 	ld	a,l
 	ld	hl,(iy+3)
-	jr	_NoClipRectangle_ASM
+	jr	_FillRectangle_NoClip_ASM
 
 ;-------------------------------------------------------------------------------
-_NoClipRectangle:
+_FillRectangle_NoClip:
 ; Draws an unclipped rectangle with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -380,7 +355,7 @@ _NoClipRectangle:
 	ret	z
 	ld	hl,(iy+3)
 	ld	e,(iy+6)
-_NoClipRectangle_ASM:
+_FillRectangle_NoClip_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
@@ -408,7 +383,7 @@ NoClipRectangle_Skip:
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipRectangleOutline:
+_Rectangle:
 ; Draws an clipped rectangle outline with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -426,7 +401,7 @@ _ClipRectangleOutline:
 	push	bc
 	push	de
 	push	hl
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
@@ -434,7 +409,7 @@ _ClipRectangleOutline:
 	push	bc
 	push	de
 	push	hl
-	call	_ClipVertLine \.r
+	call	_VertLine \.r
 	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
@@ -445,7 +420,7 @@ _ClipRectangleOutline:
 	push	bc
 	push	de
 	push	hl
-	call	_ClipVertLine \.r
+	call	_VertLine \.r
 	ld	sp,ix
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
@@ -456,13 +431,13 @@ _ClipRectangleOutline:
 	push	bc
 	push	hl
 	push	de
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	sp,ix
 	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipRectangleOutline:
+_Rectangle_NoClip:
 ; Draws an unclipped rectangle outline with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -487,14 +462,14 @@ _NoClipRectangleOutline:
 	pop	bc
 	pop	hl
 	ld	e, c
-	call	_NoClipVertLine_ASM \.r
+	call	_VertLine_NoClip_ASM \.r
 	pop	bc
 	inc	bc
 	dec.s	bc
 	jp	_MemSet_ASM \.r
 
 ;-------------------------------------------------------------------------------
-_ClipHorizLine:
+_HorizLine:
 ; Draws an clipped horizontal line with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -536,7 +511,7 @@ _ClipHorizLine:
 	jr	_RectOutlineHoriz_ASM
 
 ;-------------------------------------------------------------------------------
-_NoClipHorizLine:
+_HorizLine_NoClip:
 ; Draws an unclipped horizontal line with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -553,7 +528,7 @@ _NoClipHorizLine:
 _RectOutlineHoriz_ASM:
 	inc	bc
 	dec.s	bc
-_NoClipHorizLine_ASM:
+_HorizLine_NoClip_ASM:
 	ld	a,b
 	or	a,c
 	ret	z
@@ -576,7 +551,7 @@ _MemSet_ASM:
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipVertLine:
+_VertLine:
 ; Draws an clipped horizontal line with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -616,10 +591,10 @@ _ClipVertLine:
 	ld	b,l
 	inc	b
 	ld	hl,(iy+3)
-	jr	_NoClipVertLine_ASM
+	jr	_VertLine_NoClip_ASM
 
 ;-------------------------------------------------------------------------------
-_NoClipVertLine:
+_VertLine_NoClip:
 ; Draws an unclipped vertical line with the global color index
 ; Arguments:
 ;  arg0 : X Coord
@@ -632,7 +607,7 @@ _NoClipVertLine:
 	ld	hl,(iy+3)		; x
 	ld	e,(iy+6)		; y
 	ld	b,(iy+9)		; length
-_NoClipVertLine_ASM:
+_VertLine_NoClip_ASM:
 	dec	b
 	ret	z
 	ld	d,lcdWidth/2
@@ -650,7 +625,7 @@ _:	ld	(hl),0
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawBuffer:
+_DrawToBuffer:
 ; Forces drawing routines to operate on the offscreen buffer
 ; Arguments:
 ;  None
@@ -666,7 +641,7 @@ _:	ld	(currentDrawingBuffer),de
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawScreen:
+_DrawToScreen:
 ; Forces drawing routines to operate on the visible screen
 ; Arguments:
 ;  None
@@ -703,7 +678,7 @@ _:	bit	2,(hl)
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawState:
+_GetDrawState:
 ; Gets the current drawing state
 ; Arguments:
 ;  None
@@ -718,27 +693,7 @@ _DrawState:
 	ret
 
 ;-------------------------------------------------------------------------------
-_SetTransparentColor:
-; Sets the transparency color for routines
-; Arguments:
-;  arg0 : Transparent color index
-; Returns:
-;  Previous transparent color index
-	pop	hl
-	pop	de
-	push	de
-	ld	a,(TransparentTextColor) \.r
-	ld	d,a
-	ld	a,e
-	ld	(TransparentTextColor),a \.r
-	ld	(NoClipSprTransColor),a \.r
-	ld	(ClipSprTransColor),a \.r
-	ld	(NoClipSprTransScaledTransColor),a \.r
-	ld	a,d
-	jp	(hl)
-
-;-------------------------------------------------------------------------------
-_ClipCircleOutline:
+_Circle:
 ; Draws a clipped circle outline
 ; Arguments:
 ;  arg0 : X Coord
@@ -771,7 +726,7 @@ l_5:	ld	bc,(iy+3)
 	add	hl,de
 	ex	de,hl
 	push	de
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	ld	bc,(iy+6)
 	ld	hl,(iy+-6)
 	add	hl,bc
@@ -783,7 +738,7 @@ l_5:	ld	bc,(iy+3)
 	push	hl
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	ld	bc,(iy+-6)
 	ld	hl,(iy+6)
 	or	a,a
@@ -791,7 +746,7 @@ l_5:	ld	bc,(iy+3)
 	ex	de,hl
 	pop	bc
 	push	de
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	pop	de
 	ld	bc,(iy+-3)
 	ld	hl,(iy+3)
@@ -800,10 +755,10 @@ l_5:	ld	bc,(iy+3)
 	push	hl
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	pop	bc
 	pop	de
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	pop	de
 	ld	bc,(iy+-6)
 	ld	hl,(iy+3)
@@ -812,7 +767,7 @@ l_5:	ld	bc,(iy+3)
 	push	hl
 	push	hl
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	ld	bc,(iy+-3)
 	ld	hl,(iy+6)
 	or	a,a
@@ -820,10 +775,10 @@ l_5:	ld	bc,(iy+3)
 	ex	de,hl
 	pop	bc
 	push	de
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	pop	de
 	pop	bc
-	call	_ClipSetPixel_ASM \.r
+	call	_SetPixel_ASM \.r
 	ld	bc,(iy+-3)
 	inc	bc
 	ld	(iy+-3),bc
@@ -866,7 +821,7 @@ _:	ld	sp,iy
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipCircle:
+_FillCircle:
 ; Draws an clipped circle
 ; Arguments:
 ;  arg0 : X Coord
@@ -885,7 +840,7 @@ _ClipCircle:
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
-_ClipCircleSectors:
+_FillCircleSectors:
 	ld	hl,(ix+-3)
 	add	hl,hl
 	push	hl
@@ -898,7 +853,7 @@ _ClipCircleSectors:
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
@@ -915,7 +870,7 @@ _ClipCircleSectors:
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
@@ -931,7 +886,7 @@ _ClipCircleSectors:
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
@@ -948,7 +903,7 @@ _ClipCircleSectors:
 	or	a,a
 	sbc	hl,bc
 	push	hl
-	call	_ClipHorizLine \.r
+	call	_HorizLine \.r
 	ld	hl,-9
 	add	hl,sp
 	ld	sp,hl
@@ -986,17 +941,17 @@ b_4:	ld	bc,(ix+-3)
 	or	a,a
 	sbc	hl,bc
 	jp	p,+_ \.r
-	jp	pe,_ClipCircleSectors \.r
+	jp	pe,_FillCircleSectors \.r
 	ld	sp,ix
 	pop	ix
 	ret
-_:	jp	po,_ClipCircleSectors \.r
+_:	jp	po,_FillCircleSectors \.r
 	ld	sp,ix
 	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipCircle:
+_FillCircle_NoClip:
 ; Draws an unclipped circle
 ; Arguments:
 ;  arg0 : X Coord
@@ -1017,7 +972,7 @@ _NoClipCircle:
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	k_4 \.r
-_NoClipCircleSectors:
+_FillCircle_NoClipSectors:
 	ld	hl,(ix+-3)
 	add	hl,hl
 	push	hl
@@ -1032,7 +987,7 @@ _NoClipCircleSectors:
 	pop	bc
 	push	bc
 	push	hl
-	call	_NoClipHorizLine_ASM \.r
+	call	_HorizLine_NoClip_ASM \.r
 	ld	hl,(ix+-6)
 	add	hl,hl
 	push	hl
@@ -1047,7 +1002,7 @@ _NoClipCircleSectors:
 	pop	bc
 	push	bc
 	push	hl
-	call	_NoClipHorizLine_ASM \.r
+	call	_HorizLine_NoClip_ASM \.r
 	ld	bc,(ix+-3)
 	ld	hl,(ix+9)
 	or	a,a
@@ -1055,7 +1010,7 @@ _NoClipCircleSectors:
 	ld	e,l
 	pop	hl
 	pop	bc
-	call	_NoClipHorizLine_ASM \.r
+	call	_HorizLine_NoClip_ASM \.r
 	ld	bc,(ix+-6)
 	ld	hl,(ix+9)
 	or	a,a
@@ -1063,7 +1018,7 @@ _NoClipCircleSectors:
 	ld	e,l
 	pop	hl
 	pop	bc
-	call	_NoClipHorizLine_ASM \.r
+	call	_HorizLine_NoClip_ASM \.r
 	ld	bc,(ix+-3)
 	inc	bc
 	ld	(ix+-3),bc
@@ -1098,17 +1053,17 @@ k_4:	ld	bc,(ix+-3)
 	or	a,a
 	sbc	hl,bc
 	jp	p,+_ \.r
-	jp	pe,_NoClipCircleSectors \.r
+	jp	pe,_FillCircle_NoClipSectors \.r
 	ld	sp,ix
 	pop	ix
 	ret
-_:	jp	po,_NoClipCircleSectors \.r
+_:	jp	po,_FillCircle_NoClipSectors \.r
 	ld	sp,ix
 	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipLine:
+_Line:
 ; Draws an arbitrarily clipped line
 ; Arguments:
 ;  arg0: x0
@@ -1223,12 +1178,12 @@ m_30:	ld	c,(iy+12)
 	ld	hl,(iy+9)
 	ld	b,(iy+6)
 	ld	de,(iy+3)
-	call	_NoClipLine_ASM \.r
+	call	_Line_NoClip_ASM \.r
 m_31:	ld	sp,iy
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipLine:
+_Line_NoClip:
 ; Draws an unclipped arbitrary line
 ; Arguments:
 ;  arg0 : X0 Coord (hl)
@@ -1244,7 +1199,7 @@ _NoClipLine:
 	ex.s	de,hl
 	ld	b,(iy+6)
 	ld	c,(iy+12)
-_NoClipLine_ASM:
+_Line_NoClip_ASM:
 	ld	a,c
 	ld	(y1),a \.r
 	ld	(nde),hl \.r
@@ -1369,8 +1324,8 @@ dy12 =$+1
 	jr	changeYLoop
 
 ;-------------------------------------------------------------------------------
-_ShiftWindowDown:
-; Shifts whatever is in the clip window down by some pixels
+_ShiftDown:
+; Shifts whatever is in the clip  down by some pixels
 ; Arguments:
 ;  arg0 : Amount to shift by
 ; Returns:
@@ -1388,8 +1343,8 @@ _ShiftWindowDown:
 	jr	+_
 
 ;-------------------------------------------------------------------------------
-_ShiftWindowRight:
-; Shifts whatever is in the clip window right by some pixels
+_ShiftRight:
+; Shifts whatever is in the clip  right by some pixels
 ; Arguments:
 ;  arg0 : Amount to shift by
 ; Returns:
@@ -1420,8 +1375,8 @@ PosOffsetDownRight_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_ShiftWindowUp:
-; Shifts whatever is in the clip window up by some pixels
+_ShiftUp:
+; Shifts whatever is in the clip  up by some pixels
 ; Arguments:
 ;  arg0 : Amount to shift by
 ; Returns:
@@ -1438,8 +1393,8 @@ _ShiftWindowUp:
 	jr	+_
 
 ;-------------------------------------------------------------------------------
-_ShiftWindowLeft:
-; Shifts whatever is in the clip window left by some pixels
+_ShiftLeft:
+; Shifts whatever is in the clip  left by some pixels
 ; Arguments:
 ;  arg0 : Amount to shift by
 ; Returns:
@@ -1469,7 +1424,7 @@ PosOffsetUpLeft_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipRegion:
+_GetClipRegion:
 ; Arguments:
 ;  Pointer to struct
 ; Returns:
@@ -1483,7 +1438,7 @@ _ClipRegion:
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipDrawScaledSprite:
+_ScaledSprite_NoClip:
 ; Draws a scaled sprite to the screen
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1564,7 +1519,7 @@ _:	lea	hl,iy
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipDrawScaledTransparentSprite:
+_ScaledTransparentSprite_NoClip:
 ; Draws a scaled sprite to the screen with transparency
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1613,8 +1568,7 @@ NoClipSprTransScaledLineNext =$+1
 NoClipSprTransScaledWidth =$+1
 _:	ld	b,0
 	ld	a,(hl)
-NoClipSprTransScaledTransColor =$+1
-	cp	a,0
+	or	a,a
 	jr	z,++++_	
 _:	ld	(de),a
 	inc	de
@@ -1638,12 +1592,13 @@ _:	lea	hl,iy
 	pop	bc
 	djnz	------_
 	ret
+
 _:	inc	de
 	djnz	-_
 	jr	---_
 
 ;-------------------------------------------------------------------------------
-_ClipDrawTransparentSprite:
+_TransparentSprite:
 ; Draws a transparent sprite with clipping
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1681,8 +1636,7 @@ ClipSprTransNextLine =$+1
 _:	ld	b,0
 	lea	de,iy
 _:	ld	a,(hl)
-ClipSprTransColor =$+1
-	cp	a,0
+	or	a,a
 	jr	z,+_
 	ld	(de),a
 _:	inc	de
@@ -1699,7 +1653,7 @@ ClipSprTransNextAmt =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_ClipDrawSprite:
+_Sprite:
 ; Places an sprite on the screen as fast as possible with clipping
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1743,7 +1697,7 @@ ClipSprNextAmt =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipDrawSprite:
+_Sprite_NoClip:
 ; Places an sprite on the screen as fast as possible
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1755,7 +1709,7 @@ _NoClipDrawSprite:
 ;  None
 	ld	iy,0
 	add	iy,sp
-_NoClipDrawSprite_ASM:
+_Sprite_NoClip_ASM:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
@@ -1783,7 +1737,7 @@ _:	ld	c,0
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipGetSprite:
+_GetSprite_NoClip:
 ; Grabs the data from the current draw buffer and stores it in another buffer
 ; Arguments:
 ;  arg0 : Pointer to storage buffer
@@ -1827,7 +1781,7 @@ NoClipSprGrabMoveAmt =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipDrawTransparentSprite:
+_TransparentSprite_NoClip:
 ; Draws a transparent sprite to the current buffer
 ; Arguments:
 ;  arg0 : Pointer to sprite
@@ -1861,8 +1815,7 @@ NoClipSprTransNextLine =$+1
 _:	ld	b,0
 	lea	de,iy
 _:	ld	a,(hl)
-NoClipSprTransColor =$+1
-	cp	a,0
+	or	a,a
 	jr	z,+_
 	ld	(de),a
 _:	inc	de
@@ -1978,22 +1931,22 @@ tmpSpriteWidth_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_NoClipDrawFGTilemap:
+_FGTilemap_NoClip:
 ; Tilemapping subsection
-	ld	hl,_NoClipDrawTransparentSprite \.r
+	ld	hl,_TransparentSprite_NoClip \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_NoClipDrawBGTilemap:
+_BGTilemap_NoClip:
 ; Tilemapping subsection
-	ld	hl,_NoClipDrawSprite \.r
+	ld	hl,_Sprite_NoClip \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_ClipDrawFGTilemap:
+_FGTilemap:
 ; Tilemapping subsection
-	ld	hl,_ClipDrawTransparentSprite \.r
+	ld	hl,_TransparentSprite \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_ClipDrawBGTilemap:
+_BGTilemap:
 ; Draws a tilemap given a tile map structure and some offsets
 ; Arguments:
 ;  arg0 : Tilemap Struct
@@ -2002,7 +1955,7 @@ _ClipDrawBGTilemap:
 ; Returns:
 ;  None
 ; C Function:
-;  void DrawBGTilemap(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset) {
+;  void DrawBGTilemap(gfx_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset) {
 ;      int x_draw, y_draw;
 ;      uint8_t x, x_tile, y_tile, y_next;
 ;      uint8_t x_res = x_offset/tilemap->tile_width;
@@ -2017,7 +1970,7 @@ _ClipDrawBGTilemap:
 ;          y_next = y*tilemap->width;
 ;          x_draw = tilemap->x_loc-x_offset;
 ;          for(x_tile = 0; x_tile <= tilemap->draw_width; x_tile++) {
-;              gc_ClipDrawSprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;              gfx_Sprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
 ;              x_draw += tilemap->tile_width;
 ;              x++;
 ;          }
@@ -2026,7 +1979,7 @@ _ClipDrawBGTilemap:
 ;      }
 ;  }
 ;
-	ld	hl,_ClipDrawSprite \.r
+	ld	hl,_Sprite \.r
 _:	ld	(_DrawFGTile_SMC),hl \.r
 	push	ix
 	ld	hl,-12
@@ -2161,7 +2114,7 @@ _TilePtr:
 ; Returns:
 ;  A pointer to an indexed tile in the tilemap (so it can be looked at or changed)
 ; C Function:
-;  uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset, uint8_t tile) {
+;  uint8_t *gfx_TilePtr(gfx_tilemap_t *tilemap, unsigned x_offset, unsigned y_offset, uint8_t tile) {
 ;      return &tilemap->map[(x_offset/tilemap->tile_width)+((y_offset/tilemap->tile_height)*tilemap->width)];
 ;  }
 	push	ix
@@ -2214,7 +2167,7 @@ _TilePtrMapped:
 	ret
 
 ;-------------------------------------------------------------------------------
-_TextX:
+_GetTextX:
 ; Gets the X position of the text cursor
 ; Arguments:
 ;  None
@@ -2224,7 +2177,7 @@ _TextX:
 	ret
 
 ;-------------------------------------------------------------------------------
-_TextY:
+_GetTextY:
 ; Gets the Y position of the text cursor
 ; Arguments:
 ;  None
@@ -2234,7 +2187,7 @@ _TextY:
 	ret
 
 ;-------------------------------------------------------------------------------
-_SetTextColor:
+_SetTextBGColorC:
 ; Sets the transparency text color for text routines
 ; Arguments:
 ;  arg0 : High 8 bits is background, Low 8 bits is foreground
@@ -2245,8 +2198,30 @@ _SetTextColor:
 	pop	de
 	push	de
 	push	hl
-	ld	hl,(TextColor_ASM) \.r
-	ld	(TextColor_ASM),de \.r
+	ld	hl,TextBGColor_ASM \.r
+	ld	d,(hl)
+	ld	a,e
+	ld	(hl),a
+	ld	a,d
+	ret
+
+;-------------------------------------------------------------------------------
+_SetTextFGColorC:
+; Sets the transparency text color for text routines
+; Arguments:
+;  arg0 : High 8 bits is background, Low 8 bits is foreground
+;  These refer to color palette indexes
+; Returns:
+;  Previous text color palette indexes
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	hl,TextFGColor_ASM \.r
+	ld	d,(hl)
+	ld	a,e
+	ld	(hl),a
+	ld	a,d
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2372,14 +2347,14 @@ CharWidthChange_ASM =$+1
 	ld	b,0
 	ex	de,hl
 	push	de
-TextColor_ASM =$+1
-	ld	de,$FF00
+TextBGColor_ASM =$+2
+TextFGColor_ASM =$+3
+	ld	de,1
 cloop:	ld	a,d
 	rlc	c
 	jr	nc,+_
 	ld	a,e
-TransparentTextColor =$+1
-_:	cp	a,$FF
+_:	or	a,a
 	jr	nz,+_
 	ld	a,(hl)
 _:	ld	(hl),a
@@ -2397,7 +2372,7 @@ CharLineDelta_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_PrintUnsignedInt:
+_PrintUInt:
 ; Places an unsigned int at the current cursor position
 ; Arguments:
 ;  arg0 : Number to print
@@ -2408,7 +2383,7 @@ _PrintUnsignedInt:
 	add	iy,sp
 	ld	hl,(iy+3)
 	ld	c,(iy+6)
-_PrintUnsignedInt_ASM:
+_PrintUInt_ASM:
 	ld	a,8
 	sub	a,c
 	ret	c
@@ -2465,10 +2440,10 @@ _PrintInt:
 	ld	a,'-'
 	call	_PrintChar_ASM \.r
 	pop	bc
-_:	jp	_PrintUnsignedInt_ASM \.r
+_:	jp	_PrintUInt_ASM \.r
 
 ;-------------------------------------------------------------------------------
-_StringWidthC:
+_GetStringWidth:
 ; Gets the width of a string
 ; Arguments:
 ;  arg0 : Pointer to string
@@ -2483,7 +2458,7 @@ _:	ld	a,(hl)
 	or	a,a
 	jr	z,+_
 	push	hl
-	call	_CharWidth_ASM \.r
+	call	_GetCharWidth_ASM \.r
 	pop	hl
 	inc	hl
 	ld	a,(hl)
@@ -2496,7 +2471,7 @@ _:	push	bc
 	ret
 
 ;-------------------------------------------------------------------------------	
-_CharWidth:
+_GetCharWidth:
 ; Gets the width of a character
 ; Arguments:
 ;  arg0 : Character
@@ -2508,7 +2483,7 @@ _CharWidth:
 	push	de
 	ld	bc,0
 	ld	a,l
-_CharWidth_ASM:
+_GetCharWidth_ASM:
 	ld	l,a
 	ld	a,(MonoFlag_ASM) \.r
 	or	a,a
@@ -2704,7 +2679,7 @@ l_19:	ld	sp,ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_SpriteFlipHoriz:
+_SpriteFlipY:
 ; Flips an array horizontally about the center vertical axis
 ; Arguments:
 ;  arg0 : Pointer to 2D byte array input
@@ -2746,7 +2721,7 @@ _FlipHorizDelta_ASM =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_SpriteFlipVert:
+_SpriteFlipX:
 ; Flip an array vertically about the center horizontal axis
 ; Arguments:
 ;  arg0 : Pointer to 2D byte array input
@@ -2798,10 +2773,41 @@ _SpriteRotate:
 	or	a,a
 	sbc	hl,hl
 	ld	a,(iy+15)
-	cp	a,180
-	jr	z,_SpriteRotate180
+	cp	a,90
+	jr	z,_SpriteRotate90
 	cp	a,-90
 	jr	z,_SpriteRotateN90
+
+_SpriteRotate180:
+	ld	a,(iy+9) ; width
+	ld	l,a
+	ld	(_Rotate180Delta_ASM),a \.r
+	ld	(_Rotate180Width_ASM),a \.r
+	ld	de,(iy+3)
+	add	hl,de
+	push	hl
+	ld	c,(iy+12)
+	ld	hl,(iy+6)
+	pop	iy
+	push	hl
+_Rotate180Width_ASM =$+1
+_:	ld	b,0
+	push	iy
+_:	lea	de,iy
+	ld	a,(de)
+	ld	(hl),a
+_Rotate180Delta_ASM =$+1
+	ld	de,0
+	add	iy,de
+	inc	hl
+	djnz	-_
+	pop	iy
+	dec	iy
+	dec 	c
+	jr	nz,--_
+	pop	hl
+	ret
+
 _SpriteRotate90:
 	ld	a,(iy+9) ; width
 	ld	l,a
@@ -2860,10 +2866,6 @@ _RotateN90Delta_ASM =$+1
 	dec 	c
 	jr	nz,--_
 	pop	hl
-	ret
-
-_SpriteRotate180:
-	ld	hl,(iy+3)
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2949,7 +2951,7 @@ _PixelPtr_ASM:
 
 ;-------------------------------------------------------------------------------
 _UpLeftShiftCalculate_ASM:
-; Calculates the position to shift the window for up/left
+; Calculates the position to shift the  for up/left
 ; Inputs:
 ;  None
 ; Outputs:
@@ -2981,7 +2983,7 @@ _:	sub	a,c
 
 ;-------------------------------------------------------------------------------
 _DownRightShiftCalculate_ASM:
-; Calculates the position to shift the window for dowm/right
+; Calculates the position to shift the  for dowm/right
 ; Inputs:
 ;  None
 ; Outputs:
@@ -3039,7 +3041,7 @@ _:	ret	po
 
 ;-------------------------------------------------------------------------------
 _ClipRectangularRegion_ASM:
-; Calculates the new coordinates given the clip window and inputs
+; Calculates the new coordinates given the clip  and inputs
 ; Inputs:
 ;  None
 ; Outputs:
@@ -3075,7 +3077,7 @@ _SignedCompare_ASM:
 
 ;-------------------------------------------------------------------------------
 _SetFullScreenClipping_ASM:
-; Sets the clipping window to the entire screen
+; Sets the clipping  to the entire screen
 ; Inputs:
 ;  None
 ; Outputs:

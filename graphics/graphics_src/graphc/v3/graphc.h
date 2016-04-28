@@ -81,7 +81,7 @@ uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
 	   
 /* Type for the clip region */
 typedef struct gc_region {
-	int x_left, y_top, x_right, y_bottom;
+	int24_t x_left, y_top, x_right, y_bottom;
 } gc_region_t;
 
 /* Type for tilemapping */
@@ -373,13 +373,13 @@ void gc_SetFontMonospace(uint8_t monospace);
  * Returns the width of the input sting
  * Takes into account monospacing flag
  */
-unsigned int gc_StringWidth(const char *string);
+uint24_t gc_StringWidth(const char *string);
 
 /**
  * Returns the width of the character
  * Takes into account monospacing flag
  */
-unsigned int gc_CharWidth(const char c);
+uint24_t gc_CharWidth(const char c);
 
 /**
  * Draws a given sprite to the screen as fast as possible; no transparency.
@@ -446,7 +446,7 @@ void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
  * Fairly fast clipped line routine
  * Returns false if offscreen, true if drawn
  */
-bool gc_ClipLine(int x0, int y0, int x1, int y1);
+bool gc_ClipLine(int24_t x0, int24_t y0, int24_t x1, int24_t y1);
 
 /**
  * Unclipped scaled sprite routines
