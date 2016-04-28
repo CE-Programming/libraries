@@ -78,7 +78,7 @@
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
-currentDrawingBuffer    equ 0E30014h
+currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
@@ -114,13 +114,13 @@ _SetClipRegion:
 ;  Must be within (0,0,320,240)
 ; Returns:
 ;  None
-	call	_SetFullScreenClipping_ASM \.r
+	call	_SetFullScreenClipping_ASM \.r	; clip against the actual LCD screen
 	ld	iy,0
 	add	iy,sp
-	call	_ClipRectangularRegion_ASM \.r
+	call	_ClipRectangularRegion_ASM \.r	; iy points to the start of the arguments
 	lea	hl,iy
 	ret	c
-	ld	de,_xmin \.r
+	ld	de,_xmin \.r			; copy the variables in
 	ld	bc,12
 	ldir
 	ret
@@ -136,13 +136,12 @@ _SetColor:
 	pop	de
 	push	de
 	push	hl
-	ld	a,(color1) \.r
-	ld	d,a
+	ld	hl,color1 \.r
+	ld	d,(hl)
 	ld	a,e
-	ld	(color1),a \.r
+	ld	(hl),a
 	ld	(color3),a \.r
 	ld	(color4),a \.r
-	ld	(color5),a \.r
 	ld	(color6),a \.r
 	ld	(color7),a \.r
 	ld	a,d
@@ -155,16 +154,16 @@ _Begin:
 ;  None
 ; Returns:
 ;  None
-	call	_boot_ClearVRAM
-	ld	hl,currentDrawingBuffer
+	call	_boot_ClearVRAM		; clear the screen
+	ld	hl,currDrawBuffer
 	ld	a,lcdBpp8
 _:	ld	de,vram
-	ld	(hl),de
+	ld	(hl),de			; set the current draw to the screen
 	ld	hl,mpLcdCtrl
 	ld	(hl),a
 	ld	l,mpLcdIcr&$FF
-	ld	(hl),4
-	jr	_SetDefaultPalette
+	ld	(hl),4			; allow interrupts status for double buffering
+	jr	_SetDefaultPalette	; setup the default palette
 
 ;-------------------------------------------------------------------------------
 _End:
@@ -173,8 +172,9 @@ _End:
 ;  None
 ; Returns:
 ;  None
+	call	_boot_ClearVRAM		; clear the screen
 	ld	hl,mpLcdBase
-	ld	a,lcdBpp16
+	ld	a,lcdBpp16		; restore the screen mode
 	jr	-_
 
 ;-------------------------------------------------------------------------------
@@ -208,13 +208,11 @@ _FillScreen:
 ;  arg0 : Color Index
 ; Returns:
 ;  None
-	pop	hl
-	pop	bc
-	push	bc
-	push	hl
-	ld	a,c
+	ld	hl,3
+	add	hl,sp
+	ld	a,(hl)			; get the color index to use
 	ld	bc,lcdSize
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	jp	_MemSet_ASM \.r
 
 ;-------------------------------------------------------------------------------
@@ -223,16 +221,20 @@ _SetPalette:
 ; Arguments:
 ;  arg0 : Pointer to palette
 ;  arg1 : Size of palette in bytes
+;  arg2 : Offset at which to start inserting the palette
 ; Returns:
 ;  None
-	pop	de
-	pop	hl
-	pop	bc
-	push	bc
-	push	hl
-	push	de
+	ld	iy,0
+	add	iy,sp
+	sbc	hl,hl
+	ld	l,(iy+9)		; offset in palette
+	add	hl,hl
 	ld	de,mpLcdPalette
-	ldir
+	add	hl,de
+	ex	de,hl
+	ld	hl,(iy+3)		; pointer to input palette
+	ld	bc,(iy+6)		; size of input palette
+	ldir				; copy the palette in
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -244,14 +246,14 @@ _GetPixel:
 ; Returns:
 ;  Color index of X,Y Coord
 	ld	iy,0
-	lea	de,iy
+	lea	de,iy			; zero de
 	add	iy,sp
-	ld	bc,(iy+3)
-	ld	e,(iy+6)
+	ld	bc,(iy+3)		; x coordinate
+	ld	e,(iy+6)		; y coordinate
 	xor	a,a
 	call	_PixelPtr_ASM \.r
 	ret	c
-	ld	a,(hl)
+	ld	a,(hl)			; get the actual pixel
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -264,35 +266,17 @@ _SetPixel:
 ;  None
 	ld	hl,3
 	add	hl,sp
-	ld	bc,(hl)
+	ld	bc,(hl)			; x coordinate
 	inc	hl
 	inc	hl
 	inc	hl
 	ld	de,0
-	ld	e,(hl)
+	ld	e,(hl)			; y coordinate
 _SetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
 color1 =$+1
-	ld	(hl),0
-	ret
-
-;-------------------------------------------------------------------------------
-_NoClipSetPixel_ASM:
-; Sets the color pixel to the global color index
-; Arguments:
-;  bc : X Coord
-;   e : Y Coord
-; Returns:
-;  None
-	ld	hl,(currentDrawingBuffer)
-	add	hl,bc
-	ld	d,lcdWidth/2
-	mlt	de
-	add	hl,de
-	add	hl,de
-color5 =$+1
-	ld	(hl),0
+	ld	(hl),0			; get the actual pixel
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -307,29 +291,28 @@ _FillRectangle:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+9)
-	ld	de,(iy+3)
+	ld	hl,(iy+9)		; hl = width
+	ld	de,(iy+3)		; de = x coordinate
 	add	hl,de
 	ld	(iy+9),hl
-	ld	hl,(iy+12)
-	ld	de,(iy+6)
-	add	hl,de
+	ld	hl,(iy+12)		; hl = height
+	ld	de,(iy+6)		; de = y coordinate
+	add	hl,de		
 	ld	(iy+12),hl
 	call	_ClipRectangularRegion_ASM \.r
-	ret	c
+	ret	c			; return if offscreen
 	ld	de,(iy+3)
 	ld	hl,(iy+9)
-	sbc	hl,de
+	sbc	hl,de			; make sure that the width is not 0
 	ret	z
 	push	hl
 	ld	de,(iy+6)
 	ld	hl,(iy+12)
-	or	a,a
 	sbc	hl,de
-	pop	bc
+	pop	bc			; bc = new width
 	ret	z
-	ld	a,l
-	ld	hl,(iy+3)
+	ld	a,l			; a = new height
+	ld	hl,(iy+3)		; hl = new x, de = new y
 	jr	_FillRectangle_NoClip_ASM
 
 ;-------------------------------------------------------------------------------
@@ -344,42 +327,39 @@ _FillRectangle_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	bc,(iy+9)
-	dec	bc
-	inc.s	bc
-	ld	a,b
-	or	a,c
-	ret	z
-	ld	a,(iy+12)
+	ld	bc,(iy+9)		; bc = width
+	sbc	hl,hl
+	adc	hl,bc
+	ret	z			; make sure width is not 0
+	ld	a,(iy+12)		; a = height
 	or	a,a
-	ret	z
-	ld	hl,(iy+3)
-	ld	e,(iy+6)
+	ret	z			; make sure height is not 0
+	ld	hl,(iy+3)		; hl = x coordinate
+	ld	e,(iy+6)		; e = y coordinate
 _FillRectangle_NoClip_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
-	add.s	hl,de
 	add	hl,de
-	ld	iy,(currentDrawingBuffer)
-	ex	de,hl
+	add	hl,de
+	ld	iy,(currDrawBuffer)
+	ex	de,hl			; de -> place to begin drawing
+	ld	(_RectangleWidth_SMC),bc \.r
+_Rectangle_Loop_NoClip:
 	add	iy,de
 	lea	de,iy
-NoClipRectangle_Loop:
-	push	bc
+_RectangleWidth_SMC =$+1
+	ld	bc,0
 	ld	hl,color1 \.r
-	ldi
-	jp	po,NoClipRectangle_Skip \.r
+	ldi				; check if we only need to draw 1 pixel
+	jp	po,_Rectangle_NoClip_Skip \.r
 	scf
 	sbc	hl,hl
 	add	hl,de
-	ldir
-NoClipRectangle_Skip:
-	ld	de,lcdWidth
-	add	iy,de
-	lea	de,iy
-	pop	bc
+	ldir				; draw the current line
+_Rectangle_NoClip_Skip:
+	ld	de,lcdWidth		; move to next line
 	dec	a
-	jr	nz,NoClipRectangle_Loop
+	jr	nz,_Rectangle_Loop_NoClip
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -392,7 +372,7 @@ _Rectangle:
 ;  arg3 : Height
 ; Returns:
 ;  None
-	push	ix
+	push	ix			; need to use ix because lines use iy
 	ld	ix,0
 	add	ix,sp
 	ld	hl,(ix+6)
@@ -401,7 +381,7 @@ _Rectangle:
 	push	bc
 	push	de
 	push	hl
-	call	_HorizLine \.r
+	call	_HorizLine \.r		; top horizontal line
 	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
@@ -409,29 +389,29 @@ _Rectangle:
 	push	bc
 	push	de
 	push	hl
-	call	_VertLine \.r
+	call	_VertLine \.r		; left vertical line
 	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
-	add	hl,bc
+	add	hl,bc			; add x and width
 	dec	hl
 	ld	bc,(ix+15)
 	push	bc
 	push	de
 	push	hl
-	call	_VertLine \.r
+	call	_VertLine \.r		; right vertical line
 	ld	sp,ix
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
 	add	hl,bc
-	dec	hl
+	dec	hl			; add y and height
 	ld	bc,(ix+12)
 	push	bc
 	push	hl
 	push	de
-	call	_HorizLine \.r
+	call	_HorizLine \.r		; bottom horizontal line
 	ld	sp,ix
 	pop	ix
 	ret
@@ -455,18 +435,16 @@ _Rectangle_NoClip:
 	push	bc
 	push	hl
 	push	de
-	call	_RectOutlineHoriz_ASM \.r
+	call	_RectHoriz_ASM \.r	; top horizontal line
 	pop	bc
 	push	bc
-	call	_RectOutlineVert_ASM \.r
+	call	_RectVert_ASM \.r	; left vertical line
 	pop	bc
 	pop	hl
-	ld	e, c
-	call	_VertLine_NoClip_ASM \.r
+	ld	e,c
+	call	_VertLine_ASM \.r	; right vertical line
 	pop	bc
-	inc	bc
-	dec.s	bc
-	jp	_MemSet_ASM \.r
+	jp	_MemSet_ASM \.r		; bottom horizontal line
 
 ;-------------------------------------------------------------------------------
 _HorizLine:
@@ -502,13 +480,11 @@ _HorizLine:
 	call	_SignedCompare_ASM \.r
 	ret	c
 	ld	hl,(iy+9)
-	or	a,a
 	sbc	hl,de
-	ld	b,h
-	ld	c,l
+	push	hl
+	pop	bc
 	ld	e,(iy+6)
-	ld	hl,(iy+3)
-	jr	_RectOutlineHoriz_ASM
+	jr	_RectHoriz_ASM
 
 ;-------------------------------------------------------------------------------
 _HorizLine_NoClip:
@@ -521,32 +497,29 @@ _HorizLine_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	de,(iy+3)
-	ld	l,(iy+6)
-	ld	bc,(iy+9)
-	ex.s	de,hl
-_RectOutlineHoriz_ASM:
-	inc	bc
-	dec.s	bc
+	ld	e,(iy+6)		; y coordinate
+	ld	bc,(iy+9)		; x coordinate
+_RectHoriz_ASM:
+	sbc	hl,hl
+	adc	hl,bc
+	ret	z			; make sure the width is not 0
+	ld	hl,(iy+3)
 _HorizLine_NoClip_ASM:
-	ld	a,b
-	or	a,c
-	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
 	add	hl,de
 	add	hl,de
-	ld	de,(currentDrawingBuffer)
-	add	hl,de
+	ld	de,(currDrawBuffer)
+	add	hl,de			; hl -> place to draw
 color3 =$+1
-	ld	a,0
+	ld	a,0			; color index to use
 _MemSet_ASM:
 	ld	(hl),a
-	push	hl
 	cpi
-	ex	de,hl
-	pop	hl
-	ret	po
+	scf
+	sbc	hl,hl
+	add	hl,de
+	ret	po			; check if we are only copying one pixel
 	ldir
 	ret
 
@@ -565,33 +538,31 @@ _VertLine:
 	ld	de,(iy+3)
 	inc	de
 	call	_SignedCompare_ASM \.r
-	ret	c
+	ret	c			; return if x > xmax
 	ld	hl,(iy+3)
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	ret	c
+	ret	c			; return if x < xmin
 	ld	hl,(iy+9)
 	ld	de,(iy+6)
 	add	hl,de
 	ld	(iy+9),hl
 	ld	hl,(_ymin) \.r
-	call	_Max_ASM \.r
+	call	_Max_ASM \.r		; get minimum y
 	ld	(iy+6),hl
 	ld	hl,(_ymax) \.r
 	ld	de,(iy+9)
-	call	_Min_ASM \.r
+	call	_Min_ASM \.r		; get maximum y
 	ld	(iy+9),hl
 	ld	de,(iy+6)
 	call	_SignedCompare_ASM \.r
-	ret	c
+	ret	c			; return if not within y bounds
 	ld	hl,(iy+9)
-	ld	de,(iy+6)
-	or	a,a
 	sbc	hl,de
 	ld	b,l
 	inc	b
 	ld	hl,(iy+3)
-	jr	_VertLine_NoClip_ASM
+	jr	_VertLine_ASM		; jump to unclipped version
 
 ;-------------------------------------------------------------------------------
 _VertLine_NoClip:
@@ -607,19 +578,19 @@ _VertLine_NoClip:
 	ld	hl,(iy+3)		; x
 	ld	e,(iy+6)		; y
 	ld	b,(iy+9)		; length
-_VertLine_NoClip_ASM:
+_VertLine_ASM:
 	dec	b
 	ret	z
 	ld	d,lcdWidth/2
 	mlt	de
 	add.s	hl,de
 	add	hl,de
-	ld	de,(currentDrawingBuffer)
-	add	hl,de
-_RectOutlineVert_ASM:
+	ld	de,(currDrawBuffer)
+	add	hl,de			; hl -> drawing location
+_RectVert_ASM:
 	ld	de,lcdWidth
 color4 =$+1
-_:	ld	(hl),0
+_:	ld	(hl),0			; loop for height
 	add	hl,de
 	djnz	-_
 	ret
@@ -635,9 +606,9 @@ _DrawToBuffer:
 	ld	de,vram
 	or	a,a 
 	sbc	hl,de
-	jr	nz,++_
+	jr	nz,++_			; if not the same, swap
 _:	ld	de,vram+lcdSize
-_:	ld	(currentDrawingBuffer),de
+_:	ld	(currDrawBuffer),de
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -651,7 +622,7 @@ _DrawToScreen:
 	ld	de,vram
 	or	a,a
 	sbc	hl,de
-	jr	z,-_
+	jr	z,-_			; if the same, swap
 	jr	--_
 
 ;-------------------------------------------------------------------------------
@@ -668,12 +639,12 @@ _SwapDraw:
 	add	hl,de
 	jr	nz,+_
 	ld	hl,vram+lcdSize
-_:	ld	(currentDrawingBuffer),de
-	ld	(mpLcdBase),hl
+_:	ld	(currDrawBuffer),de	; set up the new buffer location
+	ld	(mpLcdBase),hl		; set the new pointer location
 	ld	hl,mpLcdIcr
-	set	2,(hl)
+	set	2,(hl)			; clear the previous intrpt set
 	ld	l,mpLcdRis&$ff
-_:	bit	2,(hl)
+_:	bit	2,(hl)			; wait until the interrupt triggers
 	jr	z,-_
 	ret
 
@@ -683,14 +654,14 @@ _GetDrawState:
 ; Arguments:
 ;  None
 ; Returns:
-;  Returns 0 if drawing on the visible screen
-	ld	hl,(currentDrawingBuffer)
+;  Returns true if drawing on the buffer
+	ld	hl,(currDrawBuffer)
 	ld	de,(mpLcdBase)
 	xor	a,a
 	sbc	hl,de
-	ret	z
+	ret	z			; drawing to screen
 	inc	a
-	ret
+	ret				; drawing to buffer
 
 ;-------------------------------------------------------------------------------
 _Circle:
@@ -1260,7 +1231,7 @@ changeXLoop:
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
-	ld	de,(currentDrawingBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 color6 =$+1
 	ld	(hl),0
@@ -1297,7 +1268,7 @@ changeYLoop:
 	mlt	hl
 	add	hl,hl
 	add	hl,bc
-	ld	de,(currentDrawingBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 color7 =$+1
 	ld	(hl),0
@@ -1455,7 +1426,7 @@ _ScaledSprite_NoClip:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1536,7 +1507,7 @@ _ScaledTransparentSprite_NoClip:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1624,7 +1595,7 @@ _TransparentSprite:
 	ld	de,(iy+6)
 	add	hl,hl
 	add	hl,de
-	ld	de,(currentDrawingBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	push	hl
 	ld	hl,(iy+3)
@@ -1677,7 +1648,7 @@ _Sprite:
 	ld	bc,(iy+6)
 	add	hl,hl
 	add	hl,bc
-	ld	bc,(currentDrawingBuffer)
+	ld	bc,(currDrawBuffer)
 	add	hl,bc
 	push	hl
 	ld	hl,(iy+3)
@@ -1713,7 +1684,7 @@ _Sprite_NoClip_ASM:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1752,7 +1723,7 @@ _GetSprite_NoClip:
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
 	ex.s	de,hl
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1803,7 +1774,7 @@ _TransparentSprite_NoClip:
 	ld	de,(iy+6)
 	add	hl,hl
 	add	hl,de
-	ld	de,(currentDrawingBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	push	hl
 	ld	hl,(iy+3)
@@ -2326,7 +2297,7 @@ TextYPos_ASM = $+1
 	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
-	ld	de,(currentDrawingBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	pop	de
 	add	hl,de
@@ -2941,7 +2912,7 @@ _PixelPtr_ASM:
 	ld	hl,-lcdHeight
 	add	hl,de
 	ret	c
-	ld	hl,(currentDrawingBuffer)
+	ld	hl,(currDrawBuffer)
 	add	hl,bc
 	ld	d,lcdWidth/2
 	mlt	de
