@@ -154,16 +154,16 @@ _Begin:
 ;  None
 ; Returns:
 ;  None
-	call	_boot_ClearVRAM		; clear the screen
+	call	_boot_ClearVRAM			; clear the screen
 	ld	hl,currDrawBuffer
 	ld	a,lcdBpp8
 _:	ld	de,vram
-	ld	(hl),de			; set the current draw to the screen
+	ld	(hl),de				; set the current draw to the screen
 	ld	hl,mpLcdCtrl
 	ld	(hl),a
 	ld	l,mpLcdIcr&$FF
-	ld	(hl),4			; allow interrupts status for double buffering
-	jr	_SetDefaultPalette	; setup the default palette
+	ld	(hl),4				; allow interrupts status for double buffering
+	jr	_SetDefaultPalette		; setup the default palette
 
 ;-------------------------------------------------------------------------------
 _End:
@@ -172,9 +172,9 @@ _End:
 ;  None
 ; Returns:
 ;  None
-	call	_boot_ClearVRAM		; clear the screen
+	call	_boot_ClearVRAM			; clear the screen
 	ld	hl,mpLcdBase
-	ld	a,lcdBpp16		; restore the screen mode
+	ld	a,lcdBpp16			; restore the screen mode
 	jr	-_
 
 ;-------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ _FillScreen:
 ;  None
 	ld	hl,3
 	add	hl,sp
-	ld	a,(hl)			; get the color index to use
+	ld	a,(hl)				; get the color index to use
 	ld	bc,lcdSize
 	ld	hl,(currDrawBuffer)
 	jp	_MemSet_ASM \.r
@@ -227,14 +227,14 @@ _SetPalette:
 	ld	iy,0
 	add	iy,sp
 	sbc	hl,hl
-	ld	l,(iy+9)		; offset in palette
+	ld	l,(iy+9)			; offset in palette
 	add	hl,hl
 	ld	de,mpLcdPalette
 	add	hl,de
 	ex	de,hl
-	ld	hl,(iy+3)		; pointer to input palette
-	ld	bc,(iy+6)		; size of input palette
-	ldir				; copy the palette in
+	ld	hl,(iy+3)			; pointer to input palette
+	ld	bc,(iy+6)			; size of input palette
+	ldir					; copy the palette in
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -246,14 +246,14 @@ _GetPixel:
 ; Returns:
 ;  Color index of X,Y Coord
 	ld	iy,0
-	lea	de,iy			; zero de
+	lea	de,iy				; zero de
 	add	iy,sp
-	ld	bc,(iy+3)		; x coordinate
-	ld	e,(iy+6)		; y coordinate
+	ld	bc,(iy+3)			; x coordinate
+	ld	e,(iy+6)			; y coordinate
 	xor	a,a
 	call	_PixelPtr_ASM \.r
 	ret	c
-	ld	a,(hl)			; get the actual pixel
+	ld	a,(hl)				; get the actual pixel
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -266,17 +266,17 @@ _SetPixel:
 ;  None
 	ld	hl,3
 	add	hl,sp
-	ld	bc,(hl)			; x coordinate
+	ld	bc,(hl)				; x coordinate
 	inc	hl
 	inc	hl
 	inc	hl
 	ld	de,0
-	ld	e,(hl)			; y coordinate
+	ld	e,(hl)				; y coordinate
 _SetPixel_ASM:
 	call	_PixelPtr_ASM \.r
 	ret	c
 color1 =$+1
-	ld	(hl),0			; get the actual pixel
+	ld	(hl),0				; get the actual pixel
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -291,28 +291,28 @@ _FillRectangle:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+9)		; hl = width
-	ld	de,(iy+3)		; de = x coordinate
+	ld	hl,(iy+9)			; hl = width
+	ld	de,(iy+3)			; de = x coordinate
 	add	hl,de
 	ld	(iy+9),hl
-	ld	hl,(iy+12)		; hl = height
-	ld	de,(iy+6)		; de = y coordinate
+	ld	hl,(iy+12)			; hl = height
+	ld	de,(iy+6)			; de = y coordinate
 	add	hl,de		
 	ld	(iy+12),hl
 	call	_ClipRectangularRegion_ASM \.r
-	ret	c			; return if offscreen
+	ret	c				; return if offscreen
 	ld	de,(iy+3)
 	ld	hl,(iy+9)
-	sbc	hl,de			; make sure that the width is not 0
+	sbc	hl,de				; make sure that the width is not 0
 	ret	z
 	push	hl
 	ld	de,(iy+6)
 	ld	hl,(iy+12)
 	sbc	hl,de
-	pop	bc			; bc = new width
+	pop	bc				; bc = new width
 	ret	z
-	ld	a,l			; a = new height
-	ld	hl,(iy+3)		; hl = new x, de = new y
+	ld	a,l				; a = new height
+	ld	hl,(iy+3)			; hl = new x, de = new y
 	jr	_FillRectangle_NoClip_ASM
 
 ;-------------------------------------------------------------------------------
@@ -327,22 +327,22 @@ _FillRectangle_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	bc,(iy+9)		; bc = width
+	ld	bc,(iy+9)			; bc = width
 	sbc	hl,hl
 	adc	hl,bc
-	ret	z			; make sure width is not 0
-	ld	a,(iy+12)		; a = height
+	ret	z				; make sure width is not 0
+	ld	a,(iy+12)			; a = height
 	or	a,a
-	ret	z			; make sure height is not 0
-	ld	hl,(iy+3)		; hl = x coordinate
-	ld	e,(iy+6)		; e = y coordinate
+	ret	z				; make sure height is not 0
+	ld	hl,(iy+3)			; hl = x coordinate
+	ld	e,(iy+6)			; e = y coordinate
 _FillRectangle_NoClip_ASM:
 	ld	d,lcdWidth/2
 	mlt	de
 	add	hl,de
 	add	hl,de
 	ld	iy,(currDrawBuffer)
-	ex	de,hl			; de -> place to begin drawing
+	ex	de,hl				; de -> place to begin drawing
 	ld	(_RectangleWidth_SMC),bc \.r
 _Rectangle_Loop_NoClip:
 	add	iy,de
@@ -350,14 +350,14 @@ _Rectangle_Loop_NoClip:
 _RectangleWidth_SMC =$+1
 	ld	bc,0
 	ld	hl,color1 \.r
-	ldi				; check if we only need to draw 1 pixel
+	ldi					; check if we only need to draw 1 pixel
 	jp	po,_Rectangle_NoClip_Skip \.r
 	scf
 	sbc	hl,hl
 	add	hl,de
-	ldir				; draw the current line
+	ldir					; draw the current line
 _Rectangle_NoClip_Skip:
-	ld	de,lcdWidth		; move to next line
+	ld	de,lcdWidth			; move to next line
 	dec	a
 	jr	nz,_Rectangle_Loop_NoClip
 	ret
@@ -372,7 +372,7 @@ _Rectangle:
 ;  arg3 : Height
 ; Returns:
 ;  None
-	push	ix			; need to use ix because lines use iy
+	push	ix				; need to use ix because lines use iy
 	ld	ix,0
 	add	ix,sp
 	ld	hl,(ix+6)
@@ -381,7 +381,7 @@ _Rectangle:
 	push	bc
 	push	de
 	push	hl
-	call	_HorizLine \.r		; top horizontal line
+	call	_HorizLine \.r			; top horizontal line
 	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
@@ -391,20 +391,20 @@ _Rectangle:
 	push	bc
 	push	de
 	push	hl
-	call	_VertLine \.r		; left vertical line
+	call	_VertLine \.r			; left vertical line
 	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
-	add	hl,bc			; add x and width
+	add	hl,bc				; add x and width
 	dec	hl
 	ld	bc,(ix+15)
 	push	bc
 	push	de
 	push	hl
-	call	_VertLine \.r		; right vertical line
+	call	_VertLine \.r			; right vertical line
 	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
@@ -412,12 +412,12 @@ _Rectangle:
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
 	add	hl,bc
-	dec	hl			; add y and height
+	dec	hl				; add y and height
 	ld	bc,(ix+12)
 	push	bc
 	push	hl
 	push	de
-	call	_HorizLine \.r		; bottom horizontal line
+	call	_HorizLine \.r			; bottom horizontal line
 	ld	sp,ix
 	pop	ix
 	ret
@@ -441,16 +441,16 @@ _Rectangle_NoClip:
 	push	bc
 	push	hl
 	push	de
-	call	_RectHoriz_ASM \.r	; top horizontal line
+	call	_RectHoriz_ASM \.r		; top horizontal line
 	pop	bc
 	push	bc
-	call	_RectVert_ASM \.r	; left vertical line
+	call	_RectVert_ASM \.r		; left vertical line
 	pop	bc
 	pop	hl
 	ld	e,c
-	call	_VertLine_ASM \.r	; right vertical line
+	call	_VertLine_ASM \.r		; right vertical line
 	pop	bc
-	jp	_MemSet_ASM \.r		; bottom horizontal line
+	jp	_MemSet_ASM \.r			; bottom horizontal line
 
 ;-------------------------------------------------------------------------------
 _HorizLine:
@@ -503,12 +503,12 @@ _HorizLine_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	e,(iy+6)		; y coordinate
-	ld	bc,(iy+9)		; x coordinate
+	ld	e,(iy+6)			; y coordinate
+	ld	bc,(iy+9)			; x coordinate
 _RectHoriz_ASM:
 	sbc	hl,hl
 	adc	hl,bc
-	ret	z			; make sure the width is not 0
+	ret	z				; make sure the width is not 0
 	ld	hl,(iy+3)
 _HorizLine_NoClip_ASM:
 	ld	d,lcdWidth/2
@@ -516,16 +516,16 @@ _HorizLine_NoClip_ASM:
 	add	hl,de
 	add	hl,de
 	ld	de,(currDrawBuffer)
-	add	hl,de			; hl -> place to draw
+	add	hl,de				; hl -> place to draw
 color3 =$+1
-	ld	a,0			; color index to use
+	ld	a,0				; color index to use
 _MemSet_ASM:
 	ld	(hl),a
 	cpi
 	scf
 	sbc	hl,hl
 	add	hl,de
-	ret	po			; check if we are only copying one pixel
+	ret	po				; check if we are only copying one pixel
 	ldir
 	ret
 
@@ -544,31 +544,31 @@ _VertLine:
 	ld	de,(iy+3)
 	inc	de
 	call	_SignedCompare_ASM \.r
-	ret	c			; return if x > xmax
+	ret	c				; return if x > xmax
 	ld	hl,(iy+3)
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	ret	c			; return if x < xmin
+	ret	c				; return if x < xmin
 	ld	hl,(iy+9)
 	ld	de,(iy+6)
 	add	hl,de
 	ld	(iy+9),hl
 	ld	hl,(_ymin) \.r
-	call	_Max_ASM \.r		; get minimum y
+	call	_Max_ASM \.r			; get minimum y
 	ld	(iy+6),hl
 	ld	hl,(_ymax) \.r
 	ld	de,(iy+9)
-	call	_Min_ASM \.r		; get maximum y
+	call	_Min_ASM \.r			; get maximum y
 	ld	(iy+9),hl
 	ld	de,(iy+6)
 	call	_SignedCompare_ASM \.r
-	ret	c			; return if not within y bounds
+	ret	c				; return if not within y bounds
 	ld	hl,(iy+9)
 	sbc	hl,de
 	ld	b,l
 	inc	b
 	ld	hl,(iy+3)
-	jr	_VertLine_ASM		; jump to unclipped version
+	jr	_VertLine_ASM			; jump to unclipped version
 
 ;-------------------------------------------------------------------------------
 _VertLine_NoClip:
@@ -581,9 +581,9 @@ _VertLine_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+3)		; x
-	ld	e,(iy+6)		; y
-	ld	b,(iy+9)		; length
+	ld	hl,(iy+3)			; x
+	ld	e,(iy+6)			; y
+	ld	b,(iy+9)			; length
 _VertLine_ASM:
 	dec	b
 	ret	z
@@ -592,11 +592,11 @@ _VertLine_ASM:
 	add.s	hl,de
 	add	hl,de
 	ld	de,(currDrawBuffer)
-	add	hl,de			; hl -> drawing location
+	add	hl,de				; hl -> drawing location
 _RectVert_ASM:
 	ld	de,lcdWidth
 color4 =$+1
-_:	ld	(hl),0			; loop for height
+_:	ld	(hl),0				; loop for height
 	add	hl,de
 	djnz	-_
 	ret
@@ -612,7 +612,7 @@ _DrawToBuffer:
 	ld	de,vram
 	or	a,a 
 	sbc	hl,de
-	jr	nz,++_			; if not the same, swap
+	jr	nz,++_				; if not the same, swap
 _:	ld	de,vram+lcdSize
 _:	ld	(currDrawBuffer),de
 	ret
@@ -628,7 +628,7 @@ _DrawToScreen:
 	ld	de,vram
 	or	a,a
 	sbc	hl,de
-	jr	z,-_			; if the same, swap
+	jr	z,-_				; if the same, swap
 	jr	--_
 
 ;-------------------------------------------------------------------------------
@@ -645,12 +645,12 @@ _SwapDraw:
 	add	hl,de
 	jr	nz,+_
 	ld	hl,vram+lcdSize
-_:	ld	(currDrawBuffer),de	; set up the new buffer location
-	ld	(mpLcdBase),hl		; set the new pointer location
+_:	ld	(currDrawBuffer),de		; set up the new buffer location
+	ld	(mpLcdBase),hl			; set the new pointer location
 	ld	hl,mpLcdIcr
-	set	2,(hl)			; clear the previous intrpt set
+	set	2,(hl)				; clear the previous intrpt set
 	ld	l,mpLcdRis&$ff
-_:	bit	2,(hl)			; wait until the interrupt triggers
+_:	bit	2,(hl)				; wait until the interrupt triggers
 	jr	z,-_
 	ret
 
@@ -665,9 +665,9 @@ _GetDrawState:
 	ld	de,(mpLcdBase)
 	xor	a,a
 	sbc	hl,de
-	ret	z			; drawing to screen
+	ret	z				; drawing to screen
 	inc	a
-	ret				; drawing to buffer
+	ret					; drawing to buffer
 
 ;-------------------------------------------------------------------------------
 _Circle:
@@ -680,7 +680,7 @@ _Circle:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	lea	hl,iy-9
+	lea	hl,iy+-9
 	ld	sp,hl
 	sbc	hl,sp
 	ld	(iy+-3),hl
@@ -803,9 +803,11 @@ _FillCircle:
 ;  arg2 : Radius
 ; Returns:
 ;  None
-	ld	hl,-9
-	call	__frameset_ASM \.r
-	or	a,a
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	lea	hl,ix+-9
+	ld	sp,hl
 	sbc	hl,hl
 	ld	(ix+-3),hl
 	ld	bc,(ix+12)
@@ -828,8 +830,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+-9
 	ld	sp,hl
 	ld	hl,(ix+-3)
 	add	hl,hl
@@ -845,8 +846,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+-9
 	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
@@ -861,8 +861,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+-9
 	ld	sp,hl
 	ld	hl,(ix+-6)
 	add	hl,hl
@@ -878,8 +877,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+-9
 	ld	sp,hl
 	ld	bc,(ix+-3)
 	inc	bc
@@ -933,9 +931,12 @@ _FillCircle_NoClip:
 ;  arg2 : Radius
 ; Returns:
 ;  None
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	lea	hl,ix+-9
+	ld	sp,hl
 	ld	hl,-9
-	call	__frameset_ASM \.r
-	or	a,a
 	sbc	hl,hl
 	ld.s	(ix+7),hl
 	ld.s	(ix+10),hl
@@ -1951,11 +1952,11 @@ _BGTilemap:
 ;  }
 ;
 	ld	hl,_Sprite \.r
-_:	ld	(_DrawFGTile_SMC),hl \.r
+_:	ld	(_DrawTile_SMC),hl \.r
 	push	ix
 	ld	ix,0
 	add	ix,sp
-	lea	hl,ix-12
+	lea	hl,ix+-12
 	ld	sp,hl
 	ld	iy,(ix+6)
 	
@@ -2036,10 +2037,9 @@ _Y_Next_SMC =$+1
 	push	bc
 	ld	bc,(hl)
 	push	bc
-_DrawFGTile_SMC =$+1
+_DrawTile_SMC =$+1
 	call	0
-	ld	hl,15
-	add	hl,sp
+	lea	hl,ix+-12
 	ld	sp,hl
 	ld	iy,(ix+6)
 _BlankTile_ASM:
@@ -2168,10 +2168,8 @@ _SetTextBGColorC:
 	push	de
 	push	hl
 	ld	hl,TextBGColor_ASM \.r
-	ld	d,(hl)
-	ld	a,e
-	ld	(hl),a
-	ld	a,d
+	ld	a,(hl)
+	ld	(hl),e
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2187,10 +2185,8 @@ _SetTextFGColorC:
 	push	de
 	push	hl
 	ld	hl,TextFGColor_ASM \.r
-	ld	d,(hl)
-	ld	a,e
-	ld	(hl),a
-	ld	a,d
+	ld	a,(hl)
+	ld	(hl),e
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2263,7 +2259,7 @@ _PrintChar:
 	add	iy,sp
 	ld	a,(iy+3)
 _PrintChar_ASM:
-	push hl
+	push	hl
 TextXPos_ASM = $+1
 	ld	bc,0
 	push	af
@@ -2309,34 +2305,27 @@ TextYPos_ASM = $+1
 	add	hl,hl
 	ld	bc,(TextData_ASM) \.r
 	add	hl,bc
-	ld	b,8
-iloop:	push	bc
-	ld	c,(hl)
+	ld	iyl,8
+_:	ld	c,(hl)
 CharWidthChange_ASM =$+1
 	ld	b,0
-	ex	de,hl
-	push	de
-TextBGColor_ASM =$+2
-TextFGColor_ASM =$+3
-	ld	de,1
-cloop:	ld	a,d
+TextFGColor_ASM =$+1
+_:	ld	a,0
 	rlc	c
 	jr	nc,+_
-	ld	a,e
+TextBGColor_ASM =$+1
+	ld	a,0
 _:	or	a,a
-	jr	nz,+_
-	ld	a,(hl)
-_:	ld	(hl),a
-	inc	hl
-	djnz	cloop
+	jr	z,+_
+	ld	(de),a
+_:	inc	de
+	djnz	---_
 CharLineDelta_ASM =$+1
 	ld	bc,0
 	add	hl,bc
-	pop	de
-	ex	de,hl
 	inc	hl
-	pop	bc
-	djnz	iloop
+	dec	iyl
+	jr	nz,----_
 	pop	hl
 	ret
 
@@ -2394,7 +2383,7 @@ _PrintInt:
 ; Returns:
 ;  None
 	ld	iy,0
-	ld	bc,0
+	lea	bc,iy
 	add	iy,sp
 	ld	c,(iy+6)
 	ld	hl,(iy+3)
@@ -2539,9 +2528,13 @@ _LZDecompress:
 ;  arg2 : Pointer to Input Buffer Size
 ; Returns:
 ;  None
-	ld	hl,-20
-	call	__frameset_ASM \.r
-	ld	bc,1
+	push	ix
+	ld	ix,0
+	lea	bc,ix
+	add	ix,sp
+	lea	hl,ix+-20
+	ld	sp,hl
+	inc	bc
 	ld	hl,(ix+12)
 	or	a,a
 	sbc	hl,bc
@@ -2840,12 +2833,14 @@ _RotateN90Delta_ASM =$+1
 ;-------------------------------------------------------------------------------
 _LZ_ReadVarSize_ASM:
 ; LZ Compression Subroutine
-	ld	hl,-12
-	call	__frameset_ASM \.r
-	or	a,a
-	sbc	hl,hl
-	ld	(ix+-3),hl
-	ld	(ix+-6),hl
+	push	ix
+	ld	ix,0
+	lea	de,ix
+	add	ix,sp
+	lea	hl,ix+-12
+	ld	sp,hl
+	ld	(ix+-3),de
+	ld	(ix+-6),de
 _:	ld	de,0
 	ld	hl,(ix+9)
 	ld	a,(hl)
@@ -3071,18 +3066,18 @@ __idivs_ASM:
 	push	hl
 	pop	bc
 	inc	a
-_:
-	or	a,a
+
+_:	or	a,a
 	sbc	hl,hl
 	sbc	hl,de
 	jp	m,+_ \.r
 	ex	de,hl
 	inc	a
-	
+
 _:	add	hl,de
 	rra
 	ld	a,24
-	
+
 _:	ex	de,hl
 	adc	hl,hl
 	ex	de,hl
@@ -3092,7 +3087,7 @@ _:	ex	de,hl
 	sbc	hl,bc
 _:	dec	a
 	jr	nz,--_
-	
+
 	ex	de,hl
 	adc	hl,hl
 	ret	c
@@ -3198,29 +3193,13 @@ m__3:	rla
 	ret
 
 ;-------------------------------------------------------------------------------
-__frameset_ASM:
-; Inits the stack frame using ix
-; Arguments:
-;  HL : Negative, amount of stack space to allocate
-; Returns:
-;  None
-	ex	(sp),ix
-	lea	de,ix
-	ld	ix,0
-	add	ix,sp
-	add	hl,sp
-	ld	sp,hl
-	ex	de,hl
-	jp	(hl)
-
-;-------------------------------------------------------------------------------
 MonoFlag_ASM:
 	.db 0
 CharSpacing_ASM:
 	.dl DefaultCharSpacing_ASM \.r
 TextData_ASM:
 	.dl DefaultTextData_ASM \.r
-	
+
 DefaultCharSpacing_ASM:
 	;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
 	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,1,7,7
