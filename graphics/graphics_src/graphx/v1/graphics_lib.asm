@@ -382,7 +382,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_HorizLine \.r		; top horizontal line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+15)
@@ -390,7 +392,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r		; left vertical line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
@@ -401,7 +405,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r		; right vertical line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
@@ -675,7 +681,7 @@ _Circle:
 	ld	iy,0
 	add	iy,sp
 	ld	hl,-9
-	add	hl,sp
+	add	hl,sp			; allocate a local stack frame
 	ld	sp,hl
 	ld	bc,0
 	ld	(iy+-3),bc
@@ -825,7 +831,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-3)
@@ -842,7 +848,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-6)
@@ -858,7 +864,7 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-6)
@@ -870,12 +876,12 @@ _FillCircleSectors:
 	sbc	hl,bc
 	push	hl
 	ld	bc,(ix+-6)
-	ld	hl,(ix+-18)
+	ld	hl,(ix+6)
 	or	a,a
 	sbc	hl,bc
 	push	hl
 	call	_HorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	bc,(ix+-3)
@@ -2039,7 +2045,7 @@ _Y_Next_SMC =$+1
 	push	bc
 _DrawFGTile_SMC =$+1
 	call	0
-	ld	hl,-15
+	ld	hl,15
 	add	hl,sp
 	ld	sp,hl
 	ld	iy,(ix+6)

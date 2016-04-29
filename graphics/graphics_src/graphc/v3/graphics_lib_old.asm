@@ -419,7 +419,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+6)
@@ -429,7 +429,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+6)
@@ -442,7 +442,7 @@ _ClipRectangleOutline:
 	push	de
 	push	hl
 	call	_ClipVertLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	de,(ix+6)
@@ -897,7 +897,7 @@ _ClipCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-3)
@@ -914,7 +914,7 @@ _ClipCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-6)
@@ -930,7 +930,7 @@ _ClipCircleSectors:
 	sbc	hl,bc
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	hl,(ix+-6)
@@ -942,12 +942,12 @@ _ClipCircleSectors:
 	sbc	hl,bc
 	push	hl
 	ld	bc,(ix+-6)
-	ld	hl,(ix+-18)
+	ld	hl,(ix+6)
 	or	a,a
 	sbc	hl,bc
 	push	hl
 	call	_ClipHorizLine \.r
-	ld	hl,-9
+	ld	hl,9
 	add	hl,sp
 	ld	sp,hl
 	ld	bc,(ix+-3)
@@ -2015,7 +2015,7 @@ _ClipDrawBGTilemap:
 ;          y_next = y*tilemap->width;
 ;          x_draw = tilemap->x_loc-x_offset;
 ;          for(x_tile = 0; x_tile <= tilemap->draw_width; x_tile++) {
-;              gc_ClipDrawSprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
+;              gc_Sprite(tilemap->tiles[tilemap->map[x+y_next]], x_draw, y_draw, tilemap->tile_width, tilemap->tile_height);
 ;              x_draw += tilemap->tile_width;
 ;              x++;
 ;          }
@@ -2025,7 +2025,7 @@ _ClipDrawBGTilemap:
 ;  }
 ;
 	ld	hl,_ClipDrawSprite \.r
-_:	ld	(_DrawFGTile_SMC),hl \.r
+_:	ld	(_DrawTile_SMC),hl \.r
 	push	ix
 	ld	hl,-12
 	ld	ix,0
@@ -2057,6 +2057,7 @@ _:	srl	h
 _:	srl	h
 	rr	l
 	djnz	-_
+	
 	ld	a,l
 	ld	(_X_Res_ASM),a \.r
 	ld	hl,(iy+15)
@@ -2111,9 +2112,9 @@ _Y_Next_SMC =$+1
 	push	bc
 	ld	bc,(hl)
 	push	bc
-_DrawFGTile_SMC =$+1
+_DrawTile_SMC =$+1
 	call	0
-	ld	hl,-15
+	ld	hl,15
 	add	hl,sp
 	ld	sp,hl
 	ld	iy,(ix+6)
