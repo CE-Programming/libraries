@@ -89,14 +89,14 @@ _AllocSprite:
 ;  arg1 : height
 	ld	iy,0
 	add	iy,sp
-	ld	e,(iy+3)
-	ld	d,(iy+6)
-	ld	h,d
-	ld	l,e
+	ld	l,(iy+3)
+	ld	h,(iy+6)
+	push	hl
 	mlt	hl
 	inc	hl
 	inc	hl
 	;call	_malloc ; idk how? I wish that we had OS routines to do this properly... Oh wait, we can \o/
+	pop	de
 	ld	(hl),e
 	inc	hl
 	ld	(hl),d
@@ -382,7 +382,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_HorizLine \.r		; top horizontal line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+15)
@@ -390,7 +392,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r		; left vertical line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
@@ -401,7 +405,9 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r		; right vertical line
-	ld	sp,ix
+	ld	hl,9
+	add	hl,sp
+	ld	sp,hl
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)
