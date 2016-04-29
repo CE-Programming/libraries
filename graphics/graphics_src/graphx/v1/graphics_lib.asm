@@ -680,15 +680,13 @@ _Circle:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,-9
-	add	hl,sp			; allocate a local stack frame
+	lea	hl,iy-9
 	ld	sp,hl
-	ld	bc,0
-	ld	(iy+-3),bc
+	sbc	hl,sp
+	ld	(iy+-3),hl
 	ld	bc,(iy+9)
 	ld	(iy+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(iy+-9),hl
 	jp	l_4 \.r
@@ -761,7 +759,6 @@ l_5:	ld	bc,(iy+3)
 	ld	(iy+-3),bc
 	ld	bc,(iy+-9)
 	or	a,a
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
 	jp	m,l__2 \.r
@@ -808,12 +805,12 @@ _FillCircle:
 ;  None
 	ld	hl,-9
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
 	ld	bc,(ix+12)
 	ld	(ix+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	b_4 \.r
@@ -938,14 +935,14 @@ _FillCircle_NoClip:
 ;  None
 	ld	hl,-9
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld.s	(ix+7),bc
-	ld.s	(ix+10),bc
-	ld	(ix+-3),bc
+	or	a,a
+	sbc	hl,hl
+	ld.s	(ix+7),hl
+	ld.s	(ix+10),hl
+	ld	(ix+-3),hl
 	ld	bc,(ix+12)
 	ld	(ix+-6),bc
-	ld	hl,1
-	or	a,a
+	inc	hl
 	sbc	hl,bc
 	ld	(ix+-9),hl
 	jp	k_4 \.r
@@ -1051,8 +1048,7 @@ _Line:
 ;  true if drawn, false if offscreen
 	ld	iy,0
 	add	iy,sp
-	ld	hl,-10
-	add	hl,sp
+	lea	hl,iy-10
 	ld	sp,hl
 	ld	de,(iy+6)
 	ld	hl,(iy+3)
@@ -1206,7 +1202,6 @@ _:	ld	(dx),hl \.r
 	sbc	hl,hl
 	ld	e,b
 	ld	l,c
-	or	a,a
 	sbc	hl,de
 	ld	a,30
 	adc	a,a
@@ -1859,7 +1854,6 @@ NoTopClipNeeded_ASM:
 	jr	c,NoBottomClipNeeded_ASM
 	ex	de,hl
 	ld	de,(iy+9)
-	or	a,a
 	sbc	hl,de
 	ld	(iy+15),hl
 NoBottomClipNeeded_ASM:
@@ -1959,10 +1953,9 @@ _BGTilemap:
 	ld	hl,_Sprite \.r
 _:	ld	(_DrawFGTile_SMC),hl \.r
 	push	ix
-	ld	hl,-12
 	ld	ix,0
 	add	ix,sp
-	add	hl,sp
+	lea	hl,ix-12
 	ld	sp,hl
 	ld	iy,(ix+6)
 	
@@ -2134,7 +2127,6 @@ _TilePtrMapped:
 	ld	l,(iy+9)
 	mlt	hl
 	ex	de,hl
-	or	a,a
 	sbc	hl,hl
 	ld	l,(ix+9)
 	ld	bc,(iy+0)
@@ -2466,7 +2458,6 @@ _GetCharWidth_ASM:
 	or	a,a
 	jr	nz,+_
 	ld	a,l
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	ld	de,(CharSpacing_ASM) \.r
@@ -2479,8 +2470,7 @@ _GetCharWidth_ASM:
 	push	hl
 	pop	bc
 	ret
-_:	or	a,a
-	sbc	hl,hl
+_:	sbc	hl,hl
 	ld	l,a
 	add	hl,bc
 	ret
@@ -2668,7 +2658,6 @@ _SpriteFlipY:
 	ld	iy,0
 	add	iy,sp
 	ld	a,(iy+9)
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	push	hl
@@ -2747,7 +2736,6 @@ _SpriteRotate:
 ;  arg1 : Pointer to 2D array output
 	ld	iy,0
 	add	iy,sp
-	or	a,a
 	sbc	hl,hl
 	ld	a,(iy+15)
 	cp	a,90
@@ -2854,9 +2842,10 @@ _LZ_ReadVarSize_ASM:
 ; LZ Compression Subroutine
 	ld	hl,-12
 	call	__frameset_ASM \.r
-	ld	bc,0
-	ld	(ix+-3),bc
-	ld	(ix+-6),bc
+	or	a,a
+	sbc	hl,hl
+	ld	(ix+-3),hl
+	ld	(ix+-6),hl
 _:	ld	de,0
 	ld	hl,(ix+9)
 	ld	a,(hl)
@@ -2868,8 +2857,7 @@ _:	ld	de,0
 	inc	bc
 	ld	(ix+9),bc
 	ld	a,(ix+-9)
-	res	7,a
-	or	a,a
+	and	127
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-12),hl
@@ -2891,7 +2879,6 @@ _:	ld	de,0
 	ld	(ix+-6),bc
 	ld	a,(ix+-9)
 	and	a,128
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	sbc	hl,de
