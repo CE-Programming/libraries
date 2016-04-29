@@ -273,25 +273,21 @@ _:	call	_chkfindsym
 	jr	c,+_
 	call	_chkinram
 	jr	z,_SavePtrs_ASM
-	push	hl
-	ld	hl,(ix+__frame_arg1)
-	ld	a,(hl)
+	ld	bc,(ix+__frame_arg1)
+	ld	a,(bc)
 	cp	a,'r'
-	pop	hl
 	jp	nz,_ReturnNULL_PopIX \.r
 ; skip vat entry in archive
         ex	de,hl
 	push	ix
-	push	de
 	push	hl
 	pop	ix
-	ld	de,10
-	add	hl,de
-	ld e,(ix+9)
-	add hl,de
+	ld	bc,10
+	add	hl,bc
+	ld 	c,(ix+9)
+	add 	hl,bc
 	ex	(sp),hl
-	add	hl,de
-	pop	de
+	add	hl,bc
 	pop	ix
 	jr	_SavePtrs_ASM
 _:	ld	hl,(ix+__frame_arg1)
@@ -509,9 +505,7 @@ _GetChar_ASM:
 	pop	bc
 	inc	bc
 	ld	a,(hl)
-	push	af
 	call	_SetSlotOffset_ASM \.r
-	pop	af
 	or	a,a
 	sbc	hl,hl
 	ld	l,a
@@ -554,16 +548,14 @@ _SeekHandler_ASM:
 	jp	c,_ReturnNEG1L \.r
 	jp	_SetSlotOffset_ASM \.r
 SeekCur:
-	push	de
 	call	_GetSlotOffset_ASM \.r
-	pop	hl
+	ex	de,hl
 	add	hl,bc
 	ex	de,hl
 	jr	_SeekHandler_ASM
 SeekEnd:
-	push	de
 	call	_GetSlotSize_ASM \.r
-	pop	hl
+	ex	de,hl
 	add	hl,bc
 	ex	de,hl
 	jr	_SeekHandler_ASM
@@ -614,14 +606,12 @@ Increment:
 	pop	bc
 noIncrement:
 	call	_GetSlotVarPtr_ASM \.r
-	push	bc
 	ld	hl,(hl)
 	add	hl,bc
 	inc	hl
 	inc	hl
 charIn	=$+1
 	ld	(hl),0
-	pop	bc
 	inc	bc
 	call	_SetSlotOffset_ASM \.r
 	ld	a,(charIn) \.r
@@ -802,10 +792,7 @@ DeleteMemoryFromVar:
 	pop hl
 	ld hl,(hl)
 	push hl
-	ex de,hl
-	or a,a
-	sbc hl,hl
-	ex de,hl
+	ld de,0
 	ld e,(hl)
 	inc hl
 	ld d,(hl)

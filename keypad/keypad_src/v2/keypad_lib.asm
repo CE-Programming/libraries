@@ -23,8 +23,8 @@ _Scan:
 	ld	a,i
 	push	af
 	di
-	ld	hl,DI_Mode
-	ld	(hl),2
+	ld	hl,$f50200	;DI_Mode=$f5xx00
+	ld	(hl),h
 	xor	a,a
 _:	cp	a,(hl)
 	jr	nz,-_
@@ -40,21 +40,10 @@ _Reset:
 ;  None
 ; Returns:
 ;  None
-	ld	hl,DI_Mode
-	xor	a		; Mode 0
-	ld	(hl),a
-	inc	l		; 0F50001h
-	ld	(hl),15	; Wait 15*256 APB cycles before scanning each row
-	inc	l		; 0F50002h
-	xor	a
-	ld	(hl),a
-	inc	l		; 0F50003h
-	ld	(hl),15	; Wait 15 APB cycles before each scan
-	inc	l		; 0F50004h
-	ld	a,8		; Number of rows to scan
-	ld	(hl),a
-	inc	l		; 0F50005h
-	ld	(hl),a	; Number of columns to scan
+	ld	hl,$000f00	; 0/Wait 15*256 APB cycles before scanning each row/Mode 0/
+	ld	(DI_Mode),hl
+	ld	hl,$08080f	;(nb of columns,nb of row) to scan/Wait 15 APB cycles before each scan
+	ld	(DI_Mode+3),hl
 	ret
  
 ;-------------------------------------------------------------------------------
@@ -72,8 +61,8 @@ _ScanGroup:
 	ld	a,i
 	push	af
 	di
-	ld	hl,DI_Mode
-	ld	(hl),2
+	ld	hl,$f50200	;DI_Mode=$f5xx00
+	ld	(hl),h
 	xor	a,a
 _:	cp	a,(hl)
 	jr	nz,-_
@@ -81,7 +70,6 @@ _:	cp	a,(hl)
 	cp	a,8
 	jr	nc,+_
 	ld	l,a
-	ld	h,2
 	mlt	hl
 	ld	de,kbdG1-2
 	add	hl,de
@@ -107,12 +95,12 @@ _AnyKey:
 	ld	a,i
 	push	af
 	di
-	ld	hl,DI_Mode
-	ld	(hl),2
+	ld	hl,$f50200	;DI_Mode=$f5xx00
+	ld	(hl),h
 	xor	a,a
 _:	cp	a,(hl)
 	jr	nz,-_
-	ld	hl,kbdG1
+	ld	l,$12		; kbdG1=$f5xx12
 	or	a,(hl)
 	inc	hl
 	inc	hl
