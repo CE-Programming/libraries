@@ -382,8 +382,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_HorizLine \.r			; top horizontal line
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+9
 	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
@@ -392,8 +391,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r			; left vertical line
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+9
 	ld	sp,hl
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
@@ -405,8 +403,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r			; right vertical line
-	ld	hl,9
-	add	hl,sp
+	lea	hl,ix+9
 	ld	sp,hl
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
@@ -1443,7 +1440,6 @@ _ScaledSprite_NoClip:
 	ld	a,c
 	mlt	bc
 	ld	(NoClipSprScaledCopyAmt),bc \.r
-	or	a,a
 	sbc	hl,bc
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
@@ -1523,7 +1519,6 @@ _ScaledTransparentSprite_NoClip:
 	ld	(NoClipSprTransScaledWidth),a \.r
 	ld	a,c
 	mlt	bc
-	or	a,a
 	sbc	hl,bc
 	ld	(NoClipSprTransScaledMoveAmt),hl \.r
 	ld	(NoClipSprTransScaledLineNext),a \.r
@@ -1815,7 +1810,6 @@ _ClipDraw_ASM:
 	ld	iy,3
 	add	iy,sp
 	ld	a,(iy+12)
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	ld	(iy+12),hl
