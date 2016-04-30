@@ -382,9 +382,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_HorizLine \.r			; top horizontal line
-	ld	hl,9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+15)
@@ -392,9 +390,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r			; left vertical line
-	ld	hl,9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	hl,(ix+6)
 	ld	de,(ix+9)
 	ld	bc,(ix+12)
@@ -405,9 +401,7 @@ _Rectangle:
 	push	de
 	push	hl
 	call	_VertLine \.r			; right vertical line
-	ld	hl,9
-	add	hl,sp
-	ld	sp,hl
+	ld	sp,ix
 	ld	de,(ix+6)
 	ld	hl,(ix+9)
 	ld	bc,(ix+15)

@@ -1,0 +1,68 @@
+; Zilog eZ80 ANSI C Compiler Release 3.4
+; -nomodsect -optspeed -noreduceopt -peephole -globalopt
+; -localcse -const=ROM 
+	FILE	"..\SRC\MAIN.C"
+	.assume ADL=1
+	DEFINE ___gfx_palette_segment,SPACE=RAM,ORG=%e30200
+	SEGMENT ___gfx_palette_segment
+_gfx_palette:
+	DS	512
+	DEFINE ___gfx_vram_segment,SPACE=RAM,ORG=%d40000
+	SEGMENT ___gfx_vram_segment
+_gfx_vram:
+	DS	153600
+	SEGMENT CODE
+;    1	/* Keep these headers */
+;    2	#include <stdbool.h>
+;    3	#include <stddef.h>
+;    4	#include <stdint.h>
+;    5	#include <tice.h>
+;    6	
+;    7	/* Standard headers - it's recommended to leave them included */
+;    8	#include <math.h>
+;    9	#include <stdio.h>
+;   10	#include <stdlib.h>
+;   11	#include <string.h>
+;   12	
+;   13	/* C CE Graphics library */
+;   14	#include <lib/ce/graphx.h>
+;   15	
+;   16	/* Put function prototypes here */
+;   17	
+;   18	/* Put all your code here */
+;   19	void main(void) {
+_main:
+;   20		gfx_Begin(gfx_8bpp);
+	LD	BC,39
+	PUSH	BC
+	CALL	_gfx_Begin
+	POP	BC
+;   21		
+;   22		/* Place program code here */
+;   23		
+;   24		gfx_End();
+	CALL	_gfx_End
+;   25		pgrm_CleanUp();
+	CALL	_pgrm_CleanUp
+;   26	}
+	RET	
+
+
+;**************************** _main ***************************
+;Name                         Addr/Register   Size   Type
+;_pgrm_CleanUp                       IMPORT  -----   function
+;_gfx_End                            IMPORT  -----   function
+;_gfx_Begin                          IMPORT  -----   function
+
+
+; Stack Frame Size: 6 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+	XREF _gfx_End:ROM
+	XREF _gfx_Begin:ROM
+	XREF _pgrm_CleanUp:ROM
+	XDEF _main
+	XDEF _gfx_vram
+	XDEF _gfx_palette
+	END

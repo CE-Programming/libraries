@@ -1,0 +1,160 @@
+
+IEEE 695 OMF Linker Version 6.25 (11121301)
+Copyright (C) 1999-2008 Zilog, Inc. All Rights Reserved
+
+LINK MAP:
+
+DATE:      Fri Apr 29 20:13:54 2016
+PROCESSOR: assembler
+FILES:     obj\main.obj           
+           obj\cstartup.obj
+           obj\libheader.obj
+           obj\graphc.obj         
+           C:\CEdev\lib\std\ce\ctice.lib
+           C:\CEdev\lib\std\ce\cdebug.lib
+           C:\CEdev\lib\std\chelp.lib
+           C:\CEdev\lib\std\crt.lib
+           C:\CEdev\lib\std\crtS.lib
+           C:\CEdev\lib\std\nokernel.lib
+           C:\CEdev\lib\std\fplib.lib
+           C:\CEdev\lib\std\fplibS.lib
+           C:\CEdev\lib\ce\graphc\graphc.lib
+           
+
+
+COMMAND LIST:
+=============
+-FORMAT=INTEL32 -map -maxhexlen=64 -quiet -warnoverlap -xref -unresolved=fatal -sort ADDRESS=ascending -warn -NOdebug -NOigcase define __copy_code_to_ram = 0 range rom $000000 : $FFFFFF range ram $D00000 : $FFFFFF range bss $D031F6 : $D13FD6 change code is ram change data is ram change text is ram change strsect is text define __low_bss = base of bss define __len_bss = length of bss define __heaptop = (highaddr of bss) define __heapbot = (top of bss)+1 define __stack = $D1A87E locate .header at $D1A87F locate .icon at (top of .header)+1 locate .launcher at (top of .icon)+1 locate .libs at (top of .launcher)+1 locate .graphc_header at (top of .libs)+1 locate .graphc at (top of .graphc_header)+1 locate .startup at (top of .graphc)+1 locate code at (top of .startup)+1 locate data at (top of code)+1 locate text at (top of data)+1 bin/GRAPHCT.hex = obj\main.obj,obj\cstartup.obj,obj\libheader.obj,obj\graphc.obj,C:\CEdev\lib\std\ce\ctice.lib,C:\CEdev\lib\std\ce\cdebug.lib,C:\CEdev\lib\std\chelp.lib,C:\CEdev\lib\std\crt.lib,C:\CEdev\lib\std\crtS.lib,C:\CEdev\lib\std\nokernel.lib,C:\CEdev\lib\std\fplib.lib,C:\CEdev\lib\std\fplibS.lib,C:\CEdev\lib\ce\graphc\graphc.lib 
+WARNING (724) --> Symbol _gfx_Begin (obj\main.obj) is not defined.
+WARNING (724) --> Symbol _gfx_End (obj\main.obj) is not defined.
+
+SPACE ALLOCATION:
+=================
+
+Space                     Base         Top      Size      Used    Unused
+------------------ ----------- ----------- --------- --------- ---------
+RAM                   D:D1A87F    D:E303FF   300000H    25AD3H   2DA52DH
+                                          (  3145728    154323   2991405)
+
+
+SEGMENTS WITHIN SPACE:
+======================
+
+RAM                Type                Base        Top         Size
+------------------ ------------------- ----------- ----------- ---------
+.GRAPHC_HEADER     normal data            D:D1A8D6    D:D1A8DE        9h
+.header            normal data            D:D1A87F    D:D1A881        3h
+.launcher          normal data            D:D1A882    D:D1A8D5       54h
+.startup           normal data            D:D1A8DF    D:D1A913       35h
+___gfx_palette_seg absolute data          D:E30200    D:E303FF      200h
+___gfx_vram_segmen absolute data          D:D40000    D:D657FF    25800h
+CODE               normal data            D:D1A914    D:D1A944       31h
+DATA               normal data            D:D1A945    D:D1A951        dh
+
+SEGMENTS WITHIN MODULES:
+========================
+
+Module: ..\SRC\MAIN.C (File: main.obj) Version: 1:0 04/29/2016 20:13:54
+
+    Name                                        Base        Top      Size
+    --------------------------------------- ----------- ----------- ---------
+    Segment: ___gfx_palette_segment            D:E30200    D:E303FF      200h
+    Segment: ___gfx_vram_segment               D:D40000    D:D657FF    25800h
+    Segment: CODE                              D:D1A914    D:D1A926       13h
+
+
+Module: C:\CEdev\include\ce\asm\cstartup.asm (File: cstartup.obj) Version: 1:0 04/29/2016 20:13:54
+
+    Name                                        Base        Top      Size
+    --------------------------------------- ----------- ----------- ---------
+    Segment: .header                           D:D1A87F    D:D1A881        3h
+    Segment: .startup                          D:D1A8DF    D:D1A913       35h
+
+
+Module: C:\CEdev\include\ce\asm\libheader.asm (File: libheader.obj) Version: 1:0 04/29/2016 20:13:54
+
+    Name                                        Base        Top      Size
+    --------------------------------------- ----------- ----------- ---------
+    Segment: .launcher                         D:D1A882    D:D1A8D5       54h
+    Segment: DATA                              D:D1A945    D:D1A951        dh
+
+
+Module: ce\pgrm_cleanup.asm (Library: ctice.lib) Version: 1:0 04/19/2016 16:43:22
+
+    Name                                        Base        Top      Size
+    --------------------------------------- ----------- ----------- ---------
+    Segment: CODE                              D:D1A927    D:D1A944       1eh
+
+
+Module: graphc.asm (File: graphc.obj) Version: 1:0 04/29/2016 20:13:54
+
+    Name                                        Base        Top      Size
+    --------------------------------------- ----------- ----------- ---------
+    Segment: .GRAPHC_HEADER                    D:D1A8D6    D:D1A8DE        9h
+
+EXTERNAL DEFINITIONS:
+=====================
+
+Symbol                             Address   Module          Segment
+-------------------------------- ----------- --------------- --------------------------------
+__copy_code_to_ram                  00000000 (User Defined)
+__len_bss                           00000000 (User Defined)
+__low_bss                           00000000 (User Defined)
+__heapbot                           00000001 (User Defined)
+__heaptop                           00D13FD6 (User Defined)
+__stack                             00D1A87E (User Defined)
+_errno                              D:D008DC cstartup        CODE                            
+__init                              D:D1A882 cstartup        .header                         
+__c_startup                         D:D1A8DF cstartup        .startup                        
+_c_int0                             D:D1A8DF cstartup        .startup                        
+__exit                              D:D1A904 cstartup        .startup                        
+_exit                               D:D1A904 cstartup        .startup                        
+__saves                             D:D1A908 cstartup        .startup                        
+__errsp                             D:D1A90A cstartup        .startup                        
+_main                               D:D1A914 MAIN            CODE                            
+_pgrm_CleanUp                       D:D1A927 pgrm_cleanup    CODE                            
+_gfx_vram                           D:D40000 MAIN            ___gfx_vram_segment             
+_gfx_palette                        D:E30200 MAIN            ___gfx_palette_segment          
+
+18 external symbol(s).
+
+SYMBOL CROSS REFERENCE:
+=======================
+Name                              Use         Module
+--------------------------------- ----------- -------------------------
+__copy_code_to_ram                Defined     LINKER
+__len_bss                         Defined     LINKER
+__low_bss                         Defined     LINKER
+                                  Referenced  C:\CEdev\include\ce\asm\cstartup.asm
+__heapbot                         Defined     LINKER
+__heaptop                         Defined     LINKER
+__stack                           Defined     LINKER
+_errno                            Defined     C:\CEdev\include\ce\asm\cstartup.asm
+__init                            Defined     C:\CEdev\include\ce\asm\cstartup.asm
+__c_startup                       Defined     C:\CEdev\include\ce\asm\cstartup.asm
+_c_int0                           Defined     C:\CEdev\include\ce\asm\cstartup.asm
+__exit                            Defined     C:\CEdev\include\ce\asm\cstartup.asm
+_exit                             Defined     C:\CEdev\include\ce\asm\cstartup.asm
+__saves                           Defined     C:\CEdev\include\ce\asm\cstartup.asm
+__errsp                           Defined     C:\CEdev\include\ce\asm\cstartup.asm
+_main                             Defined     ..\SRC\MAIN.C
+                                  Referenced  C:\CEdev\include\ce\asm\cstartup.asm
+_pgrm_CleanUp                     Defined     ce\pgrm_cleanup.asm
+                                  Referenced  ..\SRC\MAIN.C
+_gfx_vram                         Defined     ..\SRC\MAIN.C
+_gfx_palette                      Defined     ..\SRC\MAIN.C
+
+UNDEFINED SYMBOL CROSS REFERENCE:
+=================================
+Name                              Use         Module
+--------------------------------- ----------- -------------------------
+_gfx_Begin                        UNDEFINED
+                                  Referenced  ..\SRC\MAIN.C
+_gfx_End                          UNDEFINED
+                                  Referenced  ..\SRC\MAIN.C
+
+
+END OF LINK MAP:
+================
+0 Errors
+2 Warnings

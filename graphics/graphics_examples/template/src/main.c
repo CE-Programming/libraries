@@ -11,16 +11,16 @@
 #include <string.h>
 
 /* C CE Graphics library */
-#include <lib/ce/graphc.h>
+#include <lib/ce/graphx.h>
 
 /* Put function prototypes here */
 
 /* Put all your code here */
 void main(void) {
-    gc_InitGraph();
-    
-/* Place program code here */
-
-    gc_CloseGraph();
-    pgrm_CleanUp();
+	gfx_Begin(gfx_8bpp);
+	
+	/* Place program code here */
+	
+	gfx_End();
+	pgrm_CleanUp();
 }

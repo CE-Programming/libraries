@@ -1,6 +1,6 @@
 /**
- * @file    GRAPHC CE C Library
- * @version 4.0
+ * @file    GRAPHX CE C Library
+ * @version 1.0
  *
  * @section LICENSE
  *
@@ -42,50 +42,52 @@
 #include <stdbool.h>
 
 /**
- * Initializes the graphics setup.
- * This includes setting the LCD into 8bpp mode and
- * loading the default palette
+ * For transparent routines; index 0 shall represent the transparent color
  */
-void gc_InitGraph(void);
+
+typedef struct gfx_sprite {
+	uint8_t width;
+	uint8_t height;
+	uint8_t data[1];
+} gfx_sprite_t;
+
+gfx_sprite_t *gfx_AllocSprite(uint8_t width, uint8_t height);
+#define gfx_TempSprite(name, width, height) uint8_t name[2 + (width) * (height)] = { (width), (height) }
+
+typedef enum gfx_mode {
+	gfx_8bpp = 0x27
+} gfx_mode_t;
 
 /**
- * Closes the graphics setup.
- * Restores the LCD to 16bpp prefered by the OS
- * and clears the screen
+ * Initializes the graphics setup 
+ * Set LCD to 8bpp mode and loads the default palette
  */
-void gc_CloseGraph(void);
+int gfx_Begin(gfx_mode_t mode);
+
+/**
+ * Closes the graphics setup
+ * Restores the LCD to 16bpp prefered by the OS and clears the screen
+ */
+void gfx_End(void);
 
 /**
  * Used for accessing the palette directly
+ * 256 is valid only for the 8 bpp mode
  */
-uint16_t gc_paletteArray[256] _At 0xE30200;
-
+uint16_t gfx_palette[256] _At 0xE30200;
 /**
  * Array of the LCD VRAM
  */
-uint16_t (*gc_vramArray)[240][320] _At 0xD40000;
+uint8_t gfx_vram[2][240][320] _At 0xD40000;
+#define gfx_vbuffer (*(uint8_t (*)[240][320])0xE30014)
 
-/**
- * Produces a random integer value
- */
-#define gc_RandInt(min, max) ((unsigned)rand() % ((max) - (min) + 1) + (min))
-
-/**
- * Checks if we are currently in a rectangular hotspot area
- */
-#define gc_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
-	  (test_x < master_x + master_width && \
-	   test_x + test_width > master_x && \
-	   test_y < master_y + master_height && \
-	   test_y + test_height > master_y)
-	   
 /* Type for the clip region */
-typedef struct gc_region {
+typedef struct gfx_region {
 	int x_left, y_top, x_right, y_bottom;
-} gc_region_t;
+} gfx_region_t;
 
-/* Type for tilemapping */
-typedef struct gc_tilemap {
+/* Type for tilemap */
+typedef struct gfx_tilemap {
 	uint8_t *map;             /* pointer to indexed map array */
 	uint8_t **tiles;          /* pointer to tiles */
 	uint8_t tile_height;      /* individual tile height */
@@ -98,9 +100,9 @@ typedef struct gc_tilemap {
 	uint8_t width;            /* total number of cols in the tilemap */
 	uint8_t y_loc;            /* y pixel location to begin drawing at */
 	uint24_t x_loc;           /* x pixel location to begin drawing at */
-} gc_tilemap_t;
+} gfx_tilemap_t;
 
-typedef enum gc_tilemap_type {
+typedef enum gfx_tilemap_type {
 	gc_tile_2_pixel = 1,      /* Set when using 2 pixel tiles */
 	gc_tile_4_pixel,          /* Set when using 4 pixel tiles */
 	gc_tile_8_pixel,          /* Set when using 8 pixel tiles */
@@ -108,46 +110,37 @@ typedef enum gc_tilemap_type {
 	gc_tile_32_pixel,         /* Set when using 32 pixel tiles */
 	gc_tile_64_pixel,         /* Set when using 64 pixel tiles */
 	gc_tile_128_pixel,        /* Set when using 128 pixel tiles */
-} gc_tilemap_type_t;
+} gfx_tilemap_type_t;
 
 /**
- * Quickly set and get pixels.
- * No clipping is performed.
- */
-#define gc_NoClipPixelPtr(x, y)           ((uint8_t*)(gc_drawingBuffer + (uint16_t)x + ((uint8_t)y)*320))
-#define gc_NoClipSetPixel(x, y, c)        (*(gc_NoClipPixelPtr(x,y)) = c)
-#define gc_NoClipGetPixel(x, y)           (*(gc_NoClipPixelPtr(x,y)))
-#define gc_RGBTo1555(r,g,b)               ((unsigned short)(((unsigned char)(r) >> 3) << 10) | (((unsigned char)(g) >> 3) << 5) | ((unsigned char)(b) >> 3))
-#define gc_FontHeight()                   8
-#define gc_drawingBuffer                  (*(uint8_t**)(0xE30014))
-#define gc_lcdWidth                       320
-#define gc_lcdHeight                      240
-
-/**
- * Draws a tilemap given an intialized tilemap structure
- *  x_offset : offset in pixels from the left of the tilemap
+ * Draws a tilemap given an initialized tilemap structure
+ *  x_offset : offset in pixels from the of the tilemap
  *  y_offset : offset in pixels from the top of the tilemap
  */
-void gc_ClipDrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
-void gc_NoClipDrawBGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gfx_Tilemap(gfx_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gfx_Tilemap_NoClip(gfx_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
- * Draws a transparent tilemap given an intialized tilemap structure
- *  x_offset : offset in pixels from the left of the tilemap
+ * Draws a transparent tilemap given an initialized tilemap structure
+ *  x_offset : offset in pixels from the left left of the tilemap
  *  y_offset : offset in pixels from the top of the tilemap
  */
-void gc_ClipDrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
-void gc_NoClipDrawFGTilemap(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gfx_TransparentTilemap(gfx_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+void gfx_TransparentTilemap_NoClip(gfx_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
 
 /**
- * Tile Setting/Getting -- These use absolute pixel offsets from the left and top
+ * Tile Setting/Getting -- Uses absolute pixel offsets from the top left
  */
-uint8_t *gc_TilePtr(gc_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+uint8_t *gfx_TilePtr(gfx_tilemap_t *tilemap, uint24_t x_offset, uint24_t y_offset);
+#define gfx_SetTile(a,b,c,d)	(*(gfx_TilePtr(a, b, c)) = (uint8_t)d)
+#define gfx_GetTile(a,b,c)	(*(gfx_TilePtr(a, b, c)))
 
 /**
- * Tile Setting/Getting -- These use mapped offsets from the tile map itself
+ * Tile Setting/Getting -- Uses a mapped offsets from the tile map itself
  */
-uint8_t *gc_TilePtrMapped(gc_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_offset);
+uint8_t *gfx_TilePtrMapped(gfx_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_offset);
+#define gfx_SetTileMapped(a,b,c,d)	(*(gfx_TilePtrMapped(a, b, c)) = (uint8_t)d)
+#define gfx_GetTileMapped(a,b,c)	(*(gfx_TilePtrMapped(a, b, c)))
 
 /**
  * Decompress a block of data using an LZ77 decoder
@@ -155,132 +148,163 @@ uint8_t *gc_TilePtrMapped(gc_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_off
  *  out : Decompressed buffer; must be large enough to hold decompressed data
  *  insize : Number of input bytes
  */
-void gc_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
+void gfx_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
+
+
+// PuCrunch, the de-facto standard on the TI-68k series :)
 
 /**
  * Sets the color index that drawing routines will use
  * This applies to lines, rectangles, etc
  * Returns the previous global color index
  */
-uint8_t gc_SetColorIndex(uint8_t index);
+uint8_t gfx_SetColor(uint8_t index);
 
 /**
- * Sets up the default palette where high=low
+ * Sets up the default palette for the given mode
  */
-void gc_SetDefaultPalette(void);
+void gfx_SetDefaultPalette(gfx_mode_t mode);
 
 /**
- * Sets up the palette; paletteSize is in bytes
+ * Set entries 0-255 in the palette (index 0 is transparent for transparent routines)
  */
-void gc_SetPalette(uint16_t *palette, uint16_t paletteSize);
+void gfx_SetPalette(uint16_t *palette, uint24_t size, uint8_t offset);
 
 /**
  * Fills the screen with the given palette index
  */
-void gc_FillScrn(uint8_t color);
-
-/**
- * Gets the 1555 color located at the given palette index.
- * Included for backwards compatibility  with v1.0
- * It is recomended you use the gc_paletteArray array instead
- */
-uint16_t gc_GetColor(uint8_t index);
-
-/**
- * Sets the 1555 color located at the given palette index.
- * Included for backwards compatibility  with v1.0
- * It is recomended you use the gc_paletteArray array instead
- */
-void gc_SetColor(uint8_t index, uint16_t color);
+void gfx_FillScreen(uint8_t color);
+void gfx_FillScreenLines(uint8_t y_start, uint8_t color);
 
 /**
  * Sets the XY pixel measured from the top left origin of the screen to the
  * given palette index color. This routine performs clipping.
  */
-void gc_ClipSetPixel(int24_t x, int24_t y);
+void gfx_SetPixel(uint24_t x, uint8_t y);
 
 /**
  * Gets the palette index color of the XY pixel measured from the top
  * left origin of the screen. This routine performs clipping.
  */
-uint8_t gc_ClipGetPixel(int24_t x, int24_t y);
+uint8_t gfx_GetPixel(uint24_t x, uint8_t y);
 
 /**
  * Draws a line given the x,y,x,y coordinates measured from the top left origin.
- * No clipping is performed.
  */
-void gc_NoClipLine(uint16_t x0, uint8_t y0, uint16_t x1, uint8_t y1);
+void gfx_Line(int x0, int y0, int x1, int y1);
+void gfx_Line_NoClip(uint24_t x0, uint8_t y0, uint24_t x1, uint8_t y1);
 
 /**
- * Draws a filled rectangle measured from the top left origin.
- * No clipping is performed.
+ * Clips the points in a line region
+ * Returns false if offscreen
  */
-void gc_NoClipRectangle(uint16_t x, uint8_t y, uint16_t width, uint8_t height);
+bool gfx_CohenSutherlandClip(int *x0, int *y0, int *x1, int *y1);
 
 /**
- * Draws a rectangle outline measured from the top left origin.
- * No clipping is performed.
+ * Draws a horizontal line measured from the top left origin.
  */
-void gc_NoClipRectangleOutline(uint16_t x, uint8_t y, uint16_t width, uint8_t height);
+void gfx_HorizLine(int x, int y, int length);
+void gfx_HorizLine_NoClip(uint24_t x, uint8_t y, uint24_t length);
 
 /**
- * Draws a fast horizontal line measured from the top left origin.
- * No clipping is performed.
+ * Draws a vertical line measured from the top left origin.
  */
-void gc_NoClipHorizLine(uint16_t x, uint8_t y, uint16_t length);
+void gfx_VertLine(int x, int y, int length);
+void gfx_VertLine_NoClip(uint24_t x, uint8_t y, uint24_t length);
 
 /**
- * Draws a fast vertical line measured from the top left origin.
- * No clipping is performed.
+ * Draws a vertical line measured from the top left origin.
  */
-void gc_NoClipVertLine(uint16_t x, uint8_t y, uint8_t length);
+void gfx_PolyLine(int *points);
+void gfx_PolyLine_NoClip(int *points);
+
+/**
+ * Draws a rectangle measured from the top left origin.
+ */
+void gfx_Rectangle(int x, int y, int width, int height);
+void gfx_Rectangle_NoClip(uint24_t x, uint8_t y, uint24_t width, uint8_t height);
+void gfx_FillRectangle(int x, int y, int width, int height);
+void gfx_FillRectangle_NoClip(uint24_t x, uint8_t y, uint24_t width, uint8_t height);
+
+/**
+ * Draws a rectangle with rounded corners of given radius, measured from the top left origin.
+ * Code example: github.com/adriweb/BetterLuaAPI-for-TI-Nspire/blob/master/BetterLuaAPI.lua#L198-L222
+ */
+void gfx_RoundRectangle(int x, int y, unsigned width, unsigned height, unsigned radius);
+void gfx_RoundRectangle_NoClip(uint24_t x, uint8_t y, unsigned width, unsigned height, unsigned radius);
+void gfx_FillRoundRectangle(int x, int y, unsigned width, unsigned height, unsigned radius);
+void gfx_FillRoundRectangle_NoClip(uint24_t x, uint8_t y, unsigned width, unsigned height, unsigned radius);
 
 /**
  * Draws a filled circle measured from the top left origin.
  */
-void gc_NoClipCircle(uint16_t x, uint8_t y, unsigned radius);
-void gc_ClipCircle(int x, int y, unsigned radius);
+void gfx_Circle(int x, int y, unsigned radius);
+void gfx_Circle_NoClip(uint24_t x, uint8_t y, uint8_t radius);
+void gfx_FillCircle(int x, int y, unsigned radius);
+void gfx_FillCircle_NoClip(uint24_t x, uint8_t y, uint8_t radius);
+
 
 /**
- * Draws circle outline measured from the top left origin.
+ * Draws an arc measured from the top left origin
  */
-void gc_ClipCircleOutline(int x, int y, unsigned radius);
+void gfx_Arc(int x, int y, unsigned width, unsigned height, int start_angle, int end_angle);
+void gfx_Arc_NoClip(uint24_t x, uint8_t y, uint24_t width, uint24_t height, int24_t start_angle, int24_t end_angle);
+void gfx_FillArc(int x, int y, unsigned width, unsigned height, int start_angle, int end_angle);
+void gfx_FillArc_NoClip(uint24_t x, uint8_t y, uint24_t width, uint24_t height, int24_t start_angle, int24_t end_angle);
 
 /**
- * Forces all graphics routines to write to the offscreen buffer
+ * Draws a triangle measured from the top left origin
  */
-void gc_DrawBuffer(void);
+void gfx_Triangle(int *points);
+void gfx_Triangle_NoClip(int *points);
+void gfx_FillTriangle(int *points);
+void gfx_FillTriangle_NoClip(int *points);
 
 /**
- * Forces all graphics routines to write to the visible screen
+ * Forces all graphics routines to write to either the offscreen buffer or the screen
  */
-void gc_DrawScreen(void);
+void gfx_SetDrawState(uint8_t buffer);
+#define gfx_screen 0
+#define gfx_buffer 1
+#define gfx_DrawToBuffer() gfx_SetDrawState(gfx_buffer)
+#define gfx_DrawToScreen() gfx_SetDrawState(gfx_screen)
 
 /**
  * Swaps the buffer with the visible screen and vice versa.
  * The current drawing location remains the same.
  */
-void gc_SwapDraw(void);
+void gfx_SwapDraw(void);
 
 /**
- * Returns 0 if graphics routines are currently drawing to visible screen
+ * Copies the input buffer to the opposite buffer
+ * Arguments:
+ *  gfx_screen: copies screen to buffer
+ *  gfx_buffer: copies buffer to screen
+ */
+void gfx_Blit(uint8_t buffer);
+void gfx_BlitLines(uint8_t buffer, uint8_t y_loc, uint8_t num_lines);
+void gfx_BlitArea(uint8_t buffer, uint24_t x, uint8_t y, uint24_t width, uint24_t height);
+// Blit rectangular area ?
+
+/**
+ * Returns false if graphics routines are currently drawing to visible screen
  * The current drawing location remains the same.
  */
-uint8_t gc_DrawState(void);
+uint8_t gfx_GetDrawState(void);
 
 /**
  * Outputs a character at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintChar(const char c);
+void gfx_PrintChar(const char c);
 
 /**
  * Outputs a signed integer at the current cursor position.
  * No text clipping is performed.
- * Values range from: (-8388608-8388607)
+ * Values range from: (-8388608 - 8388607)
  * length must be between 0-8
  */
-void gc_PrintInt(int n, uint8_t length);
+void gfx_PrintInt(int n, uint8_t length);
 
 /**
  * Outputs an unsigned integer at the current cursor position.
@@ -288,35 +312,35 @@ void gc_PrintInt(int n, uint8_t length);
  * Values range from: (0-16777215)
  * length must be between 0-8
  */
-void gc_PrintUnsignedInt(unsigned int n, uint8_t length);
+void gfx_PrintUInt(unsigned n, uint8_t length);
 
 /**
  * Outputs a string at the current cursor position
  * No text clipping is performed.
  */
-void gc_PrintString(const char *string);
+void gfx_PrintString(const char *string);
 
 /**
  * Outputs a string at the given XY coordinates measured from the top left origin.
  * The current cursor position is updated.
  * No text clipping is performed.
  */
-void gc_PrintStringXY(const char *string, uint16_t x, uint8_t y);
+void gfx_PrintStringXY(const char *string, uint24_t x, uint8_t y);
 
 /**
  * Returns the current text cursor X position
  */
-uint16_t gc_TextX(void);
+uint24_t gfx_GetTextX(void);
 
 /**
  * Returns the current text cursor Y position
  */
-uint8_t gc_TextY(void);
+uint8_t gfx_GetTextY(void);
 
 /**
  * Sets the text cursor XY position
  */
-void gc_SetTextXY(uint16_t x, uint8_t y);
+void gfx_SetTextXY(uint24_t x, uint8_t y);
 
 /**
  * Sets the current text color.
@@ -324,153 +348,137 @@ void gc_SetTextXY(uint16_t x, uint8_t y);
  * High 8 bits represent the background color.
  * Returns previous text color
  */
-uint16_t gc_SetTextColor(uint16_t color);
+uint8_t gfx_SetTextFGColor(uint8_t color);
+uint8_t gfx_SetTextBGColor(uint8_t color);
 
 /**
- * Sets the transparent color used in text and sprite functions
- * Default index transparency color is 0xFF
- * Returns the previous transparent color
+ * Draws a given sprite to the screen
  */
-uint8_t gc_SetTransparentColor(uint8_t color);
+void gfx_Sprite(gfx_sprite_t *data, int x, int y); ///< int24_t, int24_t ?
+void gfx_Sprite_NoClip(gfx_sprite_t *data, uint24_t x, uint8_t y);
 
 /**
- * Draws a given sprite to the screen as fast as possible; no transparency, clipping, or anything of the sort.
- * Basically just a direct rectangular data dump onto vram.
+ * Draws a given sprite to the screen using transparency
  */
-void gc_NoClipDrawSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
-
-/**
- * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
- * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well.
- */
-void gc_NoClipDrawTransparentSprite(uint8_t *data, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
+void gfx_TransparentSprite(gfx_sprite_t *data, int x, int y); ///< int24_t, int24_t ?
+void gfx_TransparentSprite_NoClip(gfx_sprite_t *data, uint24_t x, uint8_t y);
 
 /**
  * Quickly grab the background behind a sprite (useful for transparency)
- * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
- * A pointer to spriteBuffer is also returned for ease of use.
- * spriteBuffer is updated with the screen coordinates given.
+ * sprite_buffer must be pointing to a large enough buffer to hold width*height number of bytes
+ * A pointer to sprite_buffer is also returned for ease of use.
+ * sprite_buffer is updated with the screen coordinates given.
  */
-uint8_t *gc_NoClipGetSprite(uint8_t *spriteBuffer, uint16_t x, uint8_t y, uint8_t width, uint8_t height);
+gfx_sprite_t *gfx_GetSprite_NoClip(gfx_sprite_t *sprite_buffer, uint24_t x, uint8_t y);
+#define gfx_GetSprite gfx_GetSprite_NoClip
+
+/**
+ * Unclipped scaled sprite routines
+ * Scaling factors must be greater than or equal to 1, and an integer factor
+ * Useable with gfx_GetSprite in order to create clipped versions
+ */
+void gfx_ScaledSprite_NoClip(gfx_sprite_t *data, int24_t x, int24_t y, uint8_t width_scale, uint8_t height_scale);
+void gfx_ScaledTransparentSprite_NoClip(gfx_sprite_t *data, int24_t x, int24_t y, uint8_t width_scale, uint8_t height_scale);
+
+/**
+ * Sprite flipping and rotating routines
+ * sprite_in and sprite_out cannot be the same buffer
+ * sprite_out must be as large as sprite_in
+ * Returns a pointer to sprite_out
+ */
+gfx_sprite_t *gfx_FlipSpriteX(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_FlipSpriteY(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_FlipSpriteDiag(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_FlipSpriteOffDiag(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_RotateSpriteC(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_RotateSpriteCC(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
+gfx_sprite_t *gfx_RotateSpriteHalf(gfx_sprite_t *sprite_in, gfx_sprite_t *sprite_out);
 
 /**
  * Set the font routines to use the provided font, formated 8x8
  */
-void gc_SetCustomFontData(uint8_t *fontdata);
+void gfx_SetFontData(uint8_t *fontdata);
 
 /**
  * Set the font routines to use the provided font spacing
  */
-void gc_SetCustomFontSpacing(uint8_t *fontspacing);
+void gfx_SetFontSpacing(uint8_t *fontspacing);
 
 /**
- * To disable monospaced font, gc_SetFontMonospace(0)
+ * To disable monospaced font, gfx_SetFontMonospace(0)
  * Otherwise, send the width int pixels you wish all characters to be
  */
-void gc_SetFontMonospace(uint8_t monospace);
+void gfx_SetMonospaceFont(uint8_t monospace);
 
 /**
- * Returns the width of the input sting
+ * Returns the width of the input string
  * Takes into account monospacing flag
  */
-unsigned int gc_StringWidth(const char *string);
+unsigned int gfx_GetStringWidth(const char *string);
 
 /**
  * Returns the width of the character
  * Takes into account monospacing flag
  */
-unsigned int gc_CharWidth(const char c);
-
-/**
- * Draws a given sprite to the screen as fast as possible; no transparency.
- * Basically just a direct rectangular data dump onto vram.
- */
-void gc_ClipDrawSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
-
-/**
- * Draws a given sprite to the screen using transparency set with gc_SetTransparentColor()
- * Not as fast as gc_NoClipDrawSprite(), but still performs pretty well..
- */
-void gc_ClipDrawTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height);
-
-/**
- * Quickly grab the background behind a sprite (useful for transparency)
- * spriteBuffer must be pointing to a large enough buffer to hold width*height number of bytes
- * spriteBuffer is updated with the screen coordinates given.
- * A pointer to spriteBuffer is also returned for ease of use.
- * This routine is technically not clipped, but as long as you use one of the clipped drawing routines, it is fine
- */
-#define gc_ClipGetSprite gc_NoClipGetSprite
+unsigned int gfx_GetCharWidth(const char c);
+#define gfx_GetCharHeight(c) 8
+#define gfx_FontHeight() 8
 
 /**
  * Sets the clipping window for clipped routines
+ * This routine is inclusive
  */
-void gc_SetClipWindow(int24_t xmin, int24_t ymin, int24_t xmax, int24_t ymax);
+void gfx_SetClipRegion(int xmin, int ymin, int xmax, int ymax); ///< Do negative values make sense ?
 
 /**
  * Clips an arbitrary region to fit within the defined bounds
- * Returns false if offscreen
+ * Returns false if offscreen, true if onscreen
  */
-bool gc_ClipRegion(gc_region_t *region);
+bool gfx_GetClipRegion(gfx_region_t *region);
 
 /**
  * Screen shifting routines that operate within the clipping window
  * Note that the data left over is undefined (Must be drawn over)
  */
-void gc_ShiftWindowDown(uint24_t pixels);
-void gc_ShiftWindowUp(uint24_t pixels);
-void gc_ShiftWindowLeft(uint24_t pixels);
-void gc_ShiftWindowRight(uint24_t pixels);
+void gfx_ShiftDown(uint24_t pixels);
+void gfx_ShiftUp(uint24_t pixels);
+void gfx_ShiftLeft(uint24_t pixels);
+void gfx_ShiftRight(uint24_t pixels);
 
 /**
- * Draws a filled rectangle measured from the top left origin.
+ * Produces a random integer value
  */
-void gc_ClipRectangle(int24_t x, int24_t y, uint24_t width, uint24_t height);
+#define gfx_RandInt(min, max) ((unsigned)rand() % ((max) - (min) + 1) + (min))
 
 /**
- * Draws a rectangle outline measured from the top left origin.
+ * Checks if we are currently in a rectangular hotspot area
  */
-void gc_ClipRectangleOutline(int24_t x, int24_t y, uint24_t width, uint24_t height);
+#define gfx_CheckRectangleHotspot(master_x, master_y, master_width, master_height, test_x, test_y, test_width, test_height) \
+	   (((test_x) < ((master_x) + (master_width))) && \
+	   (((test_x) + (test_width)) > (master_x)) && \
+	   ((test_y) < ((master_y) + (master_height))) && \
+	   (((test_y) + (test_height)) > (master_y)))
 
 /**
- * Draws a fast horizontal line measured from the top left origin.
+ * Converts an RGB value to a palette color
+ * Conversion is not 100% perfect, but is quite close
  */
-void gc_ClipHorizLine(int24_t x, int24_t y, uint24_t length);
+#define gfx_RGBTo1555(r,g,b)	((uint16_t)(((uint8_t)(r) >> 3) << 10) | \
+				(((uint8_t)(g) >> 3) << 5) | \
+				((uint8_t)(b) >> 3))
+
+#define gfx_lcdWidth		320
+#define gfx_lcdHeight		240
 
 /**
- * Draws a fast vertical line measured from the top left origin.
+ * Some simple color definitions using the standard palette
  */
-void gc_ClipVertLine(int24_t x, int24_t y, uint24_t length);
-
-/**
- * Fairly fast clipped line routine
- * Returns false if offscreen, true if drawn
- */
-bool gc_ClipLine(int x0, int y0, int x1, int y1);
-
-/**
- * Unclipped scaled sprite routines
- * Scaling factors must be greater than or equal to 1, and an integer factor
- */
-void gc_NoClipDrawScaledSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
-void gc_NoClipDrawScaledTransparentSprite(uint8_t *data, int24_t x, int24_t y, uint8_t width, uint8_t height, uint8_t width_scale, uint8_t height_scale);
-
-/**
- * Sprite flipping routines
- * sprite_in and sprite_out cannot be the same buffer
- * sprite_out must be as large as sprite_in
- * Returns a pointer to sprite_out
- */
-uint8_t *gc_SpriteFlipHoriz(uint8_t *sprite_in, uint8_t *sprite_out, uint8_t width, uint8_t height);
-uint8_t *gc_SpriteFlipVert(uint8_t *sprite_in, uint8_t *sprite_out, uint8_t width, uint8_t height);
-
-/**
- * Sprite rotation routine
- * sprite_in and sprite_out cannot be the same buffer
- * sprite_out must be as large as sprite_in
- * Returns a pointer to sprite_out
- * rotation_angle must be either: (90 : 180 : -90)
- */
-uint8_t *gc_SpriteRotate(uint8_t *sprite_in, uint8_t *sprite_out, uint8_t width, uint8_t height, int rotation_angle);
+#define gfx_black	0x00
+#define gfx_red		0xE0
+#define gfx_orange	0xE3
+#define gfx_green	0x03
+#define gfx_blue	0x10
+#define gfx_purple	0x50
+#define gfx_pink	0xF0
 
 #endif

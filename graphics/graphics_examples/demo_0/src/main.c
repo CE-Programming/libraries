@@ -11,36 +11,39 @@
 #include <string.h>
 
 /* Shared libraries */
-#include <lib/ce/graphc.h>
+#include <lib/ce/graphx.h>
 
 /* Put function prototypes here */
-void printStringCentered(const char *str);
+void print_string_centered(const char *str);
 
 /* Put all your code here */
 void main(void) {
-	/* Seed the random numbers */
-	srand(rtc_Time());
+	const char msg[] = "Hello World!";
 	
-	/* Initialize the graphics */
-	gc_InitGraph();
+	/* Seed the random numbers */
+	srand( rtc_Time() );
+	
+	/* Initialize the 8bpp graphics */
+	gfx_Begin( gfx_8bpp );
 	
 	/* Fill the screen black */
-	gc_FillScrn(0x00);
+	gfx_FillScreen( gfx_black );
 	
 	/* Set the text color where index 0 is transparent, and the forecolor is random */
-	gc_SetTextColor(rand()%255);
+	gfx_SetTextFGColor( gfx_RandInt(0,255) );
 	
-	/* Print a string; centered on the screen */
-	printStringCentered("Hello World!");
-
-	/* Wait for a key to be pressed -- Don't use this in your actual programs! */
-	os_GetKey();
+	/* Print a string centered on the screen */
+	print_string_centered( msg );
+	
+	/* Wait for a key to be pressed */
+	while( !os_GetCSC() );
 	
 	/* Close the graphics and return to the OS */
-	gc_CloseGraph();
+	gfx_End();
 	pgrm_CleanUp();
 }
 
-void printStringCentered(const char *str) {
-	gc_PrintStringXY(str, (gc_lcdWidth-gc_StringWidth(str))/2,(gc_lcdHeight-gc_fontHeight())/2);
+/* Prints a screen centered string */
+void print_string_centered(const char *str) {
+	gfx_PrintStringXY(str, (gfx_lcdWidth-gfx_GetStringWidth(str)) / 2, (gfx_lcdHeight-gfx_FontHeight()) / 2);
 }
