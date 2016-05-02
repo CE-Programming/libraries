@@ -8,8 +8,8 @@
 #Change APPVAR to "YES" to create the file as an AppVar, otherwise "NO" for programs
 
 #----------------------------
-TARGET ?= GRAPHX0
-DESCRIPTION ?= "Graphics C program - Demo 0"
+TARGET ?= GRAPHX1
+DESCRIPTION ?= "Graphics C program - Demo 1"
 DEBUGMODE ?= NDEBUG
 ARCHIVED ?= NO
 APPVAR ?= NO

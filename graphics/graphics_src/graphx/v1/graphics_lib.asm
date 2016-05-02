@@ -1676,22 +1676,22 @@ _Sprite_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
+	ld	hl,(iy+6)			; hl = x coordinate
+	ld	c,(iy+9)			; c = y coordinate
+	ld	iy,(iy+3)			; iy -> sprite struct
 _Sprite_NoClip_ASM:
-	ld	hl,(iy+6)
-	ld	c,(iy+9)
-	ex.s	de,hl
-	ld	hl,(currDrawBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
-	add	hl,bc
+	add	hl,bc				; hl -> start draw location
 	ld	b,0
 	push	hl
-	ld	a,(iy+12)
-	ld	(NoClipSprLineNext),a \.r
-	ld	a,(iy+15)
-	ld	hl,(iy+3)
+	ld	a,(iy+0)
+	ld	(NoClipSprLineNext),a \.r	; a = width
+	ld	a,(iy+1)			; a = height
+	lea	hl,iy+2				; hl = data
 	pop	iy
 NoClipSprLineNext =$+1
 _:	ld	c,0

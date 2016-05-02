@@ -8,7 +8,7 @@
 #Change APPVAR to "YES" to create the file as an AppVar, otherwise "NO" for programs
 
 #----------------------------
-TARGET ?= GRAPHCT
+TARGET ?= GRAPHXT
 DESCRIPTION ?= "Graphics C program - Template"
 DEBUGMODE ?= NDEBUG
 ARCHIVED ?= NO
@@ -25,8 +25,8 @@ GFXDIR := src/gfx
 #----------------------------
 
 #Add shared library names to the L varible, for instance:
-# L := graphc fileioc keypadc
-L := graphc
+# L := graphx fileioc keypadc
+L := graphx
 
 #----------------------------
 #Try not to edit anything below these lines unless you know what you are doing
@@ -251,6 +251,6 @@ $(OBJDIR)/$(LIBHEADER_OBJ) : $(LIBHEADER_LOC)
 $(OBJDIR)/%.obj :
 
 clean :
-	@$(RM) $(OBJDIR)\* $(BINDIR)\* $(NULL)
+	@$(RM) $(OBJDIR)\*.src $(OBJDIR)\*.obj $(OBJDIR)\$(ICON_ASM) $(BINDIR)\$(TARGETMAP) $(BINDIR)\$(TARGETHEX) $(BINDIR)\$(TARGETTYPE) $(NULL)
 
 .PHONY : all clean

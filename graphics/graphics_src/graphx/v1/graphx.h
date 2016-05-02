@@ -354,13 +354,13 @@ uint8_t gfx_SetTextBGColor(uint8_t color);
 /**
  * Draws a given sprite to the screen
  */
-void gfx_Sprite(gfx_sprite_t *data, int x, int y); ///< int24_t, int24_t ?
+void gfx_Sprite(gfx_sprite_t *data, int x, int y);
 void gfx_Sprite_NoClip(gfx_sprite_t *data, uint24_t x, uint8_t y);
 
 /**
  * Draws a given sprite to the screen using transparency
  */
-void gfx_TransparentSprite(gfx_sprite_t *data, int x, int y); ///< int24_t, int24_t ?
+void gfx_TransparentSprite(gfx_sprite_t *data, int x, int y);
 void gfx_TransparentSprite_NoClip(gfx_sprite_t *data, uint24_t x, uint8_t y);
 
 /**
