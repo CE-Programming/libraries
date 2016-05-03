@@ -1411,8 +1411,6 @@ _ScaledSprite_NoClip:
 ;  arg0 : Pointer to sprite
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width -- 8bits
-;  arg4 : Height -- 8bits
 ;  arg5 : Width Scale (integer)
 ;  arg6 : Height Scale (integer)
 ; Returns:
@@ -1421,8 +1419,7 @@ _ScaledSprite_NoClip:
 	add	iy,sp
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
-	ex.s	de,hl
-	ld	hl,(currDrawBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1430,21 +1427,21 @@ _ScaledSprite_NoClip:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	c,(iy+12)
-	ld	b,(iy+18)
-	ld	a,b
+	ld	a,(iy+15)
+	ld	(NoClipSprHeightScale),a \.r
+	ld	a,(iy+12)
 	ld	(NoClipSprScaledWidth),a \.r
+	ld	iy,(iy+3)
+	ld	c,(iy+0)
+	ld	b,a
 	ld	a,c
 	mlt	bc
 	ld	(NoClipSprScaledCopyAmt),bc \.r
-	or	a,a
 	sbc	hl,bc
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
-	ld	a,(iy+21)
-	ld	(NoClipSprHeightScale),a \.r
-	ld	b,(iy+15)
-	ld	hl,(iy+3)
+	ld	b,(iy+1)
+	lea	hl,iy+2
 _:	push	bc
 NoClipSprScaledLineNext =$+1
 	ld	c,0
@@ -1462,11 +1459,11 @@ _:	ld	(de),a
 NoClipSprScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
-	ex	de,hl
 NoClipSprHeightScale =$+1
 	ld	a,0
-	push	hl
-	pop	iy
+	ld	iy,0
+	add	iy,de
+	ex	de,hl
 	pop	hl
 _:	dec	a
 	jr	z,+_
@@ -1489,11 +1486,9 @@ _:	lea	hl,iy
 _ScaledTransparentSprite_NoClip:
 ; Draws a scaled sprite to the screen with transparency
 ; Arguments:
-;  arg0 : Pointer to sprite
+;  arg0 : Pointer to sprite structure
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width -- 8bits
-;  arg4 : Height -- 8bits
 ;  arg5 : Width Scale (integer)
 ;  arg6 : Height Scale (integer)
 ; Returns:
@@ -1502,8 +1497,7 @@ _ScaledTransparentSprite_NoClip:
 	add	iy,sp
 	ld	hl,(iy+6)
 	ld	c,(iy+9)
-	ex.s	de,hl
-	ld	hl,(currDrawBuffer)
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
@@ -1511,25 +1505,25 @@ _ScaledTransparentSprite_NoClip:
 	add	hl,bc
 	ex	de,hl
 	ld	hl,lcdWidth
-	ld	c,(iy+12)
-	ld	b,(iy+18)
-	ld	a,b
+	ld	a,(iy+15)
+	ld	(NoClipSprTransHeightScale),a \.r
+	ld	a,(iy+12)
 	ld	(NoClipSprTransScaledWidth),a \.r
+	ld	iy,(iy+3)
+	ld	c,(iy+0)
+	ld	b,a
 	ld	a,c
 	mlt	bc
-	or	a,a
 	sbc	hl,bc
 	ld	(NoClipSprTransScaledMoveAmt),hl \.r
 	ld	(NoClipSprTransScaledLineNext),a \.r
-	ld	b,(iy+15)
-	ld	hl,(iy+3)
-	ld	a,(iy+21)
-	ld	(NoClipSprTransHeightScale),a \.r
+	ld	b,(iy+1)
+	lea	hl,iy+2
 _:	push	bc
 NoClipSprTransHeightScale =$+1
 	ld	a,0
-_:	push	af
-	push	hl
+_:	push	hl
+	push	af
 NoClipSprTransScaledLineNext =$+1
 	ld	c,0
 NoClipSprTransScaledWidth =$+1
@@ -1547,11 +1541,11 @@ _:	inc	hl
 NoClipSprTransScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
+	ld	iy,0
+	add	iy,de
 	ex	de,hl
-	push	hl
-	pop	iy
-	pop	hl
 	pop	af
+	pop	hl
 	dec	a
 	jr	z,+_
 	jr	----_
