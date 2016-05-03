@@ -1417,69 +1417,71 @@ _ScaledSprite_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+6)
-	ld	c,(iy+9)
+	ld	hl,(iy+6)				; hl = x coordinate
+	ld	c,(iy+9)				; c = y coordniate
 	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
-	ex	de,hl
+	ex	de,hl					; de -> start draw location
 	ld	hl,lcdWidth
 	ld	a,(iy+15)
 	ld	(NoClipSprHeightScale),a \.r
 	ld	a,(iy+12)
-	ld	(NoClipSprScaledWidth),a \.r
-	ld	iy,(iy+3)
+	ld	(NoClipSprScaledWidth),a \.r		; SMC faster inner loop
+	ld	iy,(iy+3)				; iy -> start of sprite struct
 	ld	c,(iy+0)
 	ld	b,a
 	ld	a,c
-	mlt	bc
+	mlt	bc					; width * width scale
 	ld	(NoClipSprScaledCopyAmt),bc \.r
-	sbc	hl,bc
+	sbc	hl,bc					; find x offset next
 	ld	(NoClipSprScaledMoveAmt),hl \.r
 	ld	(NoClipSprScaledLineNext),a \.r
-	ld	b,(iy+1)
-	lea	hl,iy+2
-_:	push	bc
+	ld	a,(iy+1)
+	lea	hl,iy+2					; hl -> sprite data
+	push	ix					; save ix sp
+	ld	ixh,a					; ixh = height
 NoClipSprScaledLineNext =$+1
-	ld	c,0
-	push	de
+_:	ld	c,0
+	push	de					; push dest
 NoClipSprScaledWidth =$+1
 _:	ld	b,0
 	ld	a,(hl)
 _:	ld	(de),a
 	inc	de
-	djnz	-_
+	djnz	-_					; plot width scale pixels
 	inc	hl
 	dec	c
 	jr	nz,--_
 	ex	de,hl
+	ld	iy,0
+	add	iy,de					; save hl location
 NoClipSprScaledMoveAmt =$+1
 	ld	bc,0
 	add	hl,bc
 NoClipSprHeightScale =$+1
 	ld	a,0
-	ld	iy,0
-	add	iy,de
-	ex	de,hl
+	ex	de,hl					; swap dest/src
 	pop	hl
 _:	dec	a
 	jr	z,+_
 	push	bc
 NoClipSprScaledCopyAmt = $+1
 	ld	bc,0
-	ldir
+	ldir						; copy previous line data
 	pop	bc
 	ex	de,hl
 	add	hl,bc
 	ex	de,hl
-	add	hl,bc
+	add	hl,bc					; move to previous and next row
 	jr	-_
-_:	lea	hl,iy
-	pop	bc
-	djnz	-----_
+_:	lea	hl,iy					; restore hl location
+	dec	ixh
+	jr	nz,-----_
+	pop	ix					; restore ix sp
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1495,68 +1497,66 @@ _ScaledTransparentSprite_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+6)
-	ld	c,(iy+9)
+	ld	hl,(iy+6)				; hl = x coordinate
+	ld	c,(iy+9)				; c = y coordniate
 	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
-	ex	de,hl
+	ex	de,hl					; de -> start draw location
 	ld	hl,lcdWidth
 	ld	a,(iy+15)
 	ld	(NoClipSprTransHeightScale),a \.r
 	ld	a,(iy+12)
-	ld	(NoClipSprTransScaledWidth),a \.r
-	ld	iy,(iy+3)
-	ld	c,(iy+0)
+	ld	(NoClipSprTransScaledWidth),a \.r	; SMC faster inner loop
+	ld	iy,(iy+3)				; iy -> start of sprite struct
+	ld	c,(iy+0)				; c = width
 	ld	b,a
 	ld	a,c
 	mlt	bc
-	sbc	hl,bc
+	sbc	hl,bc					; find x offset next
 	ld	(NoClipSprTransScaledMoveAmt),hl \.r
-	ld	(NoClipSprTransScaledLineNext),a \.r
-	ld	b,(iy+1)
-	lea	hl,iy+2
-_:	push	bc
-NoClipSprTransHeightScale =$+1
-	ld	a,0
+	ld	(NoClipSprTransWidth),a \.r
+	ld	a,(iy+1)
+	lea	hl,iy+2					; hl -> sprite data
+	push	ix					; save ix sp
+	ld	ixh,a					; ixh = height
+NoClipSprTransHeightScale =$+2
+_:	ld	ixl,0					; ixl = height scale
 _:	push	hl
-	push	af
-NoClipSprTransScaledLineNext =$+1
+NoClipSprTransWidth =$+1
 	ld	c,0
 NoClipSprTransScaledWidth =$+1
 _:	ld	b,0
-	ld	a,(hl)
+	ld	a,(hl)					; get sprite pixel
 	or	a,a
-	jr	z,++++_	
-_:	ld	(de),a
-	inc	de
-	djnz	-_
-_:	inc	hl
-	dec	c
-	jr	nz,---_
-	ex	de,hl
-NoClipSprTransScaledMoveAmt =$+1
-	ld	bc,0
-	add	hl,bc
-	ld	iy,0
-	add	iy,de
-	ex	de,hl
-	pop	af
-	pop	hl
-	dec	a
-	jr	z,+_
-	jr	----_
-_:	lea	hl,iy
-	pop	bc
-	djnz	------_
-	ret
-
+	jr	nz,++_					; is transparent?
 _:	inc	de
 	djnz	-_
-	jr	---_
+	jr	++_					; loop for next pixel
+_:	ld	(de),a
+	inc	de
+	djnz	-_					; set and loop for next pixel
+_:	inc	hl
+	dec	c
+	jr	nz,----_				; loop for width
+	ex	de,hl
+	ld	iy,0
+	add	iy,de					; save hl
+NoClipSprTransScaledMoveAmt =$+1
+	ld	bc,0
+	add	hl,bc					; get next draw location
+	ex	de,hl
+	pop	hl
+	dec	ixl					; loop height scale
+	jr	nz,-----_
+	lea	hl,iy					; restore hl
+	dec	ixh					; loop height
+	jr	nz,------_
+	pop	ix					; restore ix sp
+	ret
 
 ;-------------------------------------------------------------------------------
 _TransparentSprite:
