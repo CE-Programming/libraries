@@ -52,7 +52,8 @@ typedef struct gfx_sprite {
 } gfx_sprite_t;
 
 gfx_sprite_t *gfx_AllocSprite(uint8_t width, uint8_t height);
-#define gfx_TempSprite(name, width, height) uint8_t name[2 + (width) * (height)] = { (width), (height) }
+#define gfx_TempSprite(name, width, height) uint8_t name_data[2 + (width) * (height)] = { (width), (height) }; \
+                                            gfx_sprite_t *name = (gfx_sprite_t *)name_data
 
 typedef enum gfx_mode {
 	gfx_8bpp = 0x27
@@ -406,7 +407,7 @@ void gfx_SetFontSpacing(uint8_t *fontspacing);
 
 /**
  * To disable monospaced font, gfx_SetFontMonospace(0)
- * Otherwise, send the width int pixels you wish all characters to be
+ * Otherwise, send the width in pixels you wish all characters to be
  */
 void gfx_SetMonospaceFont(uint8_t monospace);
 
@@ -428,7 +429,7 @@ unsigned int gfx_GetCharWidth(const char c);
  * Sets the clipping window for clipped routines
  * This routine is inclusive
  */
-void gfx_SetClipRegion(int xmin, int ymin, int xmax, int ymax); ///< Do negative values make sense ?
+void gfx_SetClipRegion(int xmin, int ymin, int xmax, int ymax);
 
 /**
  * Clips an arbitrary region to fit within the defined bounds
@@ -481,4 +482,4 @@ void gfx_ShiftRight(uint24_t pixels);
 #define gfx_purple	0x50
 #define gfx_pink	0xF0
 
-#endif
+#endif 

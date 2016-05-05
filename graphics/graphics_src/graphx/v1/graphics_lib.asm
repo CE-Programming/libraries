@@ -53,10 +53,10 @@
  .function "gfx_ShiftUp",_ShiftUp
  .function "gfx_ShiftLeft",_ShiftLeft
  .function "gfx_ShiftRight",_ShiftRight
- .function "gfx_BGTilemap",_BGTilemap
- .function "gfx_BGTilemap_NoClip",_BGTilemap_NoClip
- .function "gfx_FGTilemap",_FGTilemap
- .function "gfx_FGTilemap_NoClip",_FGTilemap_NoClip
+ .function "gfx_Tilemap",_Tilemap
+ .function "gfx_Tilemap_NoClip",_Tilemap_NoClip
+ .function "gfx_TransparentTilemap",_TransparentTilemap
+ .function "gfx_TransparentTilemap_NoClip",_TransparentTilemap_NoClip
  .function "gfx_TilePtr",_TilePtr
  .function "gfx_TilePtrMapped",_TilePtrMapped
  .function "gfx_LZDecompress",_LZDecompress
@@ -144,10 +144,10 @@ _SetColor:
 	ld	d,(hl)
 	ld	a,e
 	ld	(hl),a
+	ld	(color2),a \.r
 	ld	(color3),a \.r
 	ld	(color4),a \.r
-	ld	(color6),a \.r
-	ld	(color7),a \.r
+	ld	(color5),a \.r
 	ld	a,d
 	ret
 
@@ -466,11 +466,11 @@ _HorizLine:
 	add	iy,sp
 	ld	de,(_ymin) \.r
 	ld	hl,(iy+6)
-	call	_SignedCompare_ASM \.r
+	call	_SignedCompare_ASM \.r		; compare y coordinate <-> ymin
 	ret	c
 	ld	hl,(_ymax) \.r
 	ld	de,(iy+6)
-	call	_SignedCompare_ASM \.r
+	call	_SignedCompare_ASM \.r		; compare y coordinate <-> ymax
 	ret	c
 	ld	hl,(iy+9)
 	ld	de,(iy+3)
@@ -478,19 +478,19 @@ _HorizLine:
 	ld	(iy+9),hl
 	ld	hl,(_xmin) \.r
 	call	_Max_ASM \.r
-	ld	(iy+3),hl
+	ld	(iy+3),hl			; save maximum x value
 	ld	hl,(_xmax) \.r
 	ld	de,(iy+9)
 	call	_Min_ASM \.r
-	ld	(iy+9),hl
+	ld	(iy+9),hl			; save minimum x value
 	ld	de,(iy+3)
 	call	_SignedCompare_ASM \.r
 	ret	c
 	ld	hl,(iy+9)
 	sbc	hl,de
 	push	hl
-	pop	bc
-	ld	e,(iy+6)
+	pop	bc				; bc = length
+	ld	e,(iy+6)			; e = y coordinate
 	jr	_RectHoriz_ASM
 
 ;-------------------------------------------------------------------------------
@@ -518,7 +518,7 @@ _HorizLine_NoClip_ASM:
 	add	hl,de
 	ld	de,(currDrawBuffer)
 	add	hl,de				; hl -> place to draw
-color3 =$+1
+color2 =$+1
 	ld	a,0				; color index to use
 _MemSet_ASM:
 	ld	(hl),a
@@ -596,7 +596,7 @@ _VertLine_ASM:
 	add	hl,de				; hl -> drawing location
 _RectVert_ASM:
 	ld	de,lcdWidth
-color4 =$+1
+color3 =$+1
 _:	ld	(hl),0				; loop for height
 	add	hl,de
 	djnz	-_
@@ -1236,7 +1236,7 @@ changeXLoop:
 	add	hl,bc
 	ld	de,(currDrawBuffer)
 	add	hl,de
-color6 =$+1
+color4 =$+1
 	ld	(hl),0
 	sbc	hl,hl
 	ld	h,b
@@ -1273,7 +1273,7 @@ changeYLoop:
 	add	hl,bc
 	ld	de,(currDrawBuffer)
 	add	hl,de
-color7 =$+1
+color5 =$+1
 	ld	(hl),0
 	pop	hl
 y1 =$+1
@@ -1504,15 +1504,15 @@ _ScaledTransparentSprite_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+6)				; hl = x coordinate
-	ld	c,(iy+9)				; c = y coordniate
+	ld	hl,(iy+6)			; hl = x coordinate
+	ld	c,(iy+9)			; c = y coordniate
 	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
-	ex	de,hl					; de -> start draw location
+	ex	de,hl				; de -> start draw location
 	ld	hl,lcdWidth
 	ld	a,(iy+15)
 	ld	(NoClipSprTransHeightScale),a \.r
@@ -1537,32 +1537,32 @@ NoClipSprTransWidth =$+1
 	ld	c,0
 NoClipSprTransScaledWidth =$+1
 _:	ld	b,0
-	ld	a,(hl)					; get sprite pixel
+	ld	a,(hl)				; get sprite pixel
 	or	a,a
-	jr	nz,++_					; is transparent?
+	jr	nz,++_				; is transparent?
 _:	inc	de
 	djnz	-_
-	jr	++_					; loop for next pixel
+	jr	++_				; loop for next pixel
 _:	ld	(de),a
 	inc	de
-	djnz	-_					; set and loop for next pixel
+	djnz	-_				; set and loop for next pixel
 _:	inc	hl
 	dec	c
-	jr	nz,----_				; loop for width
+	jr	nz,----_			; loop for width
 	ex	de,hl
 	ld	iy,0
-	add	iy,de					; save hl
+	add	iy,de				; save hl
 NoClipSprTransScaledMoveAmt =$+1
 	ld	bc,0
-	add	hl,bc					; get next draw location
+	add	hl,bc				; get next draw location
 	ex	de,hl
 	pop	hl
-	dec	ixl					; loop height scale
+	dec	ixl				; loop height scale
 	jr	nz,-----_
-	lea	hl,iy					; restore hl
-	dec	ixh					; loop height
+	lea	hl,iy				; restore hl
+	dec	ixh				; loop height
 	jr	nz,------_
-	pop	ix					; restore ix sp
+	pop	ix				; restore ix sp
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1598,7 +1598,7 @@ ClipSprTransNextLine =$+1
 _:	ld	c,0
 	lea	de,iy
 	xor	a,a
-	call	++_ \.r				; call the transparent routine
+	call	_TransparentPlot_ASM \.r	; call the transparent routine
 ClipSprTransNextAmt =$+1
 	ld	c,0
 	add	hl,bc
@@ -1609,6 +1609,7 @@ ClipSprTransNextAmt =$+1
 	pop	ix
 	ret
 
+_TransparentPlot_ASM:
 _:	ldi
 	ret	po
 _:	cp	a,(hl)
@@ -1675,7 +1676,6 @@ _Sprite_NoClip:
 	ld	hl,(iy+6)			; hl = x coordinate
 	ld	c,(iy+9)			; c = y coordinate
 	ld	iy,(iy+3)			; iy -> sprite struct
-_Sprite_NoClip_ASM:
 	ld	de,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
@@ -1706,32 +1706,28 @@ _GetSprite_NoClip:
 ;  arg0 : Pointer to storage buffer
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width
-;  arg4 : Height
 ; Returns:
-;  None
+;  Pointer to resultant sprite
 	ld	iy,0
+	lea	bc,iy
 	add	iy,sp
-	ld	hl,(iy+6)
+	ld	de,(iy+6)
 	ld	c,(iy+9)
-	ex.s	de,hl
+	ld	iy,(iy+3)
+	ld	hl,lcdWidth
+	ld	c,(iy+0)
+	ld	a,c
+	sbc	hl,bc
+	ld	(NoClipSprGrabMoveAmt),hl \.r
+	ld	(NoClipSprGrabNextLine),a \.r
 	ld	hl,(currDrawBuffer)
 	add	hl,de
 	ld	b,lcdWidth/2
 	mlt	bc
 	add	hl,bc
 	add	hl,bc
-	ex	de,hl
-	ld	hl,lcdWidth
-	ld	bc,0
-	ld	c,(iy+12)
-	ld	a,c
-	sbc	hl,bc
-	ld	(NoClipSprGrabMoveAmt),hl \.r
-	ld	(NoClipSprGrabNextLine),a \.r
-	ld	a,(iy+15)
-	ld	hl,(iy+3)
-	ex	de,hl
+	ld	a,(iy+1)
+	lea	de,iy+2
 NoClipSprGrabNextLine =$+1
 _:	ld	bc,0
 	ldir
@@ -1740,7 +1736,7 @@ NoClipSprGrabMoveAmt =$+1
 	add	hl,bc
 	dec	a
 	jr	nz,-_
-	ld	hl,(iy+3)
+	lea	hl,iy
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1750,44 +1746,37 @@ _TransparentSprite_NoClip:
 ;  arg0 : Pointer to sprite
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width
-;  arg4 : Height
 ; Returns:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	bc,0
-	ld	hl,lcdWidth
-	ld	a,(iy+12)
-	ld	(NoClipSprTransNextLine),a \.r
-	ld	l,(iy+9)
-	ld	h,lcdWidth/2
-	mlt	hl
-	ld	de,(iy+6)
-	add	hl,hl
-	add	hl,de
+	ld	hl,(iy+6)			; hl = x coordinate
+	ld	c,(iy+9)			; c = y coordinate
+	ld	iy,(iy+3)			; iy -> sprite struct
 	ld	de,(currDrawBuffer)
 	add	hl,de
+	ld	b,lcdWidth/2
+	mlt	bc
+	add	hl,bc
+	add	hl,bc
+	ld	b,0
 	push	hl
-	ld	hl,(iy+3)
-	ld	a,(iy+15)
+	ld	a,(iy+0)
+	ld	(NoClipSprTransNextLine),a \.r
+	ld	a,(iy+1)
+	lea	hl,iy+2
 	pop	iy
 	push	ix
 	ld	ixh,a
+	xor	a,a
 NoClipSprTransNextLine =$+1
-_:	ld	b,0
+_:	ld	c,0
 	lea	de,iy
-_:	ld	a,(hl)
-	or	a,a
-	jr	z,+_
-	ld	(de),a
-_:	inc	de
-	inc	hl
-	djnz	--_
+	call	_TransparentPlot_ASM \.r
 	ld	de,lcdWidth
 	add	iy,de
 	dec	ixh
-	jr	nz,---_
+	jr	nz,-_
 	pop	ix
 	ret
 
@@ -1902,22 +1891,22 @@ tmpSpriteWidth =$+1
 	ret
 
 ;-------------------------------------------------------------------------------
-_FGTilemap_NoClip:
+_TransparentTilemap_NoClip:
 ; Tilemapping subsection
 	ld	hl,_TransparentSprite_NoClip \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_BGTilemap_NoClip:
+_Tilemap_NoClip:
 ; Tilemapping subsection
 	ld	hl,_Sprite_NoClip \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_FGTilemap:
+_TransparentTilemap:
 ; Tilemapping subsection
 	ld	hl,_TransparentSprite \.r
 	jr	+_
 ;-------------------------------------------------------------------------------
-_BGTilemap:
+_Tilemap:
 ; Draws a tilemap given a tile map structure and some offsets
 ; Arguments:
 ;  arg0 : Tilemap Struct
@@ -2025,11 +2014,6 @@ _Y_Next_SMC =$+1
 	mlt	hl
 	ld	de,(iy+3)
 	add	hl,de
-	ld	b,0
-	ld	c,(iy+6)
-	push	bc
-	ld	c,(iy+7)
-	push	bc
 	ld	bc,(ix+-12)
 	push	bc
 	ld	bc,(ix+-7)
@@ -2391,7 +2375,6 @@ _PrintInt:
 	push	bc
 	push	hl
 	pop	bc
-	or	a,a
 	sbc	hl,hl
 	sbc	hl,bc
 	ld	a,'-'
@@ -2434,24 +2417,20 @@ _GetCharWidth:
 ;  arg0 : Character
 ; Returns:
 ;  Width of character in pixels
-	pop	de
-	pop	hl
-	push	hl
-	push	de
-	ld	bc,0
-	ld	a,l
+	ld	iy,0
+	lea	bc,iy
+	add	iy,sp
+	ld	a,(iy+3)
 _GetCharWidth_ASM:
+	or	a,a
+	sbc	hl,hl
 	ld	l,a
 	ld	a,(MonoFlag_ASM) \.r
 	or	a,a
 	jr	nz,+_
-	ld	a,l
-	sbc	hl,hl
-	ld	l,a
 	ld	de,(CharSpacing_ASM) \.r
 	add	hl,de
 	ld	a,(hl)
-	or	a,a
 	sbc	hl,hl
 	ld	l,a
 	add	hl,bc
