@@ -19,6 +19,9 @@
  .function "gfx_DrawToBuffer",_DrawToBuffer
  .function "gfx_DrawToScreen",_DrawToScreen
  .function "gfx_SwapDraw",_SwapDraw
+ .function "gfx_Blit",_Blit
+ .function "gfx_BlitLines",_BlitLines
+ .function "gfx_BlitArea",_BlitArea
  .function "gfx_PrintChar",_PrintChar
  .function "gfx_PrintInt",_PrintInt
  .function "gfx_PrintUInt",_PrintUInt
@@ -91,15 +94,17 @@ _AllocSprite:
 ; Arguments:
 ;  arg0 : width
 ;  arg1 : height
+;  arg2 : pointer to malloc routine
 	ld	iy,0
 	add	iy,sp
 	ld	l,(iy+3)
 	ld	h,(iy+6)
+	ld	iy,(iy+9)
 	push	hl
 	mlt	hl
 	inc	hl
 	inc	hl
-	;call	_malloc ; idk how? I wish that we had OS routines to do this properly... Oh wait, we can \o/
+	call	__indcall
 	pop	de
 	ld	(hl),e
 	inc	hl
@@ -1296,6 +1301,51 @@ dy12 =$+1
 	ld	de,0
 	sbc	hl,de
 	jr	changeYLoop
+
+;-------------------------------------------------------------------------------
+_Blit:
+; Copies the buffer image to the screen and vice versa
+; Arguments:
+;  arg0 : Buffer to copy to (screen = 0, buffer = 1)
+; Returns:
+;  None
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	ld	a,l				; this is a uint8_t
+	ld	hl,(currDrawBuffer)
+	ld	de,(mpLcdBase)
+	ld	bc,lcdSize
+	or	a,a				; if 0, copy buffer to screen
+	jr	z,+_
+	ex	de,hl
+_:	ldir
+	ret
+
+;-------------------------------------------------------------------------------
+_BlitLines:
+; Copies the buffer image to the screen and vice versa line wise
+; Arguments:
+;  arg0 : Buffer to copy to (screen = 0, buffer = 1)
+;  arg1 : Y coordinate
+;  arg2 : Number of lines to copy
+; Returns:
+;  None
+	ret
+
+;-------------------------------------------------------------------------------
+_BlitArea:
+; Copies the buffer image to the screen and vice versa rectangularly
+; Arguments:
+;  arg0 : Buffer to copy to (screen = 0, buffer = 1)
+;  arg1 : X coordinate
+;  arg2 : Y coordinate
+;  arg3 : Width
+;  arg4 : Height
+; Returns:
+;  None
+	ret
 
 ;-------------------------------------------------------------------------------
 _ShiftDown:

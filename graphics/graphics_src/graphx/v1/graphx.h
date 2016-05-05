@@ -51,7 +51,18 @@ typedef struct gfx_sprite {
 	uint8_t data[1];
 } gfx_sprite_t;
 
-gfx_sprite_t *gfx_AllocSprite(uint8_t width, uint8_t height);
+/**
+ * Allocates room on the heap for sprite data of given size
+ * Takes a pointer to the routine used for malloc as well
+ * Returns NULL upon failure to allocate space, otherwise a pointer to the sprite structure
+ * Note that if you use the system malloc routine, it must be used elsewhere in your program
+ * otherwise it will not be linked correctly
+ */
+gfx_sprite_t *gfx_AllocSprite(uint8_t width, uint8_t height, void *malloc_routine);
+
+/**
+ * This routine should probably be used globally, or for small sprites as it uses the stack
+ */
 #define gfx_TempSprite(name, width, height) uint8_t name_data[2 + (width) * (height)] = { (width), (height) }; \
                                             gfx_sprite_t *name = (gfx_sprite_t *)name_data
 
@@ -150,9 +161,6 @@ uint8_t *gfx_TilePtrMapped(gfx_tilemap_t *tilemap, uint8_t x_offset, uint8_t y_o
  *  insize : Number of input bytes
  */
 void gfx_LZDecompress(uint8_t *in, uint8_t *out, unsigned in_size);
-
-
-// PuCrunch, the de-facto standard on the TI-68k series :)
 
 /**
  * Sets the color index that drawing routines will use
@@ -285,7 +293,6 @@ void gfx_SwapDraw(void);
 void gfx_Blit(uint8_t buffer);
 void gfx_BlitLines(uint8_t buffer, uint8_t y_loc, uint8_t num_lines);
 void gfx_BlitArea(uint8_t buffer, uint24_t x, uint8_t y, uint24_t width, uint24_t height);
-// Blit rectangular area ?
 
 /**
  * Returns false if graphics routines are currently drawing to visible screen
