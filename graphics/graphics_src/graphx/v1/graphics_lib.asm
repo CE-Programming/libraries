@@ -78,6 +78,10 @@
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
+tmpWidth                equ 0E30C08h
+tmpHeight               equ 0E30C0Bh
+tmpSpritePtr            equ 0E30C0Eh
+tmpSafe                 equ 0E30C11h
 currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
 
@@ -155,6 +159,9 @@ _Begin:
 ; Returns:
 ;  None
 	call	_boot_ClearVRAM			; clear the screen
+	ld	hl,tmpWidth
+	ld	bc,11
+	call	_MemClear
 	ld	hl,currDrawBuffer
 	ld	a,lcdBpp8
 _:	ld	de,vram
@@ -1565,52 +1572,51 @@ _TransparentSprite:
 ;  arg0 : Pointer to sprite
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width -- 8bits
-;  arg4 : Height -- 8bits
 ; Returns:
 ;  None
+	push	ix				; save ix sp
 	call	_ClipDraw_ASM \.r
+	pop	ix				; restore ix sp
 	ret	nc
 	ld	(ClipSprTransNextAmt),a \.r
-	xor	a,a
-	or	a,(iy+15)
-	ret	z
-	ld	bc,0
-	ld	hl,lcdWidth
-	ld	a,(iy+12)
+	ld	a,(iy+0)			; tmpWidth
 	ld	(ClipSprTransNextLine),a \.r
-	ld	l,(iy+9)
+	ld	a,(iy+3)			; tmpHeight
 	ld	h,lcdWidth/2
 	mlt	hl
-	ld	de,(iy+6)
+	ld	bc,0				; zero ubc
 	add	hl,hl
 	add	hl,de
 	ld	de,(currDrawBuffer)
 	add	hl,de
 	push	hl
-	ld	hl,(iy+3)
-	ld	a,(iy+15)
+	ld	hl,(iy+6)			; hl -> sprite data
 	pop	iy
 	push	ix
 	ld	ixh,a
 ClipSprTransNextLine =$+1
-_:	ld	b,0
+_:	ld	c,0
 	lea	de,iy
-_:	ld	a,(hl)
-	or	a,a
-	jr	z,+_
-	ld	(de),a
-_:	inc	de
-	inc	hl
-	djnz	--_
+	xor	a,a
+	call	++_ \.r				; call the transparent routine
 ClipSprTransNextAmt =$+1
 	ld	c,0
 	add	hl,bc
-	ld	de,lcdWidth
+	ld	de,lcdWidth			; move to next row
 	add	iy,de
 	dec	ixh
-	jr	nz,---_
+	jr	nz,-_
 	pop	ix
+	ret
+
+_:	ldi
+	ret	po
+_:	cp	a,(hl)
+	jr	nz,--_
+	inc	de
+	inc	hl
+	dec	c
+	jr	nz,-_ 				; 41 cycles
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1624,24 +1630,22 @@ _Sprite:
 ;  arg4 : Height -- 8bits
 ; Returns:
 ;  None
+	push	ix				; save ix sp
 	call	_ClipDraw_ASM \.r
+	pop	ix				; restore ix sp
 	ret	nc
 	ld	(ClipSprNextAmt),a \.r
-	ld	a,(iy+12)
+	ld	a,(iy+0)			; tmpWidth
 	ld	(ClipSprLineNext),a \.r
-	ld	a,(iy+15)
-	or	a,a
-	ret	z
-	ld	l,(iy+9)
+	ld	a,(iy+3)			; tmpHeight
 	ld	h,lcdWidth/2
 	mlt	hl
-	ld	bc,(iy+6)
 	add	hl,hl
-	add	hl,bc
-	ld	bc,(currDrawBuffer)
-	add	hl,bc
+	add	hl,de
+	ld	de,(currDrawBuffer)
+	add	hl,de
 	push	hl
-	ld	hl,(iy+3)
+	ld	hl,(iy+6)			; hl -> sprite data
 	pop	iy
 	ld	bc,0
 ClipSprLineNext =$+1
@@ -1664,8 +1668,6 @@ _Sprite_NoClip:
 ;  arg0 : Pointer to sprite
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width
-;  arg4 : Height
 ; Returns:
 ;  None
 	ld	iy,0
@@ -1793,101 +1795,110 @@ _:	inc	de
 _ClipDraw_ASM:
 ; Clipping stuff
 ; Arguments:
-;  arg0 : Pointer to sprite
+;  arg0 : Pointer to sprite structure
 ;  arg1 : X Coord
 ;  arg2 : Y Coord
-;  arg3 : Width -- 8bits
-;  arg4 : Height -- 8bits
 ; Returns:
-;  How much to add to the sprite per iteration, NC if offscreen
-	ld	iy,3
-	add	iy,sp
-	ld	a,(iy+12)
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	ld	(iy+12),hl
-	ld	l,(iy+15)
-	ld	(iy+15),hl
-	ld	(tmpSpriteWidth_ASM),a \.r
-	ld	de,(iy+9)
+;  A  : How much to add to the sprite per iteration
+;  L  : New Y coordinate
+;  DE : New X coordinate
+;  NC : If offscreen
+	ld	ix,6					; get pointer to arguments
+	add	ix,sp
+	ld	hl,(ix+3)
+	ld	a,(hl)
+	ld	de,tmpWidth
+	ld	(de),a					; save tmpWidth
+	ld	(tmpSpriteWidth),a \.r			; save tmpSpriteWidth
+	ld	iy,0
+	add	iy,de
+	inc	hl
+	ld	a,(hl)
+	ld	(iy+3),a				; save tmpHeight
+	inc	hl
+	ld	(iy+6),hl				; save a ptr to the sprite data to change offsets
+	ld	de,(ix+9)
 	ld	hl,(_ymin) \.r
 	sbc	hl,de
-	jp	m,NoTopClipNeeded_ASM \.r
+	jp	m,NoTopClipNeeded_ASM \.r		; check clipping against the top
 	jr	z,NoTopClipNeeded_ASM
-	ld	a,l
-	ld	hl,(iy+15)
+	ld	a,l					; save the clipped distance
+	ld	hl,(iy+3)				; hl = tmpHeight
 	or	a,a
+	add	hl,de					; y coordinate - tmpHeight
+	ret	nc					; return if offscreen
+	ld	(iy+3),hl				; store new tmpHeight
+	ld	l,a					; restore clipped amount
+	ld	h,(iy+0)				; h = tmpWidth
+	mlt	hl					; hl = amount of lines clipped off
+	ld	de,(iy+6)				; de -> sprite data
 	add	hl,de
-	bit	7,h
-	ret	nz
-	ld	(iy+15),hl
-	ld	l,a
-	ld	h,(iy+12)
-	mlt	hl
-	ld	de,(iy+3)
-	add	hl,de
-	ld	(iy+3),hl
+	ld	(iy+6),hl				; store new ptr
 	ld	de,(_ymin) \.r
-	ld	(iy+9),de
+	ld	(ix+9),de				; new y location ymin
 NoTopClipNeeded_ASM:
-	ex	de,hl
+	ex	de,hl					; hl = y coordinate
 	ld	de,(_ymax) \.r
 	call	_SignedCompare_ASM \.r
-	ret	nc
-	ld	de,(iy+9)
-	ld	hl,(iy+15)
+	ret	nc					; return if offscreen on bottom
+	ld	de,(ix+9)				; de = y coordinate
+	ld	hl,(iy+3)				; hl = tmpHeight
 	add	hl,de
 	ld	de,(_ymax) \.r
 	call	_SignedCompare_ASM \.r
-	jr	c,NoBottomClipNeeded_ASM
-	ex	de,hl
-	ld	de,(iy+9)
+	jr	c,NoBottomClipNeeded_ASM		; is partially clipped bottom?
+	ex	de,hl					; hl = ymax
+	ld	de,(ix+9)				; de = y coordinate
 	sbc	hl,de
-	ld	(iy+15),hl
+	ld	(iy+3),hl				; store new tmpHeight
 NoBottomClipNeeded_ASM:
-	ld	hl,(iy+6)
+	ld	hl,(ix+6)				; hl = x coordinate
 	ld	de,(_xmin) \.r
 	call	_SignedCompare_ASM \.r
-	ld	hl,(iy+6)
-	jr	nc,NoLeftClip_ASM
-	ld	de,(iy+12)
-	add	hl,de
+	ld	hl,(ix+6)				; hl = x coordinate
+	jr	nc,NoLeftClip_ASM			; is partially clipped left?
+	ld	de,(iy+0)				; de = tmpWidth
+	add	hl,de					
 	ld	de,(_xmin) \.r
 	ex	de,hl
 	call	_SignedCompare_ASM \.r
-	ret	nc
-	ld	de,(iy+6)
-	ld	hl,(iy+3)
-	or	a,a
+	ret	nc					; return if offscreen
+	ld	de,(ix+6)				; de = x coordinate
+	ld	hl,(iy+6)				; hl -> sprite data
+	ccf
 	sbc	hl,de
-	ld	(iy+3),hl
-	ld	hl,(iy+12)
+	ld	(iy+6),hl				; save new ptr
+	ld	hl,(iy+0)				; hl = tmpWidth
 	add	hl,de
-	ld	(iy+12),hl
+	ld	(iy+0),hl				; save new width
 	ld	hl,(_xmin) \.r
-	ld	(iy+6),hl
+	ld	(ix+6),hl				; save min x coordinate
 NoLeftClip_ASM:
-	ld	de,(_xmax) \.r
+	ld	de,(_xmax) \.r				; de = xmax
 	call	_SignedCompare_ASM \.r
-	ret	nc
-	ld	hl,(iy+6)
-	ld	de,(iy+12)
+	ret	nc					; return if offscreen
+	ld	hl,(ix+6)				; hl = x coordinate
+	ld	de,(iy+0)				; de = tmpWidth
 	add	hl,de
 	ld	de,(_xmax) \.r
 	ex	de,hl
-	call	_SignedCompare_ASM \.r
+	call	_SignedCompare_ASM \.r			; is partially clipped right?
 	jr	nc,NoRightClip_ASM
-	ld	hl,(_xmax) \.r
-	ld	de,(iy+6)
-	or	a,a
+	ld	hl,(_xmax) \.r				; clip on the right
+	ld	de,(ix+6)
+	ccf
 	sbc	hl,de
-	ld	(iy+12),hl
+	ld	(iy+0),hl				; save new tmpWidth
 NoRightClip_ASM:
-tmpSpriteWidth_ASM =$+1
+	ld	a,(iy+3)
+	or	a,a
+	ret	z					; quit if new tmpHeight is 0 (edge case)
+tmpSpriteWidth =$+1
 	ld	a,0
-	sub	a,(iy+12)
-	scf
+	ld	de,(ix+6)				; de = x coordinate
+	ld	l,(ix+9)				; l = y coordinate
+	sub	a,(iy+0)				; compute new x width
+	scf						; set carry for success
 	ret
 
 ;-------------------------------------------------------------------------------

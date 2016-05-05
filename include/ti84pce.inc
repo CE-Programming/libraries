@@ -42,7 +42,7 @@ _JErrorNo                  equ 002012Ch
 _CallFontHook              equ 0020130h
 _CallLocalizeHook          equ 0020134h
 _LoadHLInd_s               equ 0020138h
-_cpHLDE                    equ 002013Ch
+_CpHLDE                    equ 002013Ch
 _DivHLBy10_s               equ 0020140h
 _DivHLByA_s                equ 0020144h
 _KbdScan                   equ 0020148h
@@ -71,7 +71,7 @@ _AbsO1PAbsO2               equ 00201A0h
 _Intgr                     equ 00201A4h
 _TRunc                     equ 00201A8h
 _InvSub                    equ 00201ACh
-_Times2String              equ 00201B0h
+_Times2                    equ 00201B0h
 _Plus1                     equ 00201B4h
 _Minus1                    equ 00201B8h
 _FPSub                     equ 00201BCh
@@ -128,7 +128,7 @@ _COP1Set0                  equ 0020284h
 _Cpop4OP3                  equ 0020288h
 _Mov9OP2Cp                 equ 002028Ch
 _AbsO1O2Cp                 equ 0020290h
-_cpOP1OP2                  equ 0020294h
+_CpOP1OP2                  equ 0020294h
 _OP3ToOP4                  equ 0020298h
 _OP1ToOP4                  equ 002029Ch
 _OP2ToOP4                  equ 00202A0h
@@ -141,7 +141,7 @@ _OP5ToOP4                  equ 00202B8h
 _OP1ToOP2                  equ 00202BCh
 _OP6ToOP2                  equ 00202C0h
 _OP6ToOP1                  equ 00202C4h
-_OP4toOP1                  equ 00202C8h
+_OP4ToOP1                  equ 00202C8h
 _OP5ToOP1                  equ 00202CCh
 _OP3ToOP1                  equ 00202D0h
 _OP6ToOP5                  equ 00202D4h
@@ -524,7 +524,7 @@ _ShowCursor                equ 00208B4h
 _KeyToString               equ 00208B8h
 _PullDownChk               equ 00208BCh
 _MenuCatCommon             equ 00208C0h
-_LoadCurcat                equ 00208C4h
+_LoadCurCat                equ 00208C4h
 _NCIFPrgmedMode            equ 00208C8h
 _LoadMenuNum               equ 00208CCh
 _LoadMenuNuml              equ 00208D0h
@@ -808,15 +808,15 @@ _SetupEditEqu              equ 0020D24h
 _BufToTop                  equ 0020D28h
 _IsEditFull                equ 0020D2Ch
 _IsEditEmpty               equ 0020D30h
-_IsAtTOP                   equ 0020D34h
+_IsAtTop                   equ 0020D34h
 _IsAtBtm                   equ 0020D38h
 _BufClear                  equ 0020D3Ch
 _JCursorFirst              equ 0020D40h
 _JCursorLast               equ 0020D44h
-_JursorLeft                equ 0020D48h
-_JCursorRight              equ 0020D4Ch
-_JCursorUp                 equ 0020D50h
-_JCursorDown               equ 0020D54h
+_CursorLeft                equ 0020D48h
+_CursorRight               equ 0020D4Ch
+_CursorUp                  equ 0020D50h
+_CursorDown                equ 0020D54h
 _CursorToOffset            equ 0020D58h
 _InsDisp                   equ 0020D5Ch
 _FDispBOL1                 equ 0020D60h
@@ -879,7 +879,7 @@ _ConvKeyToTok              equ 0020E40h
 _ConvFCKeyToTok            equ 0020E44h
 _ConvFEKeyToTok            equ 0020E48h
 _TokToKey                  equ 0020E4Ch
-;                          equ 0020E50h
+_GetVarCmdUSB              equ 0020E50h
 ;                          equ 0020E54h
 _DeselectAllVars           equ 0020E58h
 _DelRes                    equ 0020E5Ch
@@ -1061,7 +1061,7 @@ _CanAlphIns                equ 0021118h
 _CxReDisp                  equ 002111Ch
 _GetBaseVer                equ 0021120h
 _OPSet0DES                 equ 0021124h
-;                          equ 0021128h
+_AppGetCBLUSB              equ 0021128h
 _SetIgnoreKey              equ 002112Ch
 _SetSendThisKeyBack        equ 0021130h
 _DisableAPD                equ 0021134h
@@ -1069,8 +1069,8 @@ _EnableAPD                 equ 0021138h
 _Set2IY34                  equ 002113Ch
 _ForceCmd                  equ 0021140h
 _ApdSetup                  equ 0021144h
-_Get_NumKey                equ 0021148h
-_AppSetup                  equ 002114Ch
+_AppSetup                  equ 0021148h
+;                          equ 002114Ch
 _ReleaseSedit              equ 0021150h
 _InitSmallEditLine         equ 0021154h
 _StartSmallEdit            equ 0021158h
@@ -1082,7 +1082,7 @@ _RestorePenCol             equ 002116Ch
 ;                          equ 0021170h
 _EmptyHook                 equ 0021174h
 _ForceSmallEditReturn      equ 0021178h
-;                          equ 002117Ch
+_SaveContext               equ 002117Ch
 ;                          equ 0021180h
 _ClearRow                  equ 0021184h
 ;                          equ 0021188h
@@ -1335,7 +1335,7 @@ _TenXNoClr                 equ 0021560h
 ;                          equ 0021564h
 ;                          equ 0021568h
 _GetVarVersion             equ 002156Ch
-;                          equ 0021570h
+_ParseGraphCmdToken        equ 0021570h
 ;                          equ 0021574h
 _DeleteTempEditEqu         equ 0021578h
 _PromptMoveBackLeft        equ 002157Ch
@@ -1376,11 +1376,11 @@ _DispValue                 equ 0021604h
 ;                          equ 0021608h
 ;                          equ 002160Ch
 ;                          equ 0021610h
-_cpOP1OP2Rounded           equ 0021614h
-_cpOP1OP2Rounded2          equ 0021618h
+_CpOP1OP2Rounded           equ 0021614h
+_CpOP1OP2Rounded2          equ 0021618h
 ;                          equ 002161Ch
 ;                          equ 0021620h
-;                          equ 0021624h
+_ResetIOPrompt             equ 0021624h
 ;                          equ 0021628h
 _SetUpEditor               equ 002162Ch
 _SortA                     equ 0021630h
@@ -1435,7 +1435,7 @@ _NamedListToOP1            equ 00216F0h
 ;                          equ 00216F4h
 ;                          equ 00216F8h
 ;                          equ 00216FCh
-_InitUSBDeviceCallback     equ 0021700h
+_os_InitUSBDeviceCallback_ equ 0021700h
 _KillUSBDevice             equ 0021704h
 _SetUSBConfiguration       equ 0021708h
 _RequestUSBData            equ 002170Ch
@@ -1488,7 +1488,7 @@ _ClearGraphStyles          equ 00217C4h
 _BufToNextBASICSeparator   equ 00217C8h
 ;                          equ 00217CCh
 ;                          equ 00217D0h
-;                          equ 00217D4h
+_ZooStandard               equ 00217D4h
 ;                          equ 00217D8h
 ;                          equ 00217DCh
 ;                          equ 00217E0h
@@ -1604,8 +1604,8 @@ _CommonKeys_               equ 0021940h
 _ResetLastEntryStack       equ 0021998h
 ;                          equ 002199Ch
 ;                          equ 00219A0h
-;                          equ 00219A4h
-;                          equ 00219A8h
+_jp_JForceCmdNoChar        equ 00219A4h
+_Load_LFont                equ 00219A8h
 ;                          equ 00219ACh
 ;                          equ 00219B0h
 ;                          equ 00219B4h
@@ -1632,7 +1632,7 @@ _GetGraphModeProperties    equ 00219E8h
 ;                          equ 0021A08h
 ;                          equ 0021A0Ch
 _ClrLCDAll                 equ 0021A10h
-;                          equ 0021A14h
+_BufIPoint                 equ 0021A14h
 ;                          equ 0021A18h
 ;                          equ 0021A1Ch
 ;                          equ 0021A20h
@@ -1704,7 +1704,7 @@ _VPutPSN                   equ 0021B20h
 ;                          equ 0021B28h
 ;                          equ 0021B2Ch
 ;                          equ 0021B30h
-;                          equ 0021B34h
+_RStrGraphFlags            equ 0021B34h
 ;                          equ 0021B38h
 ;                          equ 0021B3Ch
 ;                          equ 0021B40h
@@ -1776,7 +1776,7 @@ _DrawRectBorder__          equ 0021BE0h
 ;                          equ 0021C48h
 ;                          equ 0021C4Ch
 ;                          equ 0021C50h
-;                          equ 0021C54h
+;_ret                      equ 0021C54h
 ;                          equ 0021C58h
 ;                          equ 0021C5Ch
 ;                          equ 0021C60h
@@ -1823,7 +1823,7 @@ _os_RealSqrt               equ 0021D00h
 _os_RealSub                equ 0021D04h
 _os_RealTanRad             equ 0021D08h
 _os_StrToReal              equ 0021D0Ch
-;                          equ 0021D10h
+_os_RealTrunc              equ 0021D10h
 _os_SetFlagBits            equ 0021D14h
 _os_ResetFlagBits          equ 0021D18h
 _os_TestFlagBits           equ 0021D1Ch
@@ -1856,11 +1856,11 @@ _SetBCUTo0                 equ 0021D84h
 _SetDEUTo0                 equ 0021D88h
 _SetHLUTo0                 equ 0021D8Ch
 _DivHLByA                  equ 0021D90h
-_cpHLDE_s                  equ 0021D94h
-_cpHLDE_                   equ 0021D98h
+_CpHLDE_s                  equ 0021D94h
+_CpHLDE_                   equ 0021D98h
 _LoadDEInd_s               equ 0021D9Ch
 _LoadDEInd                 equ 0021DA0h
-_cpHLDEBC                  equ 0021DA4h
+_CpHLDEBC                  equ 0021DA4h
 _NegBC                     equ 0021DA8h
 _NegDE                     equ 0021DACh
 _StrCmpre                  equ 0021DB0h
@@ -1875,7 +1875,7 @@ _ReloadAppEntryVecs        equ 0021DC4h
 ;                          equ 0021DD4h
 ;                          equ 0021DD8h
 ;                          equ 0021DDCh
-;                          equ 0021DE0h
+_os_ClearVRAMLines         equ 0021DE0h
 _os_DisableCursor          equ 0021DE4h
 _os_EnableCursor           equ 0021DE8h
 ;                          equ 0021DECh
@@ -1909,9 +1909,9 @@ _os_ReturnByteEvenBetter   equ 0021E38h
 ;                          equ 0021E5Ch
 ;                          equ 0021E60h
 ;                          equ 0021E64h
-;                          equ 0021E68h
+_ChkACplx                  equ 0021E68h
 ;                          equ 0021E6Ch
-;                          equ 0021E70h
+_os_AnsName                equ 0021E70h
 ;                          equ 0021E74h
 ;                          equ 0021E78h
 ;                          equ 0021E7Ch
@@ -1935,8 +1935,8 @@ _SetPolarEquToOP1          equ 0021E8Ch
 ;                          equ 0021EC4h
 ;                          equ 0021EC8h
 _os_DisableTimer1          equ 0021ECCh
-;                          equ 0021ED0h
-;                          equ 0021ED4h
+_os_SetKbdKey              equ 0021ED0h
+_os_GetSystemStats         equ 0021ED4h
 ;                          equ 0021ED8h
 ;                          equ 0021EDCh
 _DispHL                    equ 0021EE0h
@@ -1995,15 +1995,15 @@ _os_GetSymTablePtr         equ 0021FB0h
 _os_NextSymEntry           equ 0021FB4h
 _os_ChkFindSym             equ 0021FB8h
 _os_GetVarSize             equ 0021FBCh
-;                          equ 0021FC0h
+_os_GetVarSizeBytes        equ 0021FC0h
 ;                          equ 0021FC4h
-;                          equ 0021FC8h
-;                          equ 0021FCCh
-;                          equ 0021FD0h
-;                          equ 0021FD4h
+_os_GetRealListElement     equ 0021FC8h
+_os_GetRealVar             equ 0021FCCh
+_os_ResizeList             equ 0021FD0h
+_os_ResizeMatrix           equ 0021FD4h
 ;                          equ 0021FD8h
-;                          equ 0021FDCh
-;                          equ 0021FE0h
+_os_SetRealListElement     equ 0021FDCh
+_os_SetRealVar             equ 0021FE0h
 ;                          equ 0021FE4h
 ;                          equ 0021FE8h
 ;                          equ 0021FECh
@@ -2033,7 +2033,7 @@ _ChkInRamB                 equ 0022048h
 ;                          equ 002204Ch
 ;                          equ 0022050h
 ;                          equ 0022054h
-;                          equ 0022058h
+_os_InitUSBDeviceCallback  equ 0022058h
 _os_KillUSBDevice          equ 002205Ch
 _os_SetUSBConfiguration    equ 0022060h
 _os_RequestUSBData         equ 0022064h
@@ -2047,11 +2047,11 @@ _os_SetTimer2              equ 0022080h
 _os_DisableTimer2          equ 0022084h
 ;                          equ 0022088h
 ;_ret                      equ 002208Ch
-_os_GetSomething           equ 0022090h
-_os_SetSomething           equ 0022094h
+_os_GetYDrawLocation       equ 0022090h
+_os_SetYDrawLocation       equ 0022094h
 _RunLocalizeHook           equ 0022098h
-;                          equ 002209Ch
-;                          equ 00220A0h
+_os_IntSize                equ 002209Ch
+_os_ClearStatusBarLow      equ 00220A0h
 ;                          equ 00220A4h
 _NMIHandler                equ 00220A8h
 ;                          equ 00220ACh
@@ -2107,14 +2107,14 @@ _os_ResetEditOpen          equ 002216Ch
 ;                          equ 0022174h
 _os_FontDrawTransText      equ 0022178h
 _os_DelAppVar              equ 002217Ch
-;                          equ 0022180h
+_os_GetAppVarDataPtr       equ 0022180h
 _os_CreateAppVar           equ 0022184h
 ;                          equ 0022188h
 ;                          equ 002218Ch
 ;                          equ 0022190h
 ;                          equ 0022194h
-;                          equ 0022198h
-;                          equ 002219Ch
+_os_CreateString           equ 0022198h
+_os_GetStringDataPtr       equ 002219Ch
 ;                          equ 00221A0h
 ;                          equ 00221A4h
 ;                          equ 00221A8h
@@ -2138,7 +2138,6 @@ _os_CreateAppVar           equ 0022184h
 ;                          equ 00221F0h
 ;                          equ 00221F4h
 ;                          equ 00221F8h
-
 
 ; Boot Calls
 ;-----------------------------------
@@ -2298,22 +2297,22 @@ _WriteFlash                equ 00002E0h
 _WriteFlashByteDuplicate   equ 00002E4h ; no difference from _WriteFlashByte
 _WriteFlashA               equ 00002E8h ; byte is in A, not B
 ;                          equ 00002ECh ; lots of writes/erases involving sectors 3Bh/3Fh
-;                          equ 00002F0h ; zeroes out 4KB at 0D1887Ch and writes 0D18C7Ch to start of it
-;                          equ 00002F4h
-;                          equ 00002F8h
-;                          equ 00002FCh
-;                          equ 0000300h
-;                          equ 0000304h
+_ClrHeap                   equ 00002F0h
+_CpyToHeap                 equ 00002F4h
+_ChkHeapTop                equ 00002F8h
+_ExecuteInRAM              equ 00002FCh
+_ExecuteInRAMDup           equ 0000300h
+_ExecuteInRAMDup2          equ 0000304h
 ;                          equ 0000308h
-;                          equ 000030Ch
+_GetNextFlashEntrySize     equ 000030Ch
 ;                          equ 0000310h
-;                          equ 0000314h
+_FindFlashEntryType        equ 0000314h
 ;                          equ 0000318h
 ;                          equ 000031Ch
-;                          equ 0000320h
-;                          equ 0000324h
-;                          equ 0000328h
-;                          equ 000032Ch
+_GetNextFlashEntrySizeDup  equ 0000320h
+_GetFlashEntrySize         equ 0000324h
+_SkipFlashEntry            equ 0000328h
+_SkipNextFlashEntry        equ 000032Ch
 ;                          equ 0000330h
 _WriteFlashUnsafe          equ 0000334h
 ;                          equ 0000338h
@@ -2461,38 +2460,38 @@ _boot_GetTimer2MatchValue1 equ 000056Ch
 _boot_SetTimer2MatchValue2 equ 0000570h
 _boot_GetTimer2MatchValue2 equ 0000574h
 _CheckIfEmulated           equ 0000578h
-_boot_GetOnInterrupt       equ 000057Ch
-;                          equ 0000580h
+_boot_GetOnInt             equ 000057Ch
+_boot_RTCIntHandler        equ 0000580h
 _boot_InitializeRTC        equ 0000584h
-;                          equ 0000588h
+_boot_GetRTCInitStatus     equ 0000588h
 _boot_EnableRTC            equ 000058Ch
 _boot_DisableRTC           equ 0000590h
 _boot_SetTime24Hours       equ 0000594h
 ;                          equ 0000598h
 ;                          equ 000059Ch
-_boot_AcknowledgeAlarmInterrupt equ 00005A0h
+_boot_AckAlarmInt          equ 00005A0h
 ;                          equ 00005A4h
-;                          equ 00005A8h
-;                          equ 00005ACh
+_boot_WriteRTCTime         equ 00005A8h
+_boot_GetRTCTime12Hour     equ 00005ACh
 _boot_GetRTCTime           equ 00005B0h
 _boot_SetRTCTime           equ 00005B4h
 _boot_GetRTCAlarm          equ 00005B8h
-;                          equ 00005BCh
-_boot_CheckAlarmInterrupt  equ 00005C0h
-_boot_SetAlarmInterrupt    equ 00005C4h
+_boot_SetRTCAlarmSafe      equ 00005BCh
+_boot_CheckAlarmInt        equ 00005C0h
+_boot_SetAlarmInt          equ 00005C4h
 _boot_IsRTCAfternoon       equ 00005C8h
-_GetRTCDay                 equ 00005CCh
-;                          equ 00005D0h
+_boot_GetRTCDay            equ 00005CCh
+_boot_SetAlarmIntSafe      equ 00005D0h
 _boot_SetRTCAlarm          equ 00005D4h
-_boot_EnableRTCInterrupt   equ 00005D8h
-_boot_DisableRTCInterrupt  equ 00005DCh
-;                          equ 00005E0h
+_boot_EnableRTCInt         equ 00005D8h
+_boot_DisableRTCInt        equ 00005DCh
+_boot_SetRTCCallback       equ 00005E0h
 ;                          equ 00005E4h
 ;                          equ 00005E8h
-;                          equ 00005ECh
+_boot_SetRTCFlags          equ 00005ECh
 ;                          equ 00005F0h
 _CheckEmulationBit         equ 00005F4h
-_boot_SetDMAAddress_USB    equ 00005F8h
+_boot_SetUSBDMAAddress     equ 00005F8h
 ;                          equ 00005FCh
 _boot_SectorsBegin         equ 0000600h
 ;                          equ 0000604h
@@ -2581,6 +2580,7 @@ OP6EXT			equ 0D00638h
 progToEdit		equ 0D0065Bh
 nameBuff		equ 0D00663h
 
+equ_edit_save		equ 0D0066Eh
 iMathPtr1		equ 0D0066Fh
 iMathPtr2		equ 0D00672h
 iMathPtr3		equ 0D00675h
@@ -2618,10 +2618,20 @@ varType			equ 0D00813h
 varCurrent		equ 0D00814h
 varClass		equ 0D0081Ch
 
-catalogCurrent		equ 0D00820h
+catalogCurrent		equ 0D0081Dh ; word at this location starting with 6007h corresponds to what is highlighted in catalog
+catalogCurrentBackup	equ 0D00820h ; backup of catalogCurrent for menus
 menuAppDepth		equ 0D00823h
 menuCurrent		equ 0D00824h
+menuCurrentSub		equ 0D00825h ; holds current submenu index
+menuSelected		equ 0D00826h ; holds currently selected item in current submenu
+menuNumMenus		equ 0D00827h ; holds number of submenus for this menu
+menuNumItems		equ 0D00828h ; holds number of items in this submenu
+appFlagsBackup		equ 0D00829h ; iy+appFlags backup for menu stuff
+cursorFlagsBackup	equ 0D0082Ah ; iy+cursorFlags backup for menu stuff
+curGStyleBackup		equ 0D0082Bh ; curGStyle backup for menu stuff
+graphFlagsBackup	equ 0D0082Ch ; iy+graphFlags backup for menu stuff
 
+ioPrompt		equ 0D00879h
 ioFlag			equ 0D00894h
 sndRecState		equ 0D00896h
 ioErrState		equ 0D00897h
@@ -2631,7 +2641,6 @@ penCol			equ 0D008D2h
 penRow			equ 0D008D5h
 rclQueue		equ 0D008D6h
 rclQueueEnd		equ 0D008D9h
-
 errNo			equ 0D008DFh
 errSP			equ 0D008E0h
 errOffset		equ 0D008E3h
@@ -2664,11 +2673,25 @@ infVar20		equ D01458h
 
 curGStyle		equ 0D0146Dh
 curGY			equ 0D0146Eh
+curGY2			equ 0D01470h
+curGX2			equ 0D01471h ; currently selected equation while graphing
+freeSaveY		equ 0D01472h
+freeSaveX		equ 0D01474h
 
+XOffset			equ 0D014FAh
+YOffset			equ 0D014FCh
+lcdTallP		equ 0D014FDh
+pixWideP		equ 0D014FEh
+pixWide_m_1		equ 0D014FFh
+pixWide_m_2		equ 0D01501h
 lastEntryStkPtr		equ 0D01508h ; pointer to the next available byte in the entry stack
 lastEntryStk		equ 0D0150Bh ; the start of entry stack (note last entry is not in the stack, it is in the program '#'.)  This is a stack of strings.  first 2 bytes are length, followed by string. 2nd from last entry is first in this stack.
 numLastEntries		equ 0D01D0Bh ; number of entries you can back-track through minus one
 currLastEntry		equ 0D01D0Ch ; counter used by OS to keep track of which entry was just displayed by pressing 2nd+enter
+
+curPlotNumber		equ 0D01D45h
+
+curInc			equ 0D01D49h
 
 uXmin			equ 0D01D61h
 uXmax			equ 0D01D6Ah
@@ -2756,10 +2779,10 @@ editCursor		equ 0D0243Ah
 editTail		equ 0D0243Dh
 editBtm			equ 0D02440h
 
-currListHighlight	equ 0D0244Bh ;word, this is offset into list for currently-highlighted element in list editor
-editSym			equ 0D0244Eh ;pointer to data of variable being edited
-editDat			equ 0D02451h ;pointer to data of variable being edited
-;something		equ 0D02456h ;stats/list editor related, usually 1
+currListHighlight	equ 0D0244Bh ; word, this is offset into list for currently-highlighted element in list editor
+editSym			equ 0D0244Eh ; pointer to data of variable being edited
+editDat			equ 0D02451h ; pointer to data of variable being edited
+
 currListPageOffset	equ 0D02457h
 currList		equ 0D02458h
 listName1		equ 0D02459h
@@ -2862,8 +2885,9 @@ pTempCnt		equ 0D02596h
 cleanTmp		equ 0D02598h
 pTemp			equ 0D0259Ah
 progPtr			equ 0D0259Dh
-newDataPtr		equ 0D025A0h 
-pagedGetPtr		equ 0D025A3h ; 2 byte scrap (unstable)
+newDataPtr		equ 0D025A0h
+pagedGetPtr		equ 0D025A3h ; 3 byte scrap (unstable)
+pagedPutPtr		equ 0D025A6h
 
 appErr1			equ 0D025A9h ; use with _ErrCustom1
 appErr2			equ 0D025B6h ; use with _ErrCustom2
@@ -2916,7 +2940,9 @@ graphBGColor		equ 0D02A98h
 fillRectColor		equ 0D02AC0h
 statusBarBGColor	equ 0D02ACCh
 
-scrapMem		equ 0D02AD7h	; 3 byte scrap (unstable)
+scrapMem		equ 0D02AD7h ; 3 byte scrap (unstable)
+
+gCurYLoc		equ 0D02FD6h ; current y pixel location for C functions
 
 ;safeRAM Locations
 ;---------------------------------------------
