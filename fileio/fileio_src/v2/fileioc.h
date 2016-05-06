@@ -185,4 +185,20 @@ int ti_SetArchiveStatus(bool archived, const ti_var_t slot);
 int ti_Delete(const char *varname);
 int ti_DeleteVar(const char *varname, uint8_t type);
 
+/**
+ * Gets a token as a string variable
+ * Returns a string_buffer
+ * location points to the address to disassmble the token; it is updated and
+ * moved to the next token
+ * string buffer is the character array where the token is stored
+ * If the length argument is specified, the length of the string is stored in length
+ */
+char *ti_GetTokenString(char *string_buffer, uint8_t *location, int *length);
+
+/**
+ * Gets a pointer to the current offset in the variable
+ * Returns NULL if slot is not open
+ */
+void *ti_GetDataPtr(const ti_var_t slot);
+
 #endif
