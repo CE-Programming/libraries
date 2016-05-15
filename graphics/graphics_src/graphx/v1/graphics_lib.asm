@@ -15,9 +15,8 @@
  .function "gfx_FillScreen",_FillScreen
  .function "gfx_SetPixel",_SetPixel
  .function "gfx_GetPixel",_GetPixel
- .function "gfx_GetDrawState",_GetDrawState
- .function "gfx_DrawToBuffer",_DrawToBuffer
- .function "gfx_DrawToScreen",_DrawToScreen
+ .function "gfx_GetDraw",_GetDraw
+ .function "gfx_SetDraw",_SetDraw
  .function "gfx_SwapDraw",_SwapDraw
  .function "gfx_Blit",_Blit
  .function "gfx_BlitLines",_BlitLines
@@ -30,6 +29,7 @@
  .function "gfx_SetTextXY",_SetTextXY
  .function "gfx_SetTextBGColor",_SetTextBGColorC
  .function "gfx_SetTextFGColor",_SetTextFGColorC
+ .function "gfx_SetTextTransparentColor",_SetTextTransparentColorC
  .function "gfx_SetCustomFontData",_SetCustomFontData
  .function "gfx_SetCustomFontSpacing",_SetCustomFontSpacing
  .function "gfx_SetFontMonospace",_SetFontMonospace
@@ -71,10 +71,16 @@
  .function "gfx_GetSprite_NoClip",_GetSprite_NoClip
  .function "gfx_ScaledSprite_NoClip",_ScaledSprite_NoClip
  .function "gfx_ScaledTransparentSprite_NoClip",_ScaledTransparentSprite_NoClip
- .function "gfx_SpriteFlipY",_SpriteFlipY
- .function "gfx_SpriteFlipX",_SpriteFlipX
- .function "gfx_SpriteRotate",_SpriteRotate
-
+ .function "gfx_FlipSpriteY",_FlipSpriteY
+ .function "gfx_FlipSpriteX",_FlipSpriteX
+ .function "gfx_RotateSpriteC",_RotateSpriteC
+ .function "gfx_RotateSpriteCC",_RotateSpriteCC
+ .function "gfx_RotateSpriteHalf",_RotateSpriteHalf
+ .function "gfx_Polygon",_Polygon
+ .function "gfx_Polygon_NoClip",_Polygon_NoClip
+ .function "gfx_FillTriangle",_FillTriangle
+ .function "gfx_FillTriangle_NoClip",_FillTriangle_NoClip
+ 
  .beginDependencies
  .endDependencies
 
@@ -87,6 +93,10 @@ tmpSpritePtr            equ 0E30C0Eh
 tmpSafe                 equ 0E30C11h
 currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
+
+_Polygon:
+_Polygon_NoClip:
+	ret
 
 ;-------------------------------------------------------------------------------
 _AllocSprite:
@@ -225,7 +235,12 @@ _FillScreen:
 	ld	a,(hl)				; get the color index to use
 	ld	bc,lcdSize
 	ld	hl,(currDrawBuffer)
-	jp	_MemSet_ASM \.r
+	push	hl
+	pop	de
+	inc	de
+	ld	(hl),a
+	ldir
+	ret
 
 ;-------------------------------------------------------------------------------
 _SetPalette:
@@ -527,11 +542,11 @@ color2 =$+1
 	ld	a,0				; color index to use
 _MemSet_ASM:
 	ld	(hl),a
+	push	hl
 	cpi
-	scf
-	sbc	hl,hl
-	add	hl,de
-	ret	po				; check if we are only copying one pixel
+	ex	de,hl
+	pop	hl
+	ret	po
 	ldir
 	ret
 
@@ -608,34 +623,30 @@ _:	ld	(hl),0				; loop for height
 	ret
 
 ;-------------------------------------------------------------------------------
-_DrawToBuffer:
+_SetDraw:
 ; Forces drawing routines to operate on the offscreen buffer
+; or to operate on the visible screen
 ; Arguments:
-;  None
+;  arg0: buffer or screen
 ; Returns:
 ;  None
+	pop	hl
+	pop	bc
+	push	bc
+	push	hl
 	ld	hl,(mpLcdBase)
 	ld	de,vram
-	or	a,a 
+	ld	a,c
+	or	a,a
+	jr	z,+++_
 	sbc	hl,de
 	jr	nz,++_				; if not the same, swap
 _:	ld	de,vram+lcdSize
 _:	ld	(currDrawBuffer),de
 	ret
-
-;-------------------------------------------------------------------------------
-_DrawToScreen:
-; Forces drawing routines to operate on the visible screen
-; Arguments:
-;  None
-; Returns:
-;  None
-	ld	hl,(mpLcdBase)
-	ld	de,vram
-	or	a,a
-	sbc	hl,de
-	jr	z,-_				; if the same, swap
-	jr	--_
+_:	sbc	hl,de
+	jr	z,--_				; if the same, swap
+	jr	---_
 
 ;-------------------------------------------------------------------------------
 _SwapDraw:
@@ -661,7 +672,7 @@ _:	bit	2,(hl)				; wait until the interrupt triggers
 	ret
 
 ;-------------------------------------------------------------------------------
-_GetDrawState:
+_GetDraw:
 ; Gets the current drawing state
 ; Arguments:
 ;  None
@@ -1053,9 +1064,12 @@ _Line:
 ;  arg0: y1
 ; Returns:
 ;  true if drawn, false if offscreen
+	ld	hl,(_xmax) \.r
+	dec	hl
+	ld	(_xmax),hl \.r
 	ld	iy,0
 	add	iy,sp
-	lea	hl,iy-10
+	lea	hl,iy+-10
 	ld	sp,hl
 	ld	de,(iy+6)
 	ld	hl,(iy+3)
@@ -1160,6 +1174,9 @@ m_30:	ld	c,(iy+12)
 	ld	de,(iy+3)
 	call	_Line_NoClip_ASM \.r
 m_31:	ld	sp,iy
+	ld	hl,(_xmax) \.r
+	inc	hl
+	ld	(_xmax),hl \.r
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1174,9 +1191,8 @@ _Line_NoClip:
 ;  None
 	ld	iy,0
 	add	iy,sp
-	ld	hl,(iy+3)
-	ld	de,(iy+9)
-	ex.s	de,hl
+	ld	de,(iy+3)
+	ld	hl,(iy+9)
 	ld	b,(iy+6)
 	ld	c,(iy+12)
 _Line_NoClip_ASM:
@@ -1388,15 +1404,23 @@ _BlitArea:
 	ex	de,hl				; swap if copy swap
 _:	ld	bc,(iy+12)
 	ld	(_BlitAreaWidth_SMC),bc \.r
+	push	hl
+	ld	hl,lcdWidth
+	or	a,a
+	sbc	hl,bc
+	ld	(_BlitAreaDelta_SMC),hl \.r
+	pop	hl
 	ld	a,(iy+15)
 	ld	iy,0
-_BlitAreaWidth_SMC =$+1
-_:	ld	bc,0				; smc for speedz
-	add	iy,de
+_:	add	iy,de
 	lea	de,iy
+_BlitAreaWidth_SMC =$+1
+	ld	bc,0				; smc for speedz
 	ldir
+_BlitAreaDelta_SMC =$+1
+	ld	bc,0				; increment to next line
+	add	hl,bc
 	ld	de,lcdWidth			; increment to next line
-	add	hl,de
 	dec	a
 	jr	nz,-_
 	ret
@@ -1713,9 +1737,9 @@ ClipSprTransNextAmt =$+1
 	pop	ix
 	ret
 
-_TransparentPlot_ASM:
 _:	ldi
 	ret	po
+_TransparentPlot_ASM:
 _:	cp	a,(hl)
 	jr	nz,--_
 	inc	de
@@ -2244,12 +2268,11 @@ _GetTextY:
 
 ;-------------------------------------------------------------------------------
 _SetTextBGColorC:
-; Sets the transparency text color for text routines
+; Sets the background text color for text routines
 ; Arguments:
-;  arg0 : High 8 bits is background, Low 8 bits is foreground
-;  These refer to color palette indexes
+;  arg0 : Color index to set BG to
 ; Returns:
-;  Previous text color palette indexes
+;  Previous text color palette index
 	pop	hl
 	pop	de
 	push	de
@@ -2261,12 +2284,11 @@ _SetTextBGColorC:
 
 ;-------------------------------------------------------------------------------
 _SetTextFGColorC:
-; Sets the transparency text color for text routines
+; Sets the foreground text color for text routines
 ; Arguments:
-;  arg0 : High 8 bits is background, Low 8 bits is foreground
-;  These refer to color palette indexes
+;  arg0 : Color index to set FG to
 ; Returns:
-;  Previous text color palette indexes
+;  Previous text color palette index
 	pop	hl
 	pop	de
 	push	de
@@ -2276,6 +2298,22 @@ _SetTextFGColorC:
 	ld	(hl),e
 	ret
 
+;-------------------------------------------------------------------------------
+_SetTextTransparentColorC:
+; Sets the transparency text color for text routines
+; Arguments:
+;  arg0 : Color index to set transparent text to
+; Returns:
+;  Previous text color palette index
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	hl,TextTransColor_ASM \.r
+	ld	a,(hl)
+	ld	(hl),e
+	ret
+	
 ;-------------------------------------------------------------------------------
 _SetTextXY:
 ; Sets the transparency text color for text routines
@@ -2346,74 +2384,65 @@ _PrintChar:
 	add	iy,sp
 	ld	a,(iy+3)
 _PrintChar_ASM:
-	push	hl
-TextXPos_ASM = $+1
-	ld	bc,0
-	push	af
-	ld	e,a
+	push	ix				; save stack pointer
+	push	hl				; save hl pointer if string
+	ld	e,a				; e = char
 	ld	a,(MonoFlag_ASM) \.r
 	or	a,a
 	jr	nz,+_
 	sbc	hl,hl
-	ld	l,e
-	ld	de,(CharSpacing_ASM) \.r
-	add	hl,de
-	ld	a,(hl)
-	inc	a
-_:	push	bc
-	ld	(CharWidthChange_ASM),a \.r
+	ld	l,e				; hl = character
+	ld	bc,(CharSpacing_ASM) \.r
+	add	hl,bc
+	ld	a,(hl)				; a = char width
+TextXPos_ASM = $+1
+_:	ld	bc,0
 	sbc	hl,hl
 	ld	l,a
-	neg
-	ld	(CharWidthDelta_ASM),a \.r
+	ld	ixh,a				; ixh = char width
 	add	hl,bc
 	ld	(TextXPos_ASM),hl \.r
-CharWidthDelta_ASM =$+1
-	ld	de,-1
-	ld	hl,lcdWidth
-	add	hl,de
-	ld	(CharLineDelta_ASM),hl \.r
 TextYPos_ASM = $+1
 	ld	l,0
 	ld	h,lcdWidth/2
 	mlt	hl
 	add	hl,hl
-	ld	de,(currDrawBuffer)
-	add	hl,de
-	pop	de
-	add	hl,de
-	pop	af
-	ex	de,hl
-	or	a,a
-	sbc	hl,hl
-	ld	l,a
-	add	hl,hl
-	add	hl,hl
-	add	hl,hl
-	ld	bc,(TextData_ASM) \.r
 	add	hl,bc
-	ld	iyl,8
-_:	ld	c,(hl)
-CharWidthChange_ASM =$+1
-	ld	b,0
-TextFGColor_ASM =$+1
-_:	ld	a,0
+	ld	bc,(currDrawBuffer)
+	add	hl,bc
+	ex	de,hl				; de = draw location
+	ld	a,l				; l = character
+	sbc	hl,hl
+	ld	l,a				; hl = character
+	add	hl,hl
+	add	hl,hl
+	add	hl,hl
+	ld	bc,(TextData_ASM) \.r		; get text data array
+	add	hl,bc
+	ld	iy,0
+	ld	ixl,8
+_:	ld	c,(hl)				; c = 8 pixels
+	add	iy,de				; get draw location
+	lea	de,iy
+	ld	b,ixh
+TextBGColor_ASM =$+1
+_:	ld	a,255
 	rlc	c
 	jr	nc,+_
-TextBGColor_ASM =$+1
+TextFGColor_ASM =$+1
 	ld	a,0
-_:	or	a,a
+TextTransColor_ASM =$+1
+_:	cp	a,255				; check if transparent
 	jr	z,+_
 	ld	(de),a
-_:	inc	de
+_:	inc	de				; move to next pixel
 	djnz	---_
-CharLineDelta_ASM =$+1
-	ld	bc,0
-	add	hl,bc
+	ld	de,lcdwidth
 	inc	hl
-	dec	iyl
+	dec	ixl
 	jr	nz,----_
-	pop	hl
+	pop	hl				; restore hl and stack pointer
+	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2436,8 +2465,8 @@ _PrintUInt_ASM:
 	ld	b,8
 	mlt	bc
 	ld	a,c
-	ld	(offset0),a \.r
-offset0 =$+1
+	ld	(Offset_ASM),a \.r
+Offset_ASM =$+1
 	jr	$
 	ld	bc,-10000000
 	call	Num1 \.r
@@ -2602,6 +2631,296 @@ _SetFontMonospace:
 	ret
 
 ;-------------------------------------------------------------------------------
+_FillTriangle_NoClip:
+; Draws a filled triangle without clipping
+; Arguments:
+;  arg0-5 : x0,y0,x1,y1,x2,y2
+; Returns:
+;  None
+	ld	hl,_HorizLine_NoClip \.r
+	jr	+_
+;-------------------------------------------------------------------------------
+_FillTriangle:
+; Draws a filled triangle with clipping
+; Arguments:
+;  arg0-5 : x0,y0,x1,y1,x2,y2
+; Returns:
+;  None
+	ld	hl,_HorizLine \.r
+_:	ld	(HLine0_SMC),hl \.r
+	ld	(HLine1_SMC),hl \.r
+	ld	(HLine2_SMC),hl \.r
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	lea	hl,ix+-39
+	ld	sp,hl
+	sbc	hl,hl
+	ld	(ix+-15),hl
+	ld	(ix+-18),hl
+	ld	hl,(ix+9)
+	ld	de,(ix+15)
+	call	_SignedCompare_ASM \.r
+	jr	c,+_
+	ld	hl,(ix+9)
+	ld	(ix+9),de
+	ld	(ix+15),hl
+	ld	hl,(ix+6)
+	ld	de,(ix+12)
+	ld	(ix+6),de
+	ld	(ix+12),hl
+_:	ld	hl,(ix+15)
+	ld	de,(ix+21)
+	call	_SignedCompare_ASM \.r
+	jr	c,+_
+	ld	hl,(ix+15)
+	ld	(ix+15),de
+	ld	(ix+21),hl
+	ld	hl,(ix+12)
+	ld	de,(ix+18)
+	ld	(ix+12),de
+	ld	(ix+18),hl
+_:	ld	hl,(ix+9)
+	ld	de,(ix+15)
+	call	_SignedCompare_ASM \.r
+	jr	c,+_
+	ld	hl,(ix+9)
+	ld	(ix+9),de
+	ld	(ix+15),hl
+	ld	hl,(ix+6)
+	ld	de,(ix+12)
+	ld	(ix+6),de
+	ld	(ix+12),hl
+_:	ld	de,(ix+12)
+	ld	hl,(ix+18)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-24),hl
+	ld	de,(ix+6)
+	ld	hl,(ix+12)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-39),hl
+	ld	de,(ix+9)
+	ld	hl,(ix+15)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-36),hl
+	ld	de,(ix+6)
+	ld	hl,(ix+18)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-21),hl
+	ld	de,(ix+9)
+	ld	hl,(ix+21)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-30),hl
+	ld	de,(ix+15)
+	ld	hl,(ix+21)
+	or	a,a
+	sbc	hl,de
+	ld	(ix+-33),hl
+	ld	de,(ix+21)
+	ld	hl,(ix+9)
+	or	a,a
+	sbc	hl,de
+	jp	nz,t_17 \.r
+	ld	hl,(ix+6)
+	ld	(ix+-6),hl
+	ld	(ix+-3),hl
+	ld	de,(ix+12)
+	call	_SignedCompare_ASM \.r
+	jr	c,t_8
+	ld	(ix+-3),de
+	jr	t_12
+t_8:	ld	hl,(ix+12)
+	ld	de,(ix+-6)
+	call	_SignedCompare_ASM \.r
+	jr	c,t_12
+	ld	de,(ix+12)
+	ld	(ix+-6),de
+t_12:	ld	hl,(ix+-3)
+	ld	de,(ix+18)
+	call	_SignedCompare_ASM \.r
+	jr	c,t_11	
+	ld	(ix+-3),de
+	jr	t_13
+t_11:	ld	hl,(ix+18)
+	ld	de,(ix+-6)
+	call	_SignedCompare_ASM \.r
+	jr	c,t_13
+	ld	de,(ix+18)
+	ld	(ix+-6),de
+t_13:	ld	bc,(ix+-3)
+	ld	de,(ix+9)
+	ld	hl,(ix+-6)
+	or	a,a
+	sbc	hl,bc
+	inc	hl
+	push	hl
+	push	de
+	push	bc
+HLine0_SMC =$+1
+	call	0
+	ld	sp,ix
+	pop	ix
+	ret
+t_17:	ld	de,(ix+21)
+	ld	hl,(_ymax) \.r
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jp	p,t__29 \.r
+	jp	pe,t_20 \.r
+	jr	t__30
+t__29:	jp	po,t_20 \.r
+t__30:	ld	(ix+21),hl
+t_20:	ld	hl,(ix+15)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jr	nz,t_19
+	ld	(ix+-27),hl
+	jr	t_27
+t_19:	dec	hl
+	ld	(ix+-27),hl
+t_27:	ld	bc,(ix+9)
+	ld	(ix+-12),bc
+	jp	t_26 \.r
+t_24:	ld	hl,(ix+-15)
+	ld	bc,(ix+-36)
+	call	__idivs_ASM \.r
+	ld	bc,(ix+6)
+	add	hl,bc
+	ld	(ix+-3),hl
+	ld	hl,(ix+-18)
+	ld	bc,(ix+-30)
+	call	__idivs_ASM \.r
+	ld	bc,(ix+6)
+	add	hl,bc
+	ld	(ix+-6),hl
+	ex	de,hl
+	ld	bc,(ix+-39)
+	ld	hl,(ix+-15)
+	add	hl,bc
+	ld	(ix+-15),hl
+	ld	bc,(ix+-21)
+	ld	hl,(ix+-18)
+	add	hl,bc
+	ld	(ix+-18),hl
+	ex	de,hl
+	ld	de,(ix+-3)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jp	p,t__31 \.r
+	jp	pe,t_23 \.r
+	jr	t__32
+t__31:	jp	po,t_23 \.r
+t__32:	ex	de,hl
+	ld	(ix+-3),de
+	ld	(ix+-6),hl
+t_23:	ld	de,(ix+-3)
+	ld	hl,(ix+-6)
+	or	a,a
+	sbc	hl,de
+	ld	bc,(ix+-12)
+	inc	hl
+	push	hl
+	push	bc
+	push	de
+HLine1_SMC =$+1
+	call	0
+	lea	hl,ix+-39
+	ld	sp,hl
+	ld	bc,(ix+-12)
+	inc	bc
+	ld	(ix+-12),bc
+t_26:	ld	hl,(ix+-27)
+	or	a,a
+	sbc	hl,bc
+	jp	p,+_ \.r
+	jp	pe,t_24 \.r
+	jr	++_
+_:	jp	po,t_24 \.r
+_:	ld	bc,(ix+15)
+	ld	hl,(ix+-12)
+	or	a,a
+	sbc	hl,bc
+	ld	bc,(ix+-24)
+	call	__imuls_ASM \.r
+	ld	(ix+-15),hl
+	ld	bc,(ix+9)
+	ld	hl,(ix+-12)
+	or	a,a
+	sbc	hl,bc
+	ld	bc,(ix+-21)
+	call	__imuls_ASM \.r
+	ld	(ix+-18),hl
+	jp	t_34 \.r
+t_32:	ld	hl,(ix+-15)
+	ld	bc,(ix+-33)
+	call	__idivs_ASM \.r
+	ld	bc,(ix+12)
+	add	hl,bc
+	ld	(ix+-3),hl
+	ld	hl,(ix+-18)
+	ld	bc,(ix+-30)
+	call	__idivs_ASM \.r
+	ld	bc,(ix+6)
+	add	hl,bc
+	ld	(ix+-6),hl
+	ex	de,hl
+	ld	bc,(ix+-21)
+	ld	hl,(ix+-18)
+	add	hl,bc
+	ld	(ix+-18),hl
+	ld	bc,(ix+-24)
+	ld	hl,(ix+-15)
+	add	hl,bc
+	ld	(ix+-15),hl
+	ex	de,hl
+	ld	de,(ix+-3)
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	jp	p,+_ \.r
+	jp	pe,+++_ \.r
+	jr	++_
+_:	jp	po,+++_ \.r
+_:	ex	de,hl
+	ld	(ix+-3),de
+	ld	(ix+-6),hl
+_:	or	a,a
+	sbc	hl,de
+	ld	bc,(ix+-12)
+	inc	hl
+	push	hl
+	push	bc
+	push	de
+HLine2_SMC =$+1
+	call	0
+	lea	hl,ix+-39
+	ld	sp,hl
+	ld	bc,(ix+-12)
+	inc	bc
+	ld	(ix+-12),bc
+t_34:	ld	bc,(ix+-12)
+	ld	hl,(ix+21)
+	or	a,a
+	sbc	hl,bc
+	jp	p,+_ \.r
+	jp	pe,t_32 \.r
+	ld	sp,ix
+	pop	ix
+	ret
+_:	jp	po,t_32 \.r
+	ld	sp,ix
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
 _LZDecompress:
 ; Decompresses in lz77 format the input data into the output buffer
 ; Arguments:
@@ -2721,30 +3040,34 @@ l_19:	ld	sp,ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_SpriteFlipY:
+_FlipSpriteY:
 ; Flips an array horizontally about the center vertical axis
 ; Arguments:
-;  arg0 : Pointer to 2D byte array input
-;  arg1 : Pointer to 2D byte array output
-;  arg2 : Width
-;  arg3 : Height
+;  arg0 : Pointer to sprite struct input
+;  arg1 : Pointer to sprite struct output
 ; Returns:
-;  arg1 : Pointer to 2D array output
+;  arg1 : Pointer to sprite struct output
 	ld	iy,0
 	add	iy,sp
-	ld	a,(iy+9)
+	push	ix
+	ld	ix,(iy+3)
+	ld	a,(ix+0)
 	sbc	hl,hl
 	ld	l,a
+	ld	c,a
 	push	hl
 	ld	(_FlipHorizWidth_ASM),a \.r
 	add	hl,hl
 	ld	(_FlipHorizDelta_ASM),hl \.r
+	ld	a,(ix+1)
 	pop	hl
-	ld	de,(iy+3)
+	lea	de,ix+2
 	add	hl,de
-	ld	de,(iy+6)
-	push	de
-	ld	a,(iy+12)
+	ld	ix,(iy+6)
+	ld	(ix+1),a
+	ld	(ix+0),c
+	lea	de,ix+2
+	push	ix
 	ld	iyl,a
 _FlipHorizWidth_ASM =$+1
 _:	ld	b,0
@@ -2759,33 +3082,38 @@ _FlipHorizDelta_ASM =$+1
 	dec 	iyl
 	jr	nz,--_
 	pop	hl
+	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_SpriteFlipX:
-; Flip an array vertically about the center horizontal axis
+_FlipSpriteX:
+; Flip a sprite vertically about the center horizontal axis
 ; Arguments:
-;  arg0 : Pointer to 2D byte array input
-;  arg1 : Pointer to 2D byte array output
-;  arg2 : Width
-;  arg3 : Height
+;  arg0 : Pointer to sprite struct input
+;  arg1 : Pointer to sprite struct output
 ; Returns:
-;  arg1 : Pointer to 2D array output
+;  arg1 : Pointer to sprite struct output
 	ld	iy,0
 	add	iy,sp
+	push	ix
+	ld	ix,(iy+3)
 	xor	a,a
-	sub	a,(iy+9)
+	sub	a,(ix+0)
 	ld	(_FlipVertDelta_ASM),a \.r
 	neg
 	ld	(_FlipVertWidth_ASM),a \.r
-	ld	l,(iy+12)
+	ld	l,(ix+1)
+	ld	c,l
 	dec	l
 	ld	h,a
 	mlt	hl
-	ld	de,(iy+3)
+	lea	de,ix+2
 	add	hl,de
-	ld	de,(iy+6)
-	push	de
+	ld	ix,(iy+6)
+	ld	(ix+0),a
+	ld	(ix+1),c
+	lea	de,ix+2
+	push	ix
 _FlipVertWidth_ASM =$+1
 _:	ld	bc,0
 	ldir
@@ -2796,116 +3124,125 @@ _FlipVertDelta_ASM =$+1
 	dec 	a
 	jr	nz,-_
 	pop	hl
+	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
-_SpriteRotate:
-; Rotates an array
+_RotateSpriteC:
+; Rotates an array 90 degress clockwise
 ; Arguments:
-;  arg0 : Pointer to 2D byte array input
-;  arg1 : Pointer to 2D byte array output
-;  arg2 : Width
-;  arg3 : Height
-;  arg4 : Rotation angle (Only supports 180 & +-90 for now)
+;  arg0 : Pointer to sprite struct input
+;  arg1 : Pointer to sprite struct output
 ; Returns:
-;  arg1 : Pointer to 2D array output
+;  arg1 : Pointer to sprite struct output
+	ld	iy,0
+	lea	de,iy
+	add	iy,sp
+	push	ix
+	ld	ix,(iy+3)
+	ld	a,(ix+0) 			; a = width
+	ld	e,(ix+1)			; c = height
+	ld	(_RotateCWidth_SMC),a \.r
+	lea	hl,ix+2
+	ld	ix,(iy+6)
+	ld	(ix+0),e
+	ld	(ix+1),a
+	lea	iy,ix+1
+	add	iy,de
+	ld	c,e
+	push	ix
+_RotateCWidth_SMC =$+1
+_:	ld	b,0
+	lea	ix,iy
+_:	ld	a,(hl)
+	ld	(iy),a
+	inc	hl
+	add	iy,de
+	djnz	-_
+	lea	iy,ix
+	dec	iy
+	dec 	c
+	jr	nz,--_
+	pop	hl
+	pop	ix
+	ret
+	
+;-------------------------------------------------------------------------------
+_RotateSpriteCC:
+; Rotates a sprite 90 degrees counter clockwise
+; Arguments:
+;  arg0 : Pointer to sprite struct input
+;  arg1 : Pointer to sprite struct output
+; Returns:
+;  arg1 : Pointer to sprite struct output
+	ld	iy,0
+	lea	de,iy
+	add	iy,sp
+	push	ix
+	ld	ix,(iy+3)
+	ld	a,(ix+0) 			; a = width
+	ld	e,(ix+1)			; c = height
+	ld	(_RotateCCWidth_SMC),a \.r
+	lea	hl,ix+1
+	ld	ix,(iy+6)
+	ld	(ix+0),e
+	ld	(ix+1),a
+	ld	c,e
+	ld	b,a
+	mlt	bc
+	add	hl,bc
+	lea	iy,ix+1
+	add	iy,de
+	ld	c,e
+	push	ix
+_RotateCCWidth_SMC =$+1
+_:	ld	b,0
+	lea	ix,iy
+_:	ld	a,(hl)
+	ld	(iy),a
+	dec	hl
+	add	iy,de
+	djnz	-_
+	lea	iy,ix
+	dec	iy
+	dec 	c
+	jr	nz,--_
+	pop	hl
+	pop	ix
+	ret
+
+;-------------------------------------------------------------------------------
+_RotateSpriteHalf:
+; Rotates an array 180 degrees
+; Arguments:
+;  arg0 : Pointer to sprite struct input
+;  arg1 : Pointer to sprite struct output
+; Returns:
+;  arg1 : Pointer to sprite struct output
 	ld	iy,0
 	add	iy,sp
-	sbc	hl,hl
-	ld	a,(iy+15)
-	cp	a,90
-	jr	z,_SpriteRotate90
-	cp	a,-90
-	jr	z,_SpriteRotateN90
-
-_SpriteRotate180:
-	ld	a,(iy+9) ; width
-	ld	l,a
-	ld	(_Rotate180Delta_ASM),a \.r
-	ld	(_Rotate180Width_ASM),a \.r
-	ld	de,(iy+3)
-	add	hl,de
-	push	hl
-	ld	c,(iy+12)
-	ld	hl,(iy+6)
-	pop	iy
-	push	hl
-_Rotate180Width_ASM =$+1
-_:	ld	b,0
-	push	iy
-_:	lea	de,iy
-	ld	a,(de)
+	push	ix
+	ld	ix,(iy+3)
+	ld	c,(ix+0) 			; a = width
+	ld	b,(ix+1)			; c = height
+	lea	de,ix+2
+	ld	ix,(iy+6)
+	ld	(ix+0),c 			; a = width
+	ld	(ix+1),b
+	mlt	bc
+	lea	hl,ix+1
+	add	hl,bc
+	push	ix
+_:	ld	a,(de)
 	ld	(hl),a
-_Rotate180Delta_ASM =$+1
-	ld	de,0
-	add	iy,de
-	inc	hl
-	djnz	-_
-	pop	iy
-	dec	iy
-	dec 	c
-	jr	nz,--_
+	inc	de
+	dec	hl
+	dec	bc
+	ld	a,b
+	or	a,c
+	jr	nz,-_
 	pop	hl
-	ret
-
-_SpriteRotate90:
-	ld	a,(iy+9) ; width
-	ld	l,a
-	ld	(_Rotate90Delta_ASM),a \.r
-	ld	(_Rotate90Width_ASM),a \.r
-	ld	de,(iy+6)
-	add	hl,de
-	push	de
-	ld	c,(iy+12)
-	push	hl
-	ld	hl,(iy+3)
-	pop	iy
-_Rotate90Width_ASM =$+1
-_:	ld	b,0
-	push	iy
-_:	lea	de,iy
-	ld	a,(hl)
-	ld	(de),a
-_Rotate90Delta_ASM =$+1
-	ld	de,0
-	add	iy,de
-	inc	hl
-	djnz	-_
-	pop	iy
-	dec	iy
-	dec 	c
-	jr	nz,--_
-	pop	hl
-	ret
-
-_SpriteRotateN90:
-	ld	a,(iy+9) ; width
-	ld	l,a
-	ld	(_RotateN90Delta_ASM),a \.r
-	ld	(_RotateN90Width_ASM),a \.r
-	ld	de,(iy+3)
-	add	hl,de
-	push	hl
-	ld	c,(iy+12)
-	ld	hl,(iy+6)
-	pop	iy
-	push	hl
-_RotateN90Width_ASM =$+1
-_:	ld	b,0
-	push	iy
-_:	lea	de,iy
-	ld	a,(de)
-	ld	(hl),a
-_RotateN90Delta_ASM =$+1
-	ld	de,0
-	add	iy,de
-	inc	hl
-	djnz	-_
-	pop	iy
-	dec	iy
-	dec 	c
-	jr	nz,--_
-	pop	hl
+	pop	ix
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -3250,28 +3587,28 @@ _ComputeOutcode_ASM:
 	sbc	hl,bc
 	pop	bc
 	add	hl,hl
-	jp	po,m__1 \.r
+	jp	po,+_ \.r
 	ccf
-m__1:	rla
+_:	rla
 	ld	hl,(_xmax) \.r
 	sbc	hl,bc
 	add	hl,hl
-	jp	po,m__2 \.r
+	jp	po,+_ \.r
 	ccf
-m__2:	rla
+_:	rla
 	ld	hl,(_ymin) \.r
 	scf
 	sbc	hl,de
 	add	hl,hl
-	jp	pe,m__3 \.r
+	jp	pe,+_ \.r
 	ccf
-m__3:	rla
+_:	rla
 	ld	hl,(_ymax) \.r
 	sbc	hl,de
 	add	hl,hl
 	rla
 	ret	po
-	xor	1
+	xor	a,1
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -3284,16 +3621,16 @@ TextData_ASM:
 
 DefaultCharSpacing_ASM:
 	;   0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,1,7,7
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-	.db 2,3,5,7,7,7,7,4,4,4,7,6,3,6,2,7
-	.db 7,6,7,7,7,7,7,7,7,7,2,3,5,6,5,6
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-	.db 7,7,7,7,7,7,7,7,7,7,7,4,7,4,7,7
-	.db 3,7,7,7,7,7,7,7,7,4,7,7,4,7,7,7
-	.db 7,7,7,7,6,7,7,7,7,7,7,6,2,6,7,7
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
-	.db 7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+	.db 8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8
+	.db 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+	.db 3,4,6,8,8,8,8,5,5,5,8,7,4,7,3,8
+	.db 8,7,8,8,8,8,8,8,8,8,3,4,6,7,6,7
+	.db 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+	.db 8,8,8,8,8,8,8,8,8,8,8,5,8,5,8,8
+	.db 4,8,8,8,8,8,8,8,8,5,8,8,5,8,8,8
+	.db 8,8,8,8,7,8,8,8,8,8,8,7,3,7,8,8
+	.db 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+	.db 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
  
 ;-------------------------------------------------------------------------------
 DefaultTextData_ASM:
