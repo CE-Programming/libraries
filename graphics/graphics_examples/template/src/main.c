@@ -22,5 +22,5 @@ void main(void) {
 	/* Place program code here */
 	
 	gfx_End();
-	pgrm_CleanUp();
+	prgm_CleanUp();
 }

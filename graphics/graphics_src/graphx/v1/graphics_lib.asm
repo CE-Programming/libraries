@@ -32,7 +32,7 @@
  .function "gfx_SetTextTransparentColor",_SetTextTransparentColorC
  .function "gfx_SetCustomFontData",_SetCustomFontData
  .function "gfx_SetCustomFontSpacing",_SetCustomFontSpacing
- .function "gfx_SetFontMonospace",_SetFontMonospace
+ .function "gfx_SetMonospaceFont",_SetMonospaceFont
  .function "gfx_GetStringWidth",_GetStringWidth
  .function "gfx_GetCharWidth",_GetCharWidth
  .function "gfx_GetTextX",_GetTextX
@@ -93,10 +93,6 @@ tmpSpritePtr            equ 0E30C0Eh
 tmpSafe                 equ 0E30C11h
 currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
-
-_Polygon:
-_Polygon_NoClip:
-	ret
 
 ;-------------------------------------------------------------------------------
 _AllocSprite:
@@ -272,12 +268,14 @@ _GetPixel:
 ;  arg1 : Y Coord
 ; Returns:
 ;  Color index of X,Y Coord
-	ld	iy,0
-	lea	de,iy				; zero de
-	add	iy,sp
-	ld	bc,(iy+3)			; x coordinate
-	ld	e,(iy+6)			; y coordinate
-	xor	a,a
+	ld	hl,3
+	add	hl,sp
+	ld	bc,(hl)				; x coordinate
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	de,0
+	ld	e,(hl)				; y coordinate
 	call	_PixelPtr_ASM \.r
 	ret	c
 	ld	a,(hl)				; get the actual pixel
@@ -1064,9 +1062,10 @@ _Line:
 ;  arg0: y1
 ; Returns:
 ;  true if drawn, false if offscreen
-	ld	hl,(_xmax) \.r
-	dec	hl
-	ld	(_xmax),hl \.r
+	ld	hl,xmax \.r
+	ld	de,(hl)
+	dec	de
+	ld	(hl),de
 	ld	iy,0
 	add	iy,sp
 	lea	hl,iy+-10
@@ -1174,9 +1173,10 @@ m_30:	ld	c,(iy+12)
 	ld	de,(iy+3)
 	call	_Line_NoClip_ASM \.r
 m_31:	ld	sp,iy
-	ld	hl,(_xmax) \.r
-	inc	hl
-	ld	(_xmax),hl \.r
+	ld	hl,xmax \.r
+	ld	de,(hl)
+	inc	de
+	ld	(hl),de
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -1368,6 +1368,7 @@ _BlitLines:
 	ld	hl,(mpLcdBase)
 	add	hl,de
 	pop	de
+	ex	de,hl
 	ld	a,(iy+3)			; a = buffer to copy to
 	jr	--_
 
@@ -1400,7 +1401,7 @@ _BlitArea:
 	pop	de				; restore ptr to buffer
 	ld	a,(iy+3)
 	or	a,a
-	jr	z,+_
+	jr	nz,+_
 	ex	de,hl				; swap if copy swap
 _:	ld	bc,(iy+12)
 	ld	(_BlitAreaWidth_SMC),bc \.r
@@ -1462,10 +1463,10 @@ _ShiftRight:
 	dec	hl
 	dec	de
 	inc	a
-XDeltaDownRight_ASM =$+1
+XDeltaDownRight_SMC =$+1
 _:	ld	bc,0
 	lddr
-PosOffsetDownRight_ASM =$+1
+PosOffsetDownRight_SMC =$+1
 	ld	bc,0
 	sbc	hl,bc
 	ex	de,hl
@@ -1512,10 +1513,10 @@ _ShiftLeft:
 	dec	hl
 	dec	de
 	inc	a
-XDeltaUpLeft_ASM =$+1
+XDeltaUpLeft_SMC =$+1
 _:	ld	bc,0
 	ldir
-PosOffsetUpLeft_ASM =$+1
+PosOffsetUpLeft_SMC =$+1
 	ld	bc,0
 	add	hl,bc
 	ex	de,hl
@@ -2100,10 +2101,10 @@ _:	srl	h
 	rr	l
 	djnz	-_
 	ld	a,l
-	ld	(_X_Res_ASM),a \.r
+	ld	(_X_Res_SMC),a \.r
 	ld	hl,(iy+15)
 	sbc	hl,bc
-	ld	(_X_Draw_ASM),hl \.r ; x_draw = tilemap->x_loc-x_offset;
+	ld	(_X_Draw_SMC),hl \.r ; x_draw = tilemap->x_loc-x_offset;
 	
 	or	a,a
 	sbc	hl,hl
@@ -2114,10 +2115,10 @@ _:	srl	h
 	ld	(ix+-3),0
 	jp	_Y_Loop_ASM \.r
 
-_X_Res_ASM =$+3
+_X_Res_SMC =$+3
 n_8:	ld	(ix+-1),0
 	ld	(ix+-2),0
-_X_Draw_ASM =$+1
+_X_Draw_SMC =$+1
 	ld	hl,0
 	ld	(ix+-7),hl
 	ld	l,(iy+13)
@@ -2253,7 +2254,7 @@ _GetTextX:
 ;  None
 ; Returns:
 ;  X Text cursor posistion
-	ld	hl,(TextXPos_ASM) \.r
+	ld	hl,(TextXPos_SMC) \.r
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2263,7 +2264,7 @@ _GetTextY:
 ;  None
 ; Returns:
 ;  Y Text cursor posistion
-	ld	a,(TextYPos_ASM) \.r
+	ld	a,(TextYPos_SMC) \.r
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2277,7 +2278,7 @@ _SetTextBGColorC:
 	pop	de
 	push	de
 	push	hl
-	ld	hl,TextBGColor_ASM \.r
+	ld	hl,TextBGColor_SMC \.r
 	ld	a,(hl)
 	ld	(hl),e
 	ret
@@ -2293,7 +2294,7 @@ _SetTextFGColorC:
 	pop	de
 	push	de
 	push	hl
-	ld	hl,TextFGColor_ASM \.r
+	ld	hl,TextFGColor_SMC \.r
 	ld	a,(hl)
 	ld	(hl),e
 	ret
@@ -2309,7 +2310,7 @@ _SetTextTransparentColorC:
 	pop	de
 	push	de
 	push	hl
-	ld	hl,TextTransColor_ASM \.r
+	ld	hl,TextTransColor_SMC \.r
 	ld	a,(hl)
 	ld	(hl),e
 	ret
@@ -2324,12 +2325,12 @@ _SetTextXY:
 ;  None
 	ld	hl,3
 	add	hl,sp
-	ld	de,TextXPos_ASM \.r
+	ld	de,TextXPos_SMC \.r
 	ldi
 	ldi
 	inc	hl
 	ld	a,(hl)
-	ld	(TextYPos_ASM),a \.r
+	ld	(TextYPos_SMC),a \.r
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2344,10 +2345,10 @@ _PrintStringXY:
 	ld	hl,9
 	add	hl,sp
 	ld	a,(hl)
-	ld	(TextYPos_ASM),a \.r
+	ld	(TextYPos_SMC),a \.r
 	dec	hl
 	dec	hl
-	ld	de,TextXPos_ASM+1 \.r
+	ld	de,TextXPos_SMC+1 \.r
 	ldd
 	ldd
 	dec	hl
@@ -2387,7 +2388,8 @@ _PrintChar_ASM:
 	push	ix				; save stack pointer
 	push	hl				; save hl pointer if string
 	ld	e,a				; e = char
-	ld	a,(MonoFlag_ASM) \.r
+MonoFlag_SMC =$+1
+	ld	a,0
 	or	a,a
 	jr	nz,+_
 	sbc	hl,hl
@@ -2395,14 +2397,14 @@ _PrintChar_ASM:
 	ld	bc,(CharSpacing_ASM) \.r
 	add	hl,bc
 	ld	a,(hl)				; a = char width
-TextXPos_ASM = $+1
+TextXPos_SMC = $+1
 _:	ld	bc,0
 	sbc	hl,hl
 	ld	l,a
 	ld	ixh,a				; ixh = char width
 	add	hl,bc
-	ld	(TextXPos_ASM),hl \.r
-TextYPos_ASM = $+1
+	ld	(TextXPos_SMC),hl \.r
+TextYPos_SMC = $+1
 	ld	l,0
 	ld	h,lcdWidth/2
 	mlt	hl
@@ -2425,13 +2427,13 @@ _:	ld	c,(hl)				; c = 8 pixels
 	add	iy,de				; get draw location
 	lea	de,iy
 	ld	b,ixh
-TextBGColor_ASM =$+1
+TextBGColor_SMC =$+1
 _:	ld	a,255
 	rlc	c
 	jr	nc,+_
-TextFGColor_ASM =$+1
+TextFGColor_SMC =$+1
 	ld	a,0
-TextTransColor_ASM =$+1
+TextTransColor_SMC =$+1
 _:	cp	a,255				; check if transparent
 	jr	z,+_
 	ld	(de),a
@@ -2465,8 +2467,8 @@ _PrintUInt_ASM:
 	ld	b,8
 	mlt	bc
 	ld	a,c
-	ld	(Offset_ASM),a \.r
-Offset_ASM =$+1
+	ld	(Offset_SMC),a \.r
+Offset_SMC =$+1
 	jr	$
 	ld	bc,-10000000
 	call	Num1 \.r
@@ -2558,7 +2560,7 @@ _GetCharWidth_ASM:
 	or	a,a
 	sbc	hl,hl
 	ld	l,a
-	ld	a,(MonoFlag_ASM) \.r
+	ld	a,(MonoFlag_SMC) \.r
 	or	a,a
 	jr	nz,+_
 	ld	de,(CharSpacing_ASM) \.r
@@ -2616,7 +2618,7 @@ _:	ld	(CharSpacing_ASM),hl \.r
 	ret
 
 ;-------------------------------------------------------------------------------
-_SetFontMonospace:
+_SetMonospaceFont:
 ; Sets the font to be monospace
 ; Arguments:
 ;  arg0 : Monospace spacing amount
@@ -2627,7 +2629,7 @@ _SetFontMonospace:
 	push	de
 	push	hl
 	ld	a,e
-	ld	(MonoFlag_ASM),a \.r
+	ld	(MonoFlag_SMC),a \.r
 	ret
 
 ;-------------------------------------------------------------------------------
@@ -2920,6 +2922,97 @@ _:	jp	po,t_32 \.r
 	pop	ix
 	ret
 
+_Polygon_NoClip:
+	ld	hl,_Line_NoClip
+	jr	+_
+_Polygon:
+	ld	hl,_Line \.r
+_:	ld	(_LineType0_SMC),hl \.r
+	ld	(_LineType1_SMC),hl \.r
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	sbc	hl,hl
+	ld	(tmpWidth),hl		; set the for loop counter to 0 (tmpWidth is used as a temp variable)
+	ld	hl,(ix+9)
+	dec	hl
+	ld	(ix+9),hl		; decrement the number of points
+	jr	p_3
+p_1:
+	ld	hl,(tmpWidth)
+	add	hl,hl
+	inc	hl
+	inc	hl
+	inc	hl
+	push	hl
+	pop	bc
+	add	hl,hl
+	add	hl,hl
+	sbc	hl,bc
+	ld	bc,(ix+6)
+	add	hl,bc
+	ld	bc,(hl)
+	push	bc			; push the last argument
+	dec	hl
+	dec	hl
+	dec	hl
+	ld	bc,(hl)
+	push	bc			; push the third argument
+	dec	hl
+	dec	hl
+	dec	hl
+	ld	bc,(hl)
+	push	bc			; push the second argument
+	dec	hl
+	dec	hl
+	dec	hl
+	ld	bc,(hl)
+	push	bc			; push the first argument
+_LineType0_SMC =$+1
+	call	0
+	ld	sp,ix
+	ld	hl,(tmpWidth)
+	inc	hl
+	ld	(tmpWidth),hl		; increment the counter
+p_3:	ld	bc,(ix+9)
+	or	a,a
+	sbc	hl,bc
+	jr	c,p_1			; check if drawn all the points
+	ld	de,(ix+6)
+	add	hl,bc
+	inc	hl
+	add	hl,hl
+	dec	hl
+	push	hl
+	pop	bc
+	add	hl,hl
+	add	hl,hl
+	sbc	hl,bc
+	add	hl,de
+	ld	bc,(hl)
+	push	bc			; push the last argument
+	dec	hl
+	dec	hl
+	dec	hl
+	ld	bc,(hl)
+	push	bc			; push the third argument
+	ex	de,hl
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	bc,(hl)
+	push	bc			; push the second argument
+	dec	hl
+	dec	hl
+	dec	hl
+	ld	bc,(hl)
+	push	bc			; push the first argument
+_LineType1_SMC =$+1
+	call	0
+	ld	sp,ix
+	pop	ix
+	ret
+
 ;-------------------------------------------------------------------------------
 _LZDecompress:
 ; Decompresses in lz77 format the input data into the output buffer
@@ -2944,7 +3037,7 @@ _LZDecompress:
 	ld	a,(hl)
 	ld	(ix+-7),a
 	ld	(ix+-3),bc
-	ld	bc,0
+	dec	bc
 	ld	(ix+-6),bc
 l_17:	ld	bc,(ix+-3)
 	ld	hl,(ix+6)
@@ -3056,9 +3149,9 @@ _FlipSpriteY:
 	ld	l,a
 	ld	c,a
 	push	hl
-	ld	(_FlipHorizWidth_ASM),a \.r
+	ld	(_FlipHorizWidth_SMC),a \.r
 	add	hl,hl
-	ld	(_FlipHorizDelta_ASM),hl \.r
+	ld	(_FlipHorizDelta_SMC),hl \.r
 	ld	a,(ix+1)
 	pop	hl
 	lea	de,ix+2
@@ -3069,14 +3162,14 @@ _FlipSpriteY:
 	lea	de,ix+2
 	push	ix
 	ld	iyl,a
-_FlipHorizWidth_ASM =$+1
+_FlipHorizWidth_SMC =$+1
 _:	ld	b,0
 _:	ld	a,(hl)
 	ld	(de),a
 	dec	hl
 	inc	de
 	djnz	-_
-_FlipHorizDelta_ASM =$+1
+_FlipHorizDelta_SMC =$+1
 	ld	bc,0
 	add	hl,bc
 	dec 	iyl
@@ -3099,9 +3192,9 @@ _FlipSpriteX:
 	ld	ix,(iy+3)
 	xor	a,a
 	sub	a,(ix+0)
-	ld	(_FlipVertDelta_ASM),a \.r
+	ld	(_FlipVertDelta_SMC),a \.r
 	neg
-	ld	(_FlipVertWidth_ASM),a \.r
+	ld	(_FlipVertWidth_SMC),a \.r
 	ld	l,(ix+1)
 	ld	c,l
 	dec	l
@@ -3114,10 +3207,10 @@ _FlipSpriteX:
 	ld	(ix+1),c
 	lea	de,ix+2
 	push	ix
-_FlipVertWidth_ASM =$+1
+_FlipVertWidth_SMC =$+1
 _:	ld	bc,0
 	ldir
-_FlipVertDelta_ASM =$+1
+_FlipVertDelta_SMC =$+1
 	ld	bc,-1
 	add	hl,bc
 	add	hl,bc
@@ -3251,7 +3344,7 @@ _:	ld	a,(de)
 
 ;-------------------------------------------------------------------------------
 _LZ_ReadVarSize_ASM:
-; LZ Compression Subroutine
+; LZ Decompression Subroutine
 	push	ix
 	ld	ix,0
 	lea	de,ix
@@ -3271,7 +3364,7 @@ _:	ld	de,0
 	inc	bc
 	ld	(ix+9),bc
 	ld	a,(ix+-9)
-	and	127
+	and	a,127
 	sbc	hl,hl
 	ld	l,a
 	ld	(ix+-12),hl
@@ -3339,12 +3432,12 @@ _UpLeftShiftCalculate_ASM:
 	push	de
 	or	a,a
 	sbc	hl,de
-	ld	(XDeltaUpLeft_ASM),hl \.r
+	ld	(XDeltaUpLeft_SMC),hl \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
-	ld	(PosOffsetUpLeft_ASM),hl \.r
+	ld	(PosOffsetUpLeft_SMC),hl \.r
 	ld	a,(_ymin) \.r
 	ld	c,a
 	ld	a,(_ymax) \.r
@@ -3355,7 +3448,7 @@ _:	sub	a,c
 	add	hl,hl
 	pop	de
 	add	hl,de
-	ld	de,vram
+	ld	de,(currDrawBuffer)
 	add	hl,de
 	ret
 
@@ -3371,12 +3464,12 @@ _DownRightShiftCalculate_ASM:
 	push	hl
 	or	a,a
 	sbc	hl,de
-	ld	(XDeltaDownRight_ASM),hl \.r
+	ld	(XDeltaDownRight_SMC),hl \.r
 	ex	de,hl
 	ld	hl,lcdWidth
 	or	a,a
 	sbc	hl,de
-	ld	(PosOffsetDownRight_ASM),hl \.r
+	ld	(PosOffsetDownRight_SMC),hl \.r
 	ld	a,(_ymin) \.r
 	ld	c,a
 	ld	a,(_ymax) \.r
@@ -3612,8 +3705,6 @@ _:	rla
 	ret
 
 ;-------------------------------------------------------------------------------
-MonoFlag_ASM:
-	.db 0
 CharSpacing_ASM:
 	.dl DefaultCharSpacing_ASM \.r
 TextData_ASM:

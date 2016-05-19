@@ -17,57 +17,76 @@
 const char nameAppVar[] = "AppVar";
 
 typedef struct myData {
-    uint8_t settings_name[15];
+    uint8_t settings_name[1500];
     uint8_t var1;
     uint8_t var2;
 } myData_t;
 
 myData_t dataStruct;
 
+/* Function prototypes */
 void printText(int8_t xpos, int8_t ypos, const char *text);
 
 /* Main Function */
 void main(void) {
-    ti_var_t myAppVar;
-    int x;
+	ti_var_t myAppVar;
+	int x;
     
-    strcpy(dataStruct.settings_name, "Settings Saved");
-    dataStruct.var1 = 10;
-    dataStruct.var2 = 20;
+	strcpy(dataStruct.settings_name, "My Settings");
+	dataStruct.var1 = 10;
+	dataStruct.var2 = 20;
     
-    /* Close any files that may be open already */
-    ti_CloseAll();
+	/* Close any files that may be open already */
+	ti_CloseAll();
     
-    /* Open a new variable; deleting it if it already exists */
-    myAppVar = ti_Open(nameAppVar,"w");
+	/* Open a new variable; deleting it if it already exists */
+	myAppVar = ti_Open(nameAppVar,"w");
     
-    /* Make sure we opened okay */
-    if (!myAppVar)                                                      goto err;
+	/* Make sure we opened okay */
+	if (!myAppVar) {
+		printText(5,5,"1");
+		goto err;
+	}
     
-    /* Write the structure to the appvar */
-    if ((ti_Write(&dataStruct, sizeof(myData_t), 1, myAppVar)) != 1)    goto err;
+	/* Write the structure to the appvar */
+	if ((ti_Write(&dataStruct, sizeof(myData_t), 1, myAppVar)) != 1){
+		printText(5,5,"2");
+		goto err;
+	}
     
-    /* Let's read it just to make sure we wrote it correctly */
-    if ((ti_Rewind(myAppVar) == -1))                                    goto err;
-    ti_Seek(SEEK_SET, 1, myAppVar);
-    if ((ti_Read(&dataStruct, sizeof(myData_t), 1, myAppVar)) != 1)     goto err;
+	/* Let's read it just to make sure we wrote it correctly */
+	if ((ti_Rewind(myAppVar) == -1)){
+		printText(5,5,"3");
+		goto err;
+	}
+	
+	if ((ti_Read(&dataStruct, sizeof(myData_t), 1, myAppVar)) != 1){
+		printText(5,5,"4");
+		goto err;
+	}
     
-    /* Make sure we read these varaibles correctly too */
-    if (dataStruct.var1 != 10 && dataStruct.var2 != 20)                 goto err;
+	/* Make sure we read these varaibles correctly too */
+	if (dataStruct.var1 != 10 && dataStruct.var2 != 20) {
+		printText(5,5,"5");
+		goto err;
+	}
     
-    printText(0,0,"Read was successful");
-    
-    /* Get the scan codes */
-    while( !os_GetCSC() );
+	printText(0,0,"Read was successful");
+	goto noerr;
     
 err:
-    printText(0,0,"An error occured");
-    ti_CloseAll();
-    pgrm_CleanUp();
+	printText(0,0,"An error occured");
+noerr:
+  
+	/* Get the scan codes */
+	while( !os_GetCSC() );
+    
+	ti_CloseAll();
+	prgm_CleanUp();
 }
 
 /* Draw text on the homescreen at the given X/Y location */
 void printText(int8_t xpos, int8_t ypos, const char *text) {
-    os_SetCursorPos(ypos, xpos);
-    os_PutStrFull(text);
+	os_SetCursorPos(ypos, xpos);
+	os_PutStrFull(text);
 }

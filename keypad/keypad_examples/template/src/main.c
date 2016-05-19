@@ -15,6 +15,6 @@
 
 /* Main Function */
 void main(void) {
-    kb_Reset();
-    pgrm_CleanUp();
+	
+	prgm_CleanUp();
 }

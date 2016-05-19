@@ -2519,16 +2519,31 @@ apdFlagsLoc		equ 0D00088h		; location of APD Flags
 appFlagsLoc		equ 0D0008Dh		; location of App Flags
 rclFlagsLoc		equ 0D0008Eh            ; location of RCLQueue Flags
 shiftFlagsLoc		equ 0D00092h            ; location of Shifting Flags
+mathprintFlagsLoc	equ 0D000C4h		; location of MathPrint Flags
 
-strtokPtr		equ 0D000FFh            ; location of pointer used by strtok
-printRoutine		equ 0D00108h            ; stores pointer of printing routines (3 scrap)
+strtokPtr		equ 0D000FFh            ; location of pointer used by C strtok
+printRoutine		equ 0D00108h            ; stores pointer to printing routines (3 scrap)
 
 cellOverrideAddr	equ 0D00166h
 curCell			equ 0D0016Eh            ; selected list cell
 
 SmallEditCancelParse	equ 0D001A4h
 
+penRowBackup		equ 0D003E3h		; backup of penRow
+mathprintBackup		equ 0D003E6h		; backup of mathprint flags
+winLeftEdgeBackup	equ 0D003D2h		; backup of winLeftEdge
+catalogCurrentBackup	equ 0D003D3h		; backup of catalogCurrent
+menuCurrentSubBackup	equ 0D003D6h		; backup of menuCurrentSub
+menuNumMenusBackup	equ 0D003D8h		; backup of menuNumMenus
+menuCurrentBackup	equ 0D003DAh		; backup of menuCurrent
+cxCurAppBackup		equ 0D003DDh		; backup of cxCurApp
+
+curUnderBackup		equ 0D003E8h		; backup of curUnder
+
 appData			equ 0D00429h		; used for OFFSCRPT and ONSCRPT
+
+arcPtrEnd		equ 0D0052Fh
+
 tempSP			equ 0D0053Fh		; 3 byte scrap
 
 arcInfo			equ 0D00543h
@@ -2619,7 +2634,7 @@ varCurrent		equ 0D00814h
 varClass		equ 0D0081Ch
 
 catalogCurrent		equ 0D0081Dh ; word at this location starting with 6007h corresponds to what is highlighted in catalog
-catalogCurrentBackup	equ 0D00820h ; backup of catalogCurrent for menus
+catalogCurrentBackupM	equ 0D00820h ; backup of catalogCurrent for menus
 menuAppDepth		equ 0D00823h
 menuCurrent		equ 0D00824h
 menuCurrentSub		equ 0D00825h ; holds current submenu index
@@ -2947,13 +2962,13 @@ gCurYLoc		equ 0D02FD6h ; current y pixel location for C functions
 ;safeRAM Locations
 ;---------------------------------------------
 ;appData		equ 0D00429h ; 256 bytes
+;textShadow		equ 0D006C0h ; 260 bytes	; Call _ClrTxtShdw to put spaces in here
+;cmdShadow		equ 0D0232Dh ; 260 bytes
 pixelShadow		equ 0D031F6h ; 8400 bytes
 pixelShadow2		equ 0D052C6h ; 8400 bytes
 cmdPixelShadow		equ 0D07396h ; 8400 bytes
 plotSScreen		equ 0D09466h ; 21945 bytes	; Set GraphDraw Flag to redraw graph if used
 saveSScreen		equ 0D0EA1Fh ; 21945 bytes	; Set GraphDraw Flag to redraw graph if used
-;textShadow		equ 0D006C0h ; 260 bytes	; Call _ClrTxtShdw to put spaces in here
-;cmdShadow		equ 0D0232Dh ; 260 bytes
 cursorImage		equ 0E30800h ; 1020 bytes
 
 ;semiSafeRAM Locations
@@ -5959,10 +5974,17 @@ useTokensInString	equ 4		;1 = use tokens instead of characters when displaying c
 displayClock		equ 5		;1 = display clock (this is set every second, reset otherwise)
 clockOn			equ 6		;1 = clock on
 ;----------------------------------------------------------------------
+mathprintFlags		equ 44h
+mathprintEnabled	equ 5		;1 = use mathprint styling
+;----------------------------------------------------------------------
 backlightFlags		equ 46h
 restoreBrightness	equ 0		;1 = restore lcd brightness when needed
 ;----------------------------------------------------------------------
+grFlags			equ 4Ah
+drawGrLbls		equ 0		;1 = don't draw Graph Labels (this is usually reset anyway)
+
 putMapFlags		equ 4Ah
+usePixelShadow2		equ 3		;1 = use pixelshadow2, not pixelshadow
 putMapUseColor		equ 4		;1 = use custom color
 ;----------------------------------------------------------------------
 graphDispFlags		equ 4Bh

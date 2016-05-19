@@ -2,16 +2,16 @@
 ; Resets interrupts back to OS expected values
 ;-------------------------------------------------------------------------
 ; Interrupts
-pIntStatus	.equ	5000h
-mpIntStatus	.equ	0F00000h
-pIntMask	.equ	5004h
-mpIntMask	.equ	0F00004h
-pIntAck		.equ	5008h
-mpIntAck	.equ	0F00008h
-pIntLachEnable	.equ	500Ch
-mpIntLachEnable	.equ	0F0000Ch
-pIntXor		.equ	5010h
-mpIntXor	.equ	0F00010h
+pIntStatus		.equ	5000h
+mpIntStatus		.equ	0F00000h
+pIntMask		.equ	5004h
+mpIntMask		.equ	0F00004h
+pIntAck			.equ	5008h
+mpIntAck		.equ	0F00008h
+pIntLachEnable		.equ	500Ch
+mpIntLachEnable		.equ	0F0000Ch
+pIntXor			.equ	5010h
+mpIntXor		.equ	0F00010h
 pIntStatusMasked	.equ	5014h
 mpIntStatusMasked	.equ	0F00014h
 
@@ -41,9 +41,7 @@ _int_reset:
 	ld	bc,16
 	ldir
 	ret
-_ir:	dw	1 | 10h | 1000h | 2000h, 0
-	dw	0FFFFh, 0FFFFh
-	dw	1 | 8 | 10h, 0
-	dw	0, 0
-
-	end
+_ir:	.dw	1 | 10h | 1000h | 2000h, 0
+	.dw	0FFFFh, 0FFFFh
+	.dw	1 | 8 | 10h, 0
+	.dw	0, 0

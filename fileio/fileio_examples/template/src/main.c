@@ -21,5 +21,5 @@ void main(void) {
 /* Place program here */
 
     ti_CloseAll();
-    pgrm_CleanUp();
+    prgm_CleanUp();
 }

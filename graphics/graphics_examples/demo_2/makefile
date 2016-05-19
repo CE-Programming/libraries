@@ -1,19 +1,25 @@
 #----------------------------
 
 #Change TARGET to specify the output program name
-#Change ICONC to "ICON" to include a custom icon, and "NICON" to not use an icon. Icons use the palette located in \include\ce\pal, and is named iconc.png in your project's root directory.
 #Change DEBUGMODE to "DEBUG" in order to compile debug.h functions in, and "NDEBUG" to not compile debugging functions
-#Change DESCRIPTION to modify what is displayed within a compatible shell
 #Change ARCHIVED to "YES" to mark the output as archived, and "NO" to not
 #Change APPVAR to "YES" to create the file as an AppVar, otherwise "NO" for programs
+#Change ICONPNG to change the name of the png file that should be made into the icon
+#Change DESCRIPTION to modify what is displayed within a compatible shell (Not compiled in if icon is not present)
 
 #----------------------------
 TARGET ?= GRAPHX2
-DESCRIPTION ?= "Graphics C program - Demo 2"
 DEBUGMODE ?= NDEBUG
 ARCHIVED ?= NO
 APPVAR ?= NO
 #----------------------------
+ICONPNG ?= iconc.png
+DESCRIPTION ?= "C Graphics Demo 2"
+#----------------------------
+
+#Add shared library names to the L varible, for instance:
+# L := graphx fileioc keypadc
+L := graphx
 
 #These directories specify where source and output should go
 
@@ -24,65 +30,62 @@ BINDIR := bin
 GFXDIR := src/gfx
 #----------------------------
 
-#Add shared library names to the L varible, for instance:
-# L := graphx fileioc keypadc
-L := graphx
+#This changes the location of compiled output (Advanced)
+
+#----------------------------
+BSSHEAP_LOW := D031F6
+BSSHEAP_HIGH := D13FD6
+STACK_HIGH := D1A87E
+INIT_LOC := D1A87F
+#----------------------------
 
 #----------------------------
 #Try not to edit anything below these lines unless you know what you are doing
 #----------------------------
 
 #----------------------------
+
+#Define some common makefile things
 empty :=
 space := $(empty) $(empty)
 comma := ,
-TARGETHEX := $(TARGET).hex
-TARGETMAP := $(TARGET).map
+CD = cd
+RM = del /F /Q
+CP = copy /Y
+NULL = >nul 2>&1
 
-ICON_PNG := iconc.png
+#Generate the default names for input and object files
+TARGETHEX := $(TARGET).hex
 ICON_ASM := iconc.asm
 CSTARTUP_ASM := cstartup.asm
 LIBHEADER_ASM := libheader.asm
 
+#Objects
 ICON_OBJ := $(ICON_ASM:%.asm=%.obj)
 CSTARTUP_OBJ := $(CSTARTUP_ASM:%.asm=%.obj)
 LIBHEADER_OBJ := $(LIBHEADER_ASM:%.asm=%.obj)
 
+#Get the locations of the startup modules and LibLoad modules
 LIBHEADER_LOC := $(CEDEV)/include/ce/asm/$(LIBHEADER_ASM)
 CSTARTUP_LOC := $(CEDEV)/include/ce/asm/$(CSTARTUP_ASM)
-ICON_LOC := .
 
+#Find all the directories in the source input
 ALLDIRS := $(sort $(dir $(wildcard $(SRCDIR)/*/)))
 
-BIN = $(call NATIVEPATH,$(CEDEV)/bin)
-ifeq ($(OS),Windows_NT)
+#Assume Windows; it is a simple matter to run make under wine
 NATIVEPATH = $(subst /,\,$(1))
 WINPATH = $(NATIVEPATH)
 CEDEV ?= $(realpath ..\..)
+
+#Locations of needed compiling/assembling/linking programs
 CC = "$(BIN)eZ80cc"
 AS = "$(BIN)eZ80asm"
 LD = "$(BIN)eZ80link"
 CV = "$(BIN)convhex"
 PG = "$(BIN)convpng"
-CD = cd
-RM = del /F /Q
-CP = copy /Y
-NULL = >nul 2>&1
-else
-NATIVEPATH = $(subst \,/,$(1))
-WINPATH = $(subst \,\\,$(shell winepath --windows $(1)))
-CEDEV ?= $(realpath ../..)
-CC = wine "$(BIN)eZ80cc"
-LD = wine "$(BIN)eZ80link"
-CV = "$(BIN)convhex_linux"
-PG = "$(BIN)convpng_linux"
-CD = cd
-RM = rm -f
-CP = cp -f
-NULL = >/dev/null
-endif
 BIN := $(call NATIVEPATH,$(CEDEV)/bin/)
 
+#Determine if output should be archived or an AppVar
 ifneq ($(ARCHIVED),NO)
 CVFLAGS := -a
 endif
@@ -92,69 +95,57 @@ TARGETTYPE := $(TARGET).8xv
 else
 TARGETTYPE := $(TARGET).8xp
 endif
+TARGETMAP := $(TARGET).map
 
-ifneq ("$(wildcard $(ICON_PNG))","")
-ICONC := ICON
-endif
-
+#Find all of the available C and ASM files (Remeber, you can create C <-> assembly routines easily this way)
 SOURCES := $(call WINPATH,$(foreach dir,$(ALLDIRS),$(wildcard $(dir)*.c)))
 ASMSOURCES := $(call WINPATH,$(foreach dir,$(ALLDIRS),$(wildcard $(dir)*.asm)))
-SOURCES := $(call WINPATH,$(addprefix $(CURDIR)/,$(SOURCES)))
-ASMSOURCES := $(call WINPATH,$(addprefix $(CURDIR)/,$(ASMSOURCES)))
+PNGSOURCES := $(call WINPATH,)
 
+#Figure out what the names of the sources will become once made into objects
 OBJECTS := $(addprefix $(OBJDIR)/,$(notdir $(SOURCES:%.c=%.obj)))
 OBJECTS += $(addprefix $(OBJDIR)/,$(notdir $(ASMSOURCES:%.asm=%.obj)))
 OBJECTS += $(OBJDIR)/$(CSTARTUP_OBJ)
 
-ifeq ($(ICONC),ICON)
-ICON_CONV := $(PG) -c $(DESCRIPTION) && $(CP) $(ICON_ASM) $(OBJDIR) $(NULL) && $(RM) $(ICON_ASM) $(NULL)
+#Check if there is an icon present that we can convert; if so, generate a recipe to build it properly
+ifneq ("$(wildcard $(ICON_PNG))","")
+ICON_CONV := $(PG) -c $(ICON_PNG)$(comma)$(DESCRIPTION) && \
+             $(CP) $(ICON_ASM) $(OBJDIR) $(NULL) && \
+	     $(RM) $(ICON_ASM) $(NULL)
 OBJECTS += $(OBJDIR)/$(ICON_OBJ)
+ICONC := ICON
 else
 ICON_CONV :=
 endif
 
+#Are there any shared libraries that we need to find? If so, add in the proper objects and sources and header files
 ifdef L
-OBJECTS += $(OBJDIR)/$(LIBHEADER_OBJ)
 LIBLOC := $(foreach var,$(L),lib/ce/$(var))
 LIBS := $(call WINPATH,$(foreach var,$(L),$(CEDEV)/lib/ce/$(var)/$(var).asm))
 OBJECTS += $(addprefix $(OBJDIR)/,$(notdir $(LIBS:%.asm=%.obj)))
+OBJECTS += $(OBJDIR)/$(LIBHEADER_OBJ)
 endif
 
+#Define the nesassary headers, along with any the user may have defined, where modification should just trigger a build
+USERHEADERS := $(call WINPATH,$(foreach dir,$(ALLDIRS),$(wildcard $(dir)*.h)))
 HEADERS := $(subst $(space),;,$(call WINPATH,. $(ALLDIRS) $(addprefix $(CEDEV)/,. include/ce/asm include/ce/c include include/std lib/std/ce lib/ce $(LIBLOC))))
 LIBRARIES := $(call WINPATH,$(addprefix $(CEDEV)/lib/std/,ce/ctice.lib ce/cdebug.lib chelp.lib crt.lib crtS.lib nokernel.lib fplib.lib fplibS.lib))
 LIBRARIES += $(call WINPATH,$(foreach var,$(L),$(CEDEV)/lib/ce/$(var)/$(var).lib))
 
+#Define the assembler flags used by the Zilog assembler
 ASM_FLAGS := \
 	-define:_EZ80=1 -define:_SIMULATE=1 -define:$(ICONC) -include:$(HEADERS) -NOlist -NOlistmac \
 	-pagelen:250 -pagewidth:132 -quiet -sdiopt -warn -NOdebug -NOigcase -cpu:EZ80F91
 
+#Define the C flags used by the Zilog compiler
 CFLAGS := \
 	-quiet -define:$(DEBUGMODE) -define:_EZ80F91 -define:_EZ80 -define:$(ICONC) -define:_SIMULATE -NOlistinc -NOmodsect -cpu:EZ80F91 -keepasm \
 	-optspeed -NOreduceopt -NOgenprintf -stdinc:"$(HEADERS)" -usrinc:"." -NOdebug \
 	-asmsw:"$(ASM_FLAGS)"
 
-LDFLAGS := \
-	-FORMAT=INTEL32 \
-	-map -maxhexlen=64 -quiet -warnoverlap -xref -unresolved=fatal \
-	-sort ADDRESS=ascending -warn -NOdebug -NOigcase \
-	define __copy_code_to_ram = 0 \
-	range rom $$000000 : $$FFFFFF \
-	range ram $$D00000 : $$FFFFFF \
-	range bss $$D031F6 : $$D13FD6 \
-	change code is ram \
-	change data is ram \
-	change text is ram \
-	change strsect is text \
-	define __low_bss = base of bss \
-	define __len_bss = length of bss \
-	define __heaptop = (highaddr of bss) \
-	define __heapbot = (top of bss)+1 \
-	define __stack = $$D1A87E \
-	locate .header at $$D1A87F \
-	locate .icon at (top of .header)+1 \
-	locate .launcher at (top of .icon)+1 \
-	locate .libs at (top of .launcher)+1
-
+#This is a giant mess, but basically it is just repeated code to properly align all of the nesasary libraries and
+#their header information. Kind of annoying, but this is the only certain way ZDS is able to organize things properly
+#Currently 11 libraries are supported; more can be added later if needed (probably not)
 ifdef L
 LIBNUM := $(words $(L))
 LDLIBS := locate .$(word 1,$(L))_header at (top of .libs)+1
@@ -199,59 +190,92 @@ endif
 endif
 endif
 endif
-LDFLAGS += $(LDLIBS)
 LDLAST := .$(word $(words $(L)),$(L))
 else
 LDLAST := .libs
 endif
 
-LDFLAGS += \
+#These are the linker flags, basically organized to properly set up the enviornment
+LDFLAGS := \
+	-FORMAT=INTEL32 \
+	-map -maxhexlen=64 -quiet -warnoverlap -xref -unresolved=fatal \
+	-sort ADDRESS=ascending -warn -NOdebug -NOigcase \
+	define __copy_code_to_ram = 0 \
+	range rom $$000000 : $$FFFFFF \
+	range ram $$D00000 : $$FFFFFF \
+	range bss $$$(BSSHEAP_LOW) : $$$(BSSHEAP_HIGH) \
+	change code is ram \
+	change data is ram \
+	change text is ram \
+	change strsect is text \
+	define __low_bss = base of bss \
+	define __len_bss = length of bss \
+	define __heaptop = (highaddr of bss) \
+	define __heapbot = (top of bss)+1 \
+	define __stack = $$$(STACK_HIGH) \
+	locate .header at $$$(INIT_LOC) \
+	locate .icon at (top of .header)+1 \
+	locate .launcher at (top of .icon)+1 \
+	locate .libs at (top of .launcher)+1 \
+	$(LDLIBS) \
 	locate .startup at (top of $(LDLAST))+1 \
 	locate code at (top of .startup)+1 \
 	locate data at (top of code)+1 \
-	locate text at (top of data)+1
+	locate text at (top of data)+1 \
 
+#The rules to build all of the different sorts of files
+
+#This rule is trigged to build everything
 all : $(BINDIR)/$(TARGETTYPE)
-
+	
+#This rule builds the Intel HEX file
 $(BINDIR)/$(TARGETHEX) : $(OBJECTS) $(LIBRARIES)
-	@$(LD) $(LDFLAGS) $@ = "$(subst $(space),$(comma),$(call WINPATH,$^))" || @$(RM) $(BINDIR)/$(TARGETTYPE) $(BINDIR)/$(TARGETHEX) $(NULL)
-
+	@$(LD) $(LDFLAGS) $@ = "$(subst $(space),$(comma),$(call WINPATH,$^))"
+	
+#These rules use ConvHEX to convert the Intel HEX file to a calculator format
 %.8xv : %.hex
 	@$(CV) $(CVFLAGS) $(@:%.8xv=%)
-
 %.8xp : %.hex
 	@$(CV) $(CVFLAGS) $(@:%.8xp=%)
-
+	
+#This rule handles conversion of the icon, if it is ever updated
 $(OBJDIR)/$(ICON_OBJ) : $(ICON_PNG)
 	@$(ICON_CONV) && \
 	@$(CD) $(OBJDIR) && \
-	$(AS) $(ASM_FLAGS) $(ICON_ASM)
+	@$(AS) $(ASM_FLAGS) $(ICON_ASM)
 	
+#This rule builds the assembly files and places them in the object directory
 $(OBJDIR)/%.obj : $(SRCDIR)/%.asm
 	@$(CD) $(OBJDIR) && \
-        $(AS) $(ASM_FLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
-
-$(OBJDIR)/%.obj : $(SRCDIR)/%.c
+	@$(AS) $(ASM_FLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
+	
+#These rules compile the source files into object files
+$(OBJDIR)/%.obj : $(SRCDIR)/%.c $(USERHEADERS)
 	@$(CD) $(OBJDIR) && \
-	 $(CC) $(CFLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
-
-$(OBJDIR)/%.obj : $(GFXDIR)/%.c
+	@$(CC) $(CFLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
+	
+$(OBJDIR)/%.obj : $(GFXDIR)/%.c $(USERHEADERS)
 	@$(CD) $(OBJDIR) && \
-	 $(CC) $(CFLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
-
+	@$(CC) $(CFLAGS) $(call WINPATH,$(addprefix $(CURDIR)/,$<))
+	
+#This rule builds the standard startup module (Which is nice, because then it is completely customizable)
 $(OBJDIR)/$(CSTARTUP_OBJ) : $(CSTARTUP_LOC)
 	@$(CD) $(OBJDIR) && \
-	$(AS) $(ASM_FLAGS) $(call WINPATH,$<)
-
+	@$(AS) $(ASM_FLAGS) $(call WINPATH,$<)
+	
+#This rule builds the LibLoad library locater object
 $(OBJDIR)/$(LIBHEADER_OBJ) : $(LIBHEADER_LOC)
 	@$(CD) $(OBJDIR) && \
-	$(AS) $(ASM_FLAGS) $(call WINPATH,$<)
+	@$(AS) $(ASM_FLAGS) $(call WINPATH,$<)
 	@$(CD) $(OBJDIR) && \
-	$(CC) $(CFLAGS) -asm $(LIBS)
+	@$(CC) $(CFLAGS) -asm $(LIBS)
 	
-$(OBJDIR)/%.obj :
-
+#This is just a silly rule needed for the icon conversion to work properly
+$(OBJDIR)/%.obj : 
+	
+#This rule cleans up everything
 clean :
-	@$(RM) $(OBJDIR)\*.src $(OBJDIR)\*.obj $(OBJDIR)\$(ICON_ASM) $(BINDIR)\$(TARGETMAP) $(BINDIR)\$(TARGETHEX) $(BINDIR)\$(TARGETTYPE) $(NULL)
-
+	@$(RM) $(call WINPATH,$(BINDIR)/$(TARGETHEX) $(BINDIR)/$(TARGETTYPE) $(BINDIR)/$(TARGETMAP) $(OBJECTS) $(OBJDIR)/*.src $(OBJDIR)/$(ICON_ASM)) $(NULL)
+	@echo Cleaned build files.
+	
 .PHONY : all clean

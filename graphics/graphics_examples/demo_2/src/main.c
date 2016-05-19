@@ -19,32 +19,26 @@
 /* Put all your code here */
 void main(void) {
 	/* Decalre some variables */
-	int x_pos;
-	uint8_t y_pos;
-	uint8_t scale;
-	
-	/* Seed the random numbers so they are different */
-	srand( rtc_Time() );
+	gfx_TempSprite( sprite_buffer, 32, 32 );
 
-	/* Initialize some random coordinates */
-	x_pos = gfx_RandInt(0,110);
-	y_pos = gfx_RandInt(0,30);
-	scale = gfx_RandInt(1,2);
-	
 	/* Initialize the 8bpp graphics */
 	gfx_Begin( gfx_8bpp );
 	
-	/* Set the text color where index 0 is transparent, and the forecolor is random */
-	gfx_SetPalette(logo_gfx_pal, sizeof(logo_gfx_pal), 0);
+	/* Normally we would set up the palette here, but convpng matched the image to the closest standard palette values */
+	//gfx_SetPalette( logo_gfx_pal, sizeof(logo_gfx_pal), 0);
 	
 	/* Draw a sprite randomly on the screen without clipping */
-	gfx_ScaledSprite_NoClip( ubuntu, y_pos, x_pos, scale, scale );
-	gfx_ScaledTransparentSprite_NoClip( ubuntu, x_pos, y_pos, scale+1, scale+1 );
+	gfx_Sprite_NoClip( ubuntu, 10, 10 );
+	gfx_Sprite_NoClip( gfx_FlipSpriteX(ubuntu, sprite_buffer), 10 + 32, 10 + 32 );
+	gfx_Sprite_NoClip( gfx_FlipSpriteY(ubuntu, sprite_buffer), 10 + 32 + 32, 10 + 32 + 32);
+	gfx_Sprite_NoClip( gfx_RotateSpriteC(ubuntu, sprite_buffer), 10 + 32 + 32 + 32, 10 + 32 + 32 + 32);
+	gfx_Sprite_NoClip( gfx_RotateSpriteCC(ubuntu, sprite_buffer), 10 + 32 + 32 + 32 + 32, 10 + 32 + 32 + 32 + 32);
+	gfx_Sprite_NoClip( gfx_RotateSpriteHalf(ubuntu, sprite_buffer), 10 + 32 + 32 + 32 + 32 + 32, 10 + 32 + 32 + 32 + 32 + 32);
 	
 	/* Wait for a key to be pressed */
 	while( !os_GetCSC() );
 	
 	/* Close the graphics and return to the OS */
 	gfx_End();
-	pgrm_CleanUp();
+	prgm_CleanUp();
 }

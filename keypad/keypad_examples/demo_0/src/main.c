@@ -20,34 +20,34 @@ void fillScreen(uint8_t color);
 
 /* Main Function */
 void main(void) {
-    /* Key varaible */
-    uint8_t key;
-    
-    /* Loop until 2nd is pressed */
-    while(kb_ScanGroup(kb_group_1) != kb_2nd) {
-        key = kb_ScanGroup(kb_group_7);
+	/* Key varaible */
+	kb_key_t key;
+
+	/* Loop until 2nd is pressed */
+	while(kb_ScanGroup(kb_group_1) != kb_2nd) {
+		key = kb_ScanGroup(kb_group_7);
         
-        switch(key) {
-            case kb_Down:           /* Change screen color to black */
-                fillScreen(0x00);
-                break;
-            case kb_Right:          /* Change screen color to red */
-                fillScreen(0xE0);
-                break;
-            case kb_Up:             /* Change screen color to white */
-                fillScreen(0xFF);
-                break;
-            case kb_Left:           /* Change screen color to a different red */
-                fillScreen(0xC0);
-                break;
-            default:
-                break;
-        }
-    }
-    pgrm_CleanUp();
+		switch(key) {
+			case kb_Down:           /* Change screen color to black */
+				fillScreen(0x00);
+				break;
+			case kb_Right:          /* Change screen color to red */
+				fillScreen(0xE0);
+				break;
+			case kb_Up:             /* Change screen color to white */
+				fillScreen(0xFF);
+				break;
+			case kb_Left:           /* Change screen color to a different red */
+				fillScreen(0xC0);
+				break;
+			default:
+				break;
+		}
+	}
+	prgm_CleanUp();
 }
 
 /* Simple way to fill the screen with a given color */
 void fillScreen(uint8_t color) {
-    memset_fast(lcd_buf, color, lcd_size);
+	memset_fast(lcd_buf, color, lcd_size);
 }

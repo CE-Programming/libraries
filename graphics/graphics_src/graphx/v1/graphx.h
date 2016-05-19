@@ -109,7 +109,7 @@ typedef struct gfx_region {
 /* Type for tilemap */
 typedef struct gfx_tilemap {
 	uint8_t *map;             /* pointer to indexed map array */
-	uint8_t **tiles;          /* pointer to tiles */
+	gfx_image_t **tiles;          /* pointer to tiles */
 	uint8_t tile_height;      /* individual tile height */
 	uint8_t tile_width;       /* individual tile width */
 	uint8_t draw_height;      /* number of rows to draw in the tilemap */
@@ -123,13 +123,13 @@ typedef struct gfx_tilemap {
 } gfx_tilemap_t;
 
 typedef enum gfx_tilemap_type {
-	gc_tile_2_pixel = 1,      /* Set when using 2 pixel tiles */
-	gc_tile_4_pixel,          /* Set when using 4 pixel tiles */
-	gc_tile_8_pixel,          /* Set when using 8 pixel tiles */
-	gc_tile_16_pixel,         /* Set when using 16 pixel tiles */
-	gc_tile_32_pixel,         /* Set when using 32 pixel tiles */
-	gc_tile_64_pixel,         /* Set when using 64 pixel tiles */
-	gc_tile_128_pixel,        /* Set when using 128 pixel tiles */
+	gfx_tile_2_pixel = 1,      /* Set when using 2 pixel tiles */
+	gfx_tile_4_pixel,          /* Set when using 4 pixel tiles */
+	gfx_tile_8_pixel,          /* Set when using 8 pixel tiles */
+	gfx_tile_16_pixel,         /* Set when using 16 pixel tiles */
+	gfx_tile_32_pixel,         /* Set when using 32 pixel tiles */
+	gfx_tile_64_pixel,         /* Set when using 64 pixel tiles */
+	gfx_tile_128_pixel,        /* Set when using 128 pixel tiles */
 } gfx_tilemap_type_t;
 
 /**
@@ -247,9 +247,16 @@ void gfx_FillCircle_NoClip(uint24_t x, uint8_t y, uint8_t radius);
 
 /**
  * Draws a polygon outline
+ * Example:
+ * int points[6] = { 
+ *                    160,  1,  (x0, y0)
+ *                    1,  238,  (x1, y1)
+ *                    318,238,  (x2, y2)
+ *                  };
+ * num_points = 3;
  */
-void gfx_PolyLine(int *points);
-void gfx_PolyLine_NoClip(int *points);
+void gfx_Polygon(int *points, unsigned num_points);
+void gfx_Polygon_NoClip(int *points, unsigned num_points);
 
 /**
  * Draws a filled triangle measured from the top left origin
@@ -279,10 +286,10 @@ uint8_t gfx_GetDraw(void);
 void gfx_SwapDraw(void);
 
 /**
- * Copies the input buffer to the opposite buffer
+ * Copies the the data in the opposite (buffer or screen) to the screen or buffer
  * Arguments:
- *  gfx_screen: copies screen to buffer
- *  gfx_buffer: copies buffer to screen
+ *  gfx_screen: copies buffer to screen
+ *  gfx_buffer: copies screen to buffer
  */
 void gfx_Blit(uint8_t buffer);
 void gfx_BlitLines(uint8_t buffer, uint8_t y_loc, uint8_t num_lines);

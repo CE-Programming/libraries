@@ -18,6 +18,8 @@ void print_string_centered(const char *str);
 
 /* Put all your code here */
 void main(void) {
+	unsigned x;
+	uint8_t y;
 	const char msg[] = "Hello World!";
 	
 	/* Seed the random numbers */
@@ -29,8 +31,8 @@ void main(void) {
 	/* Fill the screen black */
 	gfx_FillScreen( gfx_black );
 	
-	/* Set the text color where index 0 is transparent, and the forecolor is random */
-	gfx_SetTextFGColor( gfx_RandInt(0,255) );
+	/* Set the random text color */
+	gfx_SetTextFGColor( randInt(1,255) );
 	
 	/* Print a string centered on the screen */
 	print_string_centered( msg );
@@ -40,7 +42,7 @@ void main(void) {
 	
 	/* Close the graphics and return to the OS */
 	gfx_End();
-	pgrm_CleanUp();
+	prgm_CleanUp();
 }
 
 /* Prints a screen centered string */

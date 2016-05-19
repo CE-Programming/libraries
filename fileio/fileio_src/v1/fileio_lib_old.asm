@@ -513,7 +513,7 @@ _GetChar_ASM:
 	sbc	hl,hl
 	ld	l,a
 	ret
- 
+
 ;-------------------------------------------------------------------------------
 _Seek:
 ; Performs an fseek on an AppVar
