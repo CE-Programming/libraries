@@ -1,6 +1,6 @@
 /**
  * @file    FILEIOC CE C Library
- * @version 1.6
+ * @version 2.0
  *
  * @section LICENSE
  *
@@ -43,10 +43,10 @@
 /**
  * Varible and flag definitions
  */
-#define Program             (5)
-#define ProtectedProgram    (6)
-#define AppVar              (21)
-#define TempProgram         (22)
+#define ti_Program             (5)
+#define ti_ProtectedProgram    (6)
+#define ti_AppVar              (21)
+#define ti_TempProgram         (22)
 
 #ifndef EOF
 #define EOF (-1)
@@ -85,6 +85,23 @@ ti_var_t ti_OpenVar(const char *varname, const char *mode, uint8_t type);
  * Returns zero if closing failed
  */
 int ti_Close(const ti_var_t slot);
+
+/**
+ * Returns the name of the file(s) that contains the string as the first part of the variable
+ * This can then be used with ti_Open and other functions
+ * seach_pos should be set to NULL to begin a search, and is then updated with each call
+ *
+ * For example:
+ *  uint8_t *search_pos = NULL;
+ *  char *var_name;
+ *  while((var_name = ti_Detect( &search_pos, "my_data" )) != NULL) {
+ *    ...do something with the name or search_pos...
+ *  }
+ * If the return value is NULL, either the variable wasn't found in the current search span, or there are no more variables to find
+ * If detection_string is NULL, return is NULL as well
+ */
+char *ti_Detect(void **curr_search_posistion, const char *detection_string);
+char *ti_DetectVar(void **curr_search_posistion, const char *detection_string);
 
 /**
  * Writes to the current variable pointer given:
@@ -186,18 +203,16 @@ int ti_Delete(const char *varname);
 int ti_DeleteVar(const char *varname, uint8_t type);
 
 /**
- * Gets a token as a string variable
- * Returns a string_buffer
- * location points to the address to disassmble the token; it is updated and
- * moved to the next token
- * string buffer is the character array where the token is stored
- * If the length argument is specified, the length of the string is stored in length
+ * Gets the string used for displaying a TI token
+ * read_pointer is updated to the next token, depending on if it is 1 or 2 bytes in length
+ * length_of_token gets the length of the token, used for determining the next read location (Can be NULL if you don't care)
+ * length_of_string returns the length of the returned string (Can be NULL if you don't care)
  */
-char *ti_GetTokenString(char *string_buffer, uint8_t *location, int *length);
+char *ti_GetTokenString(void **read_pointer, uint8_t *length_of_token, unsigned *length_of_string);
 
 /**
- * Gets a pointer to the current offset in the variable
- * Returns NULL if slot is not open
+ * Gets a pointer to the data located at the current posistion in the slot
+ * Good way for fast reading of data
  */
 void *ti_GetDataPtr(const ti_var_t slot);
 
