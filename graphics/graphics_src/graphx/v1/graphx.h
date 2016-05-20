@@ -286,10 +286,10 @@ uint8_t gfx_GetDraw(void);
 void gfx_SwapDraw(void);
 
 /**
- * Copies the input buffer to the opposite buffer
+ * Copies the the data in the opposite (buffer or screen) to the screen or buffer
  * Arguments:
- *  gfx_screen: copies screen to buffer
- *  gfx_buffer: copies buffer to screen
+ *  gfx_screen: copies buffer to screen
+ *  gfx_buffer: copies screen to buffer
  */
 void gfx_Blit(uint8_t buffer);
 void gfx_BlitLines(uint8_t buffer, uint8_t y_loc, uint8_t num_lines);

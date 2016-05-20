@@ -17,7 +17,7 @@
 const char nameAppVar[] = "AppVar";
 
 typedef struct myData {
-    uint8_t settings_name[1500];
+    uint8_t settings_name[15];
     uint8_t var1;
     uint8_t var2;
 } myData_t;

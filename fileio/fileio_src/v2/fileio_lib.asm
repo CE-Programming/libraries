@@ -5,7 +5,7 @@
  .libraryVersion        2               ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
-; v1 functions -- can no longer move/add, but can fix
+; v1 functions
 ;-------------------------------------------------------------------------------
  .function "ti_CloseAll",_CloseAll
  .function "ti_Open",_Open
@@ -34,16 +34,9 @@
 
  .beginDependencies
  .endDependencies
-
+ 
 ;-------------------------------------------------------------------------------
-; Used throughout the library
-varOpenType	equ 0E30C08h
-currSlot	equ 0E30C11h
-resizeBytes	equ 0E30C0Eh
-;-------------------------------------------------------------------------------
-
-;-------------------------------------------------------------------------------
-#define VATPtr0	$D0244E
+#define VATPtr0 $D0244E
 #define VATPtr1 $D0257B
 #define VATPtr2 $D0257E
 #define VATPtr3 $D02581
@@ -57,49 +50,28 @@ resizeBytes	equ 0E30C0Eh
 ;-------------------------------------------------------------------------------
 
 ;-------------------------------------------------------------------------------
-_CloseAll:
-; Initializes the File IO library
-; Arguments:
-;  None
-; Returns:
-;  None
-	or	a,a
-	sbc	hl,hl
-	ld	(VATPtr0),hl
-	ld	(VATPtr1),hl
-	ld	(VATPtr2),hl
-	ld	(VATPtr3),hl
-	ld	(VATPtr4),hl
-	ld	(varPtr0),hl
-	ld	(varPtr1),hl
-	ld	(varPtr2),hl
-	ld	(varPtr3),hl
-	ld	(varPtr4),hl
-	ld	hl,VarOffset0 \.r
-	ld	bc,15
-	jp	_MemClear
-
-;-------------------------------------------------------------------------------
-_Detect:
-; Finds an AppVar that starts with some data
+_DetectVar:
+; Finds a variable that starts with some data
 ; Arguments:
 ;  arg0 : address of pointer to being search
 ;  arg1 : pointer to null terminated string of data to search for
 	pop	hl
 	pop	de
+	pop	bc
+	push	bc
 	push	de
 	push	hl
-	ld	a,e
+	ld	a,c
 	jr	+_
 
 ;-------------------------------------------------------------------------------
-_DetectVar:
-; Finds a varaible that starts with some data
+_Detect:
+; Finds an AppVar that starts with some data
 ;  arg0 : address of pointer to being search
 ;  arg1 : pointer to null terminated string of data to search for
 ;  arg2 : type of varaible to search for
 	ld	a,appVarObj
-_:	ld	(DetectType_SMC),a
+_:	ld	(DetectType_SMC),a \.r
 	push	ix
 	ld	ix,0
 	add	ix,sp
@@ -195,65 +167,7 @@ _:	ld	a,(hl)
 	xor	a,a
 	ld	(de),a
 	ret
-	
-;-------------------------------------------------------------------------------
-_Resize:
-; Resizes an AppVar
-; Arguments:
-;  arg0 : New size
-;  arg1 : Slot number
-; Returns:
-;  Resized size if no failure
-	pop	de
-	pop	hl				; hl = newSize
-	pop	bc				; a = slot
-	ld	a,c
-	push	bc
-	push	hl
-	push	de
-	ld	(currSlot),a
-	call	_CheckIfSlotOpen \.r
-	jp	nz,_ReturnNEG1L \.r
-	push	hl
-	call	_CheckInRAM_ASM \.r
-	pop	hl
-	jp	z,_ReturnNULL \.r
-	ld	de,$FFFF-30
-	sbc	hl,de
-	add	hl,de
-	push	af
-	push	hl
-	ld	bc,0
-	call	_SetSlotOffset_ASM \.r
-	pop	hl
-	pop	af
-	jp	nc,_ReturnNULL \.r		; return if too big
-	push	hl
-	call	_GetSlotSize_ASM \.r
-	pop	hl
-	or	a,a
-	sbc	hl,bc
-	ld	(resizeBytes),hl
-	jr	z,NoResize
-	jr	c,DecreaseSize
-IncreaseSize:
-	call	_EnoughMem
-	jp	c,_ReturnNULL \.r
-	ex	de,hl
-	call	AddMemoryToVar \.r
-	jr	NoResize
-DecreaseSize:
-	push	hl
-	pop	bc
-	or	a,a
-	sbc	hl,hl
-	sbc	hl,bc
-	ld	(resizeBytes),hl
-	call	DeleteMemoryFromVar \.r
-NoResize:
-	ld	hl,(resizeBytes)
-	ret
- 
+
 ;-------------------------------------------------------------------------------
 _GetTokenString:
 ; Returns pointer to next token string
@@ -307,10 +221,10 @@ _GetDataPtr:
 ;  Pointer to current offset data
 	pop	de
 	pop	hl
-	ld	a,l
 	push	hl
 	push	de
-	ld	(currSlot),a
+	ld	a,l
+	ld	(CurrentSlot_ASM),a \.r
 	call	_CheckIfSlotOpen \.r
 	jp	z,_ReturnNULL \.r
 	call	_GetSlotSize_ASM \.r
@@ -322,16 +236,99 @@ _GetDataPtr:
 	ret
 
 ;-------------------------------------------------------------------------------
-_IsArchived:
-; Checks if a variable is archived
+_CloseAll:
+; Initializes the File IO library
 ; Arguments:
-;  arg0 : Slot number
+;  None
+; Returns:
+;  None
+	or	a,a
+	sbc	hl,hl
+	ld	(VATPtr0),hl
+	ld	(VATPtr1),hl
+	ld	(VATPtr2),hl
+	ld	(VATPtr3),hl
+	ld	(VATPtr4),hl
+	ld	(varPtr0),hl
+	ld	(varPtr1),hl
+	ld	(varPtr2),hl
+	ld	(varPtr3),hl
+	ld	(varPtr4),hl
+	ld	hl,VarOffset0 \.r
+	ld	bc,15
+	jp	_memclear
+
+;-------------------------------------------------------------------------------
+_Resize:
+; Resizes an AppVar
+; Arguments:
+;  __frame_arg0 : New size
+;  __frame_arg1 : Slot number
+; Returns:
+;  Resized size if no failure
+	pop	de
+	pop	hl								; hl=newSize
+	pop	bc							 ;	a=slot
+	ld	a,c
+	ld	(CurrentSlot_ASM),a \.r
+	push	bc
+	push	hl
+	push	de
+	call	_CheckIfSlotOpen \.r
+	jp	z,_ReturnNEG1L \.r
+	push	hl
+	call	_CheckInRAM_ASM \.r
+	ld	a,l
+	pop	hl
+	jp	z,_ReturnNULL \.r
+	ld	de,$FFFF-30
+	or	a,a
+	sbc	hl,de
+	add	hl,de
+	push	af
+	push	hl
+	ld	bc,0
+	call	_SetSlotOffset_ASM \.r
+	pop	hl
+	pop	af
+	jp	nc,_ReturnNULL \.r	; return if too big
+	push	hl
+	call	_GetSlotSize_ASM \.r
+	pop	hl
+	or	a,a
+	sbc	hl,bc
+	ld	(ResizeBytes),hl \.r
+	jr	z,NoResize
+	jr	c,DecreaseSize
+IncreaseSize:
+	call	_enoughmem
+	jp	c,_ReturnNULL \.r
+	ex	de,hl
+	call	AddMemoryToVar \.r
+	jr	NoResize
+DecreaseSize:
+	push	hl
+	pop	bc
+	or	a,a
+	sbc	hl,hl
+	sbc	hl,bc
+	ld	(ResizeBytes),hl \.r
+	call	DeleteMemoryFromVar \.r
+NoResize:
+	ld	hl,(ResizeBytes) \.r
+	ret
+ 
+;-------------------------------------------------------------------------------
+_IsArchived:
+; Checks if a varaible is archived
+; Arguments:
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  0 if not archived
 	pop	de
 	pop	hl
 	ld	a,l
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	push	hl
 	push	de
 	call	_CheckIfSlotOpen \.r
@@ -339,11 +336,10 @@ _IsArchived:
 _CheckInRAM_ASM:
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
-	dec	hl
-	dec	hl
-	dec	hl
-	dec	hl
-	dec	hl
+	push	bc
+	ld	bc,-5
+	add	hl,bc
+	pop	bc
 	ld	a,(hl)
 	or	a,a
 	sbc	hl,hl
@@ -356,27 +352,30 @@ _CheckInRAM_ASM:
 _OpenVar:
 ; Opens a variable
 ; Arguments:
-;  arg0 : Pointer to variable name
-;  arg1 : Opening flags
-;  arg2 : Varaible Type
+;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg1 : Opening flags
+;  __frame_arg2 : Varaible Type
 ; Returns:
 ;  Slot number if no error
-	ld	iy,0
-	add	iy,sp
-	ld	a,(iy+9)
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	a,(ix+__frame_arg2)
+	pop	ix
 	jr	+_
 ;-------------------------------------------------------------------------------
 _Open:
 ; Opens an AppVar
 ; Arguments:
-;  arg0 : Pointer to variable name
-;  arg1 : Opening flags
+;  __frame_arg0 : Pointer to varaible name
+;  __frame_arg1 : Opening flags
 ; Returns:
 ;  Slot number if no error
-	ld	iy,0
-	add	iy,sp
-	ld	a,appVarObj
-_:	ld	(varOpenType),a
+	ld	a,$15
+_:	ld	(varTypeOpen),a \.r
+	push	ix
+	ld	ix,0
+	add	ix,sp
 	xor	a,a
 	ld	hl,(VATPtr0)
 	add	hl,de
@@ -402,37 +401,40 @@ _:	ld	(varOpenType),a
 	add	hl,de
 	inc	a
 	sbc	hl,de
-	jp	nz,_ReturnNULL \.r
-_:	ld	(currSlot),a			; store the current slot number
-	ld	hl,(iy+3)
-	dec	hl
-	call	_Mov9ToOP1
-	ld	a,(varOpenType)
-	ld	(OP1),a
-	ld	hl,(iy+6)
+	jr	z,+_
+	jp	_ReturnNULL_PopIX \.r
+_:	ld	(CurrentSlot_ASM),a \.r
+	ld	hl,(ix+__frame_arg0)
+	ld	de,op1+1
+	ld	bc,9
+	ldir
+	xor	a,a
+	ld	(de),a
+	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	cp	a,'w'
-	jr	nz,+_
-	call	_PushOP1			; delete the file if a 'w' exists
-	call	_ChkFindSym
-	call	nc,_DelVarArc
-	call	_PopOP1
-_:	ld	hl,(iy+6)
+	jr	nz,nooverwite
+	call	_pushop1
+	call	_chkfindsym
+	call	nc,_delvararc
+	call	_popop1
+nooverwite:
+	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	cp	a,'r'
 	jr	z,+_
 	cp	a,'a'
 	jr	z,+_
 	cp	a,'w'
-	jp	nz,_ReturnNULL \.r
+	jp	nz,_ReturnNULL_PopIX \.r
 _:	inc	hl
 	ld	a,(hl)
 	cp	a,'+'
 	jr	nz,++_
-_ArchiveThisVar:
-	call	_PushOP1
-	call	_ChkFindSym
-	call	_ChkInRam
+archivevar:
+	call	_pushop1
+	call	_chkfindsym
+	call	_chkinram
 	jr	z,+_
 	inc	de
 	inc	de
@@ -443,73 +445,84 @@ _ArchiveThisVar:
 	inc	hl
 	ld	d,(hl)
 	ex	de,hl
-	call	_EnoughMem
-	jp	c,_ReturnNULL \.r
-	call	_PopOP1
-	call	_PushOP1
-	call	_Arc_Unarc
-	call	_PopOP1
-	jr	_ArchiveThisVar
-_:	call	_PopOP1
-_:	call	_ChkFindSym
+	call	_enoughmem
+	jp	c,_ReturnNULL_PopIX \.r
+	call	_popop1
+	call	_pushop1
+	call	_arc_Unarc
+	call	_popop1
+	jr	archivevar
+_:	call	_popop1
+_:	call	_chkfindsym
 	jr	c,+_
-	call	_ChkInRam
+	call	_chkinram
 	jr	z,_SavePtrs_ASM
-	ld	bc,(iy+6)
-	ld	a,(bc)
-	cp	a,'r'
-	jp	nz,_ReturnNULL \.r
-        ex	de,hl				; skip vat entry in archive
-	push	iy
 	push	hl
-	pop	iy
-	ld	bc,10
-	add	hl,bc
-	ld 	c,(iy+9)
-	add 	hl,bc
-	ex	(sp),hl
-	add	hl,bc
-	pop	iy
-	jr	_SavePtrs_ASM
-_:	ld	hl,(iy+6)
+	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	cp	a,'r'
-	jp	z,_ReturnNULL \.r
+	pop	hl
+	jp	nz,_ReturnNULL_PopIX \.r
+; skip vat entry in archive
+        ex	de,hl
+	push	ix
+	push	de
+	push	hl
+	pop	ix
+	ld	a,10
+	add	a,(ix+9)
+	ld	de,0
+	ld	e,a
+	add	hl,de
+	ex	(sp),hl
+	add	hl,de
+	pop	de
+	pop	ix
+	jr	_SavePtrs_ASM
+_:	ld	hl,(ix+__frame_arg1)
+	ld	a,(hl)
+	cp	a,'r'
+	jp	z,_ReturnNULL_PopIX \.r
 	or	a,a
 	sbc	hl,hl
-	ld	a,(varOpenType)
-	call	_CreateVar
+varTypeOpen =$+1
+	ld	a,0
+	call	_createvar
 _SavePtrs_ASM:
 	push	hl
 	call	_GetSlotVATPtr_ASM \.r
 	pop	bc
 	ld	(hl),bc
-	call	_GetSlotDataPtr_ASM \.r
+	call	_GetSlotVarPtr_ASM \.r
 	ld	(hl),de
-	ld	hl,(iy+6)
+	ld	hl,(ix+__frame_arg1)
 	ld	a,(hl)
 	ld	bc,0
 	cp	a,'a'
 	call	z,_GetSlotSize_ASM \.r
 	call	_SetSlotOffset_ASM \.r
-	ld	a,(currSlot)
+	pop	ix
+	ld	a,(CurrentSlot_ASM) \.r
+	or	a,a
+	sbc	hl,hl
+	ld	l,a
 	ret
-
+ 
 ;-------------------------------------------------------------------------------
 _SetArchiveStatus:
 ; Sets the archive status of a slot
 ; Arguments:
-;  arg0 : Boolean value
-;  arg1 : Slot number
+;  __frame_arg0 : Boolean value
+;  __frame_arg1 : Slot number
 ; Returns:
 ;  None
 	ld	a,$15
-	ld	(variableTypeArc),a \.r
+	ld	(varTypeOpenArc),a \.r
 	pop	hl
 	pop	bc
 	pop	de
 	ld	a,e
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	push	de
 	push	bc
 	push	hl
@@ -523,18 +536,19 @@ _SetArchiveStatus:
 	add	hl,bc
 	ld	b,(hl)
 	ld	de,op1+1
-_:	dec	hl
-	ld	a,(hl)
+	dec	hl
+_:	ld	a,(hl)
 	ld	(de),a
 	inc	de
+	dec	hl
 	djnz	-_
 	xor	a,a
 	ld	(de),a
-variableTypeArc =$+1
+varTypeOpenArc =$+1
 	ld	a,0
 	ld	(op1),a
-	call	_ChkFindSym
-	call	_ChkInRam
+	call	_chkfindsym
+	call	_chkinram
 	push	af
 	ld	bc,0
 	call	_GetSlotVATPtr_ASM \.r
@@ -544,41 +558,43 @@ variableTypeArc =$+1
 	or	a,a
 	jr	z,SetNotArchived
 SetArchived:
-	push	bc	
-	pop	af	
-	jp	z,_Arc_Unarc
+	push	bc
+	pop	af
+	jp	z,_arc_unarc
 	ret
 SetNotArchived:
 	push	bc
 	pop	af
-	jp	nz,_Arc_Unarc
+	jp	nz,_arc_unarc
 	ret
-
+ 
 ;-------------------------------------------------------------------------------
 _Write:
 ; Performs an fwrite to an AppVar
 ; Arguments:
-;  arg0 : Pointer to data to write
-;  arg1 : Size of entries (bytes)
-;  arg2 : Number of entries
-;  arg3 : Slot number
+;  __frame_arg0 : Pointer to data to write
+;  __frame_arg1 : Size of entries (bytes)
+;  __frame_arg2 : Number of entries
+;  __frame_arg3 : Slot number
 ; Returns:
 ;  Number of chunks written if success
-	ld	iy,0
-	add	iy,sp
-	ld	bc,(iy+6)
-	ld	hl,(iy+9)
-	call	__smulu				; hl*bc
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	bc,(ix+__frame_arg1)
+	ld	hl,(ix+__frame_arg2)
+	call	$000228			; hl*bc
 	ex	de,hl
-	ld	a,(iy+12)
-	ld	(currSlot),a
-	ld	hl,(iy+3)
+	ld	a,(ix+__frame_arg3)
+	ld	(CurrentSlot_ASM),a \.r
+	ld	hl,(ix+__frame_arg0)
 	call	_CheckIfSlotOpen \.r
-	jp	z,_ReturnNULL \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
+	ld	a,l
 	pop	hl
-	jp	z,_ReturnNULL \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	ld	bc,0
 _:	ld	a,(hl)
 	push	hl
@@ -587,11 +603,11 @@ _:	ld	a,(hl)
 	ld	(charIn),a \.r
 	call	_PutChar_ASM \.r
 	call	_SetAToHLU
-	rla
+	bit	7,a
 	pop	bc
 	pop	de
 	pop	hl
-	jr	c,+_
+	jr	nz,+_
 	inc	hl
 	inc	bc
 	dec	de
@@ -599,40 +615,41 @@ _:	ld	a,(hl)
 	or	a,d
 	jr	nz,-_
 	jr	_s
-
+ 
 ;-------------------------------------------------------------------------------
 _Read:
 ; Performs an fread to an AppVar
 ; Arguments:
-;  arg0 : Pointer to data to read into
-;  arg1 : Size of entries (bytes)
-;  arg2 : Number of entries
-;  arg3 : Slot number
+;  __frame_arg0 : Pointer to data to read into
+;  __frame_arg1 : Size of entries (bytes)
+;  __frame_arg2 : Number of entries
+;  __frame_arg3 : Slot number
 ; Returns:
 ;  Number of chunks read if success
-	ld	iy,0
-	add	iy,sp
-	ld	bc,(iy+6)
-	ld	hl,(iy+9)
-	call	__smulu				; hl*bc
+	push	ix
+	ld	ix,0
+	add	ix,sp
+	ld	bc,(ix+__frame_arg1)
+	ld	hl,(ix+__frame_arg2)
+	call	$000228			; hl*bc
 	ex	de,hl
-	ld	a,(iy+12)
-	ld	(currSlot),a
-	ld	hl,(iy+3)
+	ld	a,(ix+__frame_arg3)
+	ld	(CurrentSlot_ASM),a \.r
+	ld	hl,(ix+__frame_arg0)
 	call	_CheckIfSlotOpen \.r
-	jp	z,_ReturnNULL \.r
+	jp	z,_ReturnNULL_PopIX \.r
 	ld	bc,0
 _:	push	hl
 	push	de
 	push	bc
 	call	_GetChar_ASM \.r
 	call	_SetAToHLU
-	rla
+	bit	7,a
 	ld	a,l
 	pop	bc
 	pop	de
 	pop	hl
-	jr	c,_s
+	jr	nz,_s
 	ld	(hl),a
 	inc	hl
 	inc	bc
@@ -640,25 +657,26 @@ _:	push	hl
 	ld	a,e
 	or	a,d
 	jr	nz,-_
-_s:	ld	de,(iy+6)
+_s:	ld	de,(ix+__frame_arg1)
 	ex.s	de,hl
 	push	hl
 	ld	l,c
 	ld	h,b
 	pop	bc
+	pop	ix
 	jp	__sdivu
 
 ;-------------------------------------------------------------------------------
 _GetChar:
 ; Performs an fgetc to an AppVar
 ; Arguments:
-;  arg0 : Slot number
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  Character read if success
 	pop	de
 	pop	bc
 	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	push	bc
 	push	de
 	call	_CheckIfSlotOpen \.r
@@ -668,12 +686,12 @@ _GetChar_ASM:
 	push	bc
 	call	_GetSlotOffset_ASM \.r
 	pop	hl
-	dec	hl
 	or	a,a
-	sbc	hl,bc				; size-offset
+	sbc	hl,bc	; size-offset
 	jp	c,_ReturnNEG1L \.r
+	jp	z,_ReturnNEG1L \.r
 	push	bc
-	call	_GetSlotDataPtr_ASM \.r
+	call	_GetSlotVarPtr_ASM \.r
 	ld	hl,(hl)
 	add	hl,bc
 	inc	hl
@@ -681,7 +699,9 @@ _GetChar_ASM:
 	pop	bc
 	inc	bc
 	ld	a,(hl)
+	push	af
 	call	_SetSlotOffset_ASM \.r
+	pop	af
 	or	a,a
 	sbc	hl,hl
 	ld	l,a
@@ -691,26 +711,28 @@ _GetChar_ASM:
 _Seek:
 ; Performs an fseek on an AppVar
 ; Arguments:
-;  arg0 : Posistion to seek to
-;  arg1 : Origin position
-;  arg2 : Slot number
+;  __frame_arg0 : Posistion to seek to
+;  __frame_arg1 : Origin position
+;  __frame_arg2 : Slot number
 ; Returns:
 ;  -1 if failure
-	ld	iy,0
-	add	iy,sp
-	ld	de,(iy+3)
-	ld	l,(iy+6)
-	ld	a,(iy+9)
-	ld	(currSlot),a
-	call	_CheckIfSlotOpen \.r
-	jp	z,_ReturnNEG1L \.r
-	ld	a,l
-	or	a,a
-	jr	z,SeekCur
-	dec	a
-	jr	z,SeekEnd
-	dec	a
-	jp	nz,_ReturnNEG1L \.r
+	push ix
+	ld ix,0
+	add ix,sp
+	ld de,(ix+__frame_arg0)
+	ld l,(ix+__frame_arg1)
+	ld a,(ix+__frame_arg2)
+	pop ix
+	ld (CurrentSlot_ASM),a \.r
+	call _CheckIfSlotOpen \.r
+	jp z,_ReturnNEG1L \.r
+	ld a,l
+	or a,a
+	jr z,SeekCur
+	dec a
+	jr z,SeekEnd
+	dec a
+	jp nz,_ReturnNEG1L \.r
 _SeekHandler_ASM:
 	call	_GetSlotSize_ASM \.r
 	push	bc
@@ -722,14 +744,16 @@ _SeekHandler_ASM:
 	jp	c,_ReturnNEG1L \.r
 	jp	_SetSlotOffset_ASM \.r
 SeekCur:
+	push	de
 	call	_GetSlotOffset_ASM \.r
-	ex	de,hl
+	pop	hl
 	add	hl,bc
 	ex	de,hl
 	jr	_SeekHandler_ASM
 SeekEnd:
+	push	de
 	call	_GetSlotSize_ASM \.r
-	ex	de,hl
+	pop	hl
 	add	hl,bc
 	ex	de,hl
 	jr	_SeekHandler_ASM
@@ -738,8 +762,8 @@ SeekEnd:
 _PutChar:
 ; Performs an fputc on an AppVar
 ; Arguments:
-;  arg0 : Character to place
-;  arg1 : Slot number
+;  __frame_arg0 : Character to place
+;  __frame_arg1 : Slot number
 ; Returns:
 ;  Character written if no failure
 	pop	de
@@ -748,7 +772,7 @@ _PutChar:
 	ld	(charIn),a \.r
 	pop	bc
 	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	push	bc
 	push	hl
 	push	de
@@ -756,6 +780,7 @@ _PutChar:
 	jp	z,_ReturnNEG1L \.r
 	push	hl
 	call	_CheckInRAM_ASM \.r
+	ld	a,l
 	pop	hl
 	jp	z,_ReturnNEG1L \.r
 _PutChar_ASM:
@@ -770,8 +795,8 @@ _PutChar_ASM:
 Increment:
 	push	bc
 	inc	hl
-	ld	(resizeBytes),hl
-	call	_EnoughMem
+	ld	(ResizeBytes),hl \.r
+	call	_enoughmem
 	pop	bc
 	jp	c,_ReturnNEG1L \.r
 	push	bc
@@ -779,13 +804,15 @@ Increment:
 	call	AddMemoryToVar \.r
 	pop	bc
 noIncrement:
-	call	_GetSlotDataPtr_ASM \.r
+	call	_GetSlotVarPtr_ASM \.r
+	push	bc
 	ld	hl,(hl)
 	add	hl,bc
 	inc	hl
 	inc	hl
 charIn	=$+1
 	ld	(hl),0
+	pop	bc
 	inc	bc
 	call	_SetSlotOffset_ASM \.r
 	ld	a,(charIn) \.r
@@ -798,8 +825,8 @@ charIn	=$+1
 _DeleteVar:
 ; Deletes an arbitrary variable
 ; Arguments:
-;  arg0 : Pointer to variable name
-;  arg1 : Variable type
+;  __frame_arg0 : Pointer to variable name
+;  __frame_arg1 : Variable type
 ; Returns:
 ;  0 if failure
 	pop	hl
@@ -815,40 +842,44 @@ _DeleteVar:
 _Delete:
 ; Deletes an AppVar
 ; Arguments:
-;  arg0 : Pointer to AppVar name
+;  __frame_arg0 : Pointer to AppVar name
 ; Returns:
 ;  0 if failure
 	ld	a,$15
-_:	pop	de
+_:	ld	(varTypeOpenDelete),a \.r
+	pop	de
 	pop	hl
 	push	hl
 	push	de
-	dec	hl
-	push	af
-	call	_Mov9ToOP1
-	pop	af
-	ld	(OP1),a
-	call	_ChkFindSym
+	ld	de,op1+1
+	ld	bc,8
+	ldir
+	xor	a,a
+	ld	(de),a
+varTypeOpenDelete	=$+1
+	ld	a,0
+	ld	(op1),a
+	call	_chkfindsym
 	jp	c,_ReturnNULL \.r
-	call	_DelVarArc
+	call	_delvararc
 	or	a,a
 	sbc	hl,hl
 	inc	hl
 	ret
-
+ 
 ;-------------------------------------------------------------------------------
 _Rewind:
 ; Performs an frewind on a varaible
 ; Arguments:
-;  arg0 : Slot number
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  -1 if failure
 	pop	hl
 	pop	bc
+	ld	a,c
 	push	bc
 	push	hl
-	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	call	_CheckIfSlotOpen \.r
 	jp	z,_ReturnNEG1L \.r
 	ld	bc,0
@@ -861,15 +892,15 @@ _Rewind:
 _Tell:
 ; Performs an ftell on a varaible
 ; Arguments:
-;  arg0 : Slot number
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  -1 if failure
 	pop	hl
 	pop	bc
+	ld	a,c
 	push	bc
 	push	hl
-	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	call	_CheckIfSlotOpen \.r
 	jp	z,_ReturnNEG1L \.r
 	call	_GetSlotOffset_ASM \.r
@@ -881,17 +912,17 @@ _Tell:
 _GetSize:
 ; Gets the size of an AppVar
 ; Arguments:
-;  arg0 : Slot number
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  -1 if failure
 	pop	hl
 	pop	bc
+	ld	a,c
 	push	bc
 	push	hl
-	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	call	_CheckIfSlotOpen \.r
-	jr	z,_ReturnNEG1L
+	jp	z,_ReturnNEG1L \.r
 	call	_GetSlotSize_ASM \.r
 	push	bc
 	pop	hl
@@ -901,15 +932,15 @@ _GetSize:
 _Close:
 ; Closes an open slot varaible
 ; Arguments:
-;  arg0 : Slot number
+;  __frame_arg0 : Slot number
 ; Returns:
 ;  None
 	pop	hl
 	pop	bc
+	ld	a,c
 	push	bc
 	push	hl
-	ld	a,c
-	ld	(currSlot),a
+	ld	(CurrentSlot_ASM),a \.r
 	call	_GetSlotVATPtr_ASM \.r
 	ex	de,hl
 	xor	a,a
@@ -922,128 +953,132 @@ _Close:
 ; Internal library routines
 ;-------------------------------------------------------------------------------
  
+;-------------------------------------------------------------------------------
+AddMemoryToVar:
+	call _GetSlotVarPtr_ASM \.r
+	push hl
+	ld hl,(hl)
+	push hl
+	 call _GetSlotOffset_ASM \.r
+	pop hl
+	add hl,bc
+	inc hl
+	inc hl
+	ex de,hl
+	ld hl,(ResizeBytes) \.r
+	call _InsertMem
+	pop hl
+	ld hl,(hl)
+	push hl
+	ex de,hl
+	or a,a
+	sbc hl,hl
+	ex de,hl
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	ex de,hl
+	ld bc,(ResizeBytes) \.r
+	add hl,bc						; increase by 5
+	jr SaveSize
+DeleteMemoryFromVar:
+	call _GetSlotVarPtr_ASM \.r
+	push hl
+	ld hl,(hl)
+	push hl
+	 call _GetSlotOffset_ASM \.r
+	pop hl
+	add hl,bc
+	inc hl
+	inc hl
+	ld de,(ResizeBytes) \.r
+	call _DelMem
+	pop hl
+	ld hl,(hl)
+	push hl
+	ex de,hl
+	or a,a
+	sbc hl,hl
+	ex de,hl
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	ex de,hl
+	ld bc,(ResizeBytes) \.r
+	or a,a
+	sbc hl,bc								; decrease amount
+SaveSize:
+	ex de,hl
+	pop hl										; pointer to size bytes location
+	ld (hl),e
+	inc hl
+	ld (hl),d								; write new size.
+	ret
+ 
+_ReturnNULL_PopIX:
+	pop	ix
 _ReturnNULL:
 	xor	a,a
 	sbc	hl,hl
 	ret
 _ReturnNEG1L:
-	scf
+	xor	a,a
 	sbc	hl,hl
+	dec	hl
 	ret
-
-;-------------------------------------------------------------------------------
-AddMemoryToVar:
-	call	_GetSlotDataPtr_ASM	\.r
-	push	hl
-	ld	hl,(hl)
-	push	hl
-	call	_GetSlotOffset_ASM	\.r
-	pop	hl
-	add	hl,bc
-	inc	hl
-	inc	hl
-	ex	de,hl
-	ld	hl,(resizeBytes)
-	call	_InsertMem
-	pop	hl
-	ld	hl,(hl)
-	push	hl
-	ex	de,hl
-	or	a,a
-	sbc	hl,hl
-	ex	de,hl
-	ld	e,(hl)
-	inc	hl
-	ld	d,(hl)
-	ex	de,hl
-	ld	bc,(resizeBytes)
-	add	hl,bc
-	jr	SaveSize
-
-DeleteMemoryFromVar:
-	call	_GetSlotDataPtr_ASM \.r
-	push	hl
-	ld	hl,(hl)
-	push	hl
-	call	_GetSlotOffset_ASM \.r
-	pop	hl
-	add	hl,bc
-	inc	hl
-	inc	hl
-	ld	de,(resizeBytes)
-	call	_DelMem
-	pop	hl
-	ld	hl,(hl)
-	push	hl
-	ex	de,hl
-	or	a,a
-	sbc	hl,hl
-	ex	de,hl
-	ld	e,(hl)
-	inc	hl
-	ld	d,(hl)
-	ex	de,hl
-	ld	bc,(resizeBytes)
-	or	a,a
-	sbc	hl,bc					; decrease amount
-SaveSize:
-	ex	de,hl
-	pop	hl					; pointer to size bytes location
-	ld	(hl),e
-	inc	hl
-	ld	(hl),d					; write new size
-	ret
-
 _CheckIfSlotOpen:
 	push	hl
 	push	bc
 	ld	c,a
 	call	_GetSlotVATPtr_ASM \.r
 	ld	hl,(hl)
-	add	hl,de
-	or	a,a
+	add	hl,de 
+	or	a,a 
 	sbc	hl,de
 	ld	a,c
 	pop	bc
 	pop	hl
 	ret
 _GetSlotVATPtr_ASM:
-	ld	a,(currSlot)
-	ld	hl,VATPtr0 	; =$D0244E
+	ld	a,(CurrentSlot_ASM) \.r
+	dec	a
+	ld	hl,VATPtr0
+	or	a,a
+	ret	z
+	ld	hl,VATPtr1
 	dec	a
 	ret	z
-	inc	h
-	ld	l,$7b		; VATPtr1=$D0257B
+	ld	hl,VATPtr2
 	dec	a
 	ret	z
-	ld	l,$7e		; VATPtr2= $D0257E
+	ld	hl,VATPtr3
 	dec	a
 	ret	z
-	ld	l,$81		; VATPtr3=$D02581
-	dec	a
-	ret	z
-	ld	l,$84		; VATPtr4=$D02584
+	ld	hl,VATPtr4
 	ret
-_GetSlotDataPtr_ASM:
-	ld	a,(currSlot)
-	ld	hl,varPtr0	; varPtr0 = $D0067E
+_GetSlotSizePtr_ASM:
+_GetSlotVarPtr_ASM:
+	ld	a,(CurrentSlot_ASM) \.r
+	dec	a
+	ld	hl,varPtr0
+	or	a,a
+	ret	z
+	ld	hl,varPtr1
 	dec	a
 	ret	z
-	ld	l,$81		; varPtr1 = $D00681
+	ld	hl,varPtr2
 	dec	a
 	ret	z
-	ld	hl,varPtr2	; varPtr2 = $D01FED
+	ld	hl,varPtr3
 	dec	a
 	ret	z
-	ld	l,$f3		; varPtr3 = $D01FF3
-	dec	a
-	ret	z
-	ld	l,$f9		; varPtr4 = $D01FF9
+	ld	hl,varPtr4
 	ret
 _GetSlotOffsetPtr_ASM:
 	push	bc
-	ld	hl,(currSlot)
-	dec	l
+	ld	a,(CurrentSlot_ASM) \.r
+	dec	a
+	ld	l,a
 	ld	h,3
 	mlt	hl
 	ld	bc,VarOffset0 \.r
@@ -1051,7 +1086,7 @@ _GetSlotOffsetPtr_ASM:
 	pop	bc
 	ret
 _GetSlotSize_ASM:
-	call	_GetSlotDataPtr_ASM \.r
+	call	_GetSlotSizePtr_ASM \.r
 	ld	hl,(hl)
 	ld	bc,0
 	ld	c,(hl)
@@ -1071,8 +1106,19 @@ _SetSlotOffset_ASM:
 ; Internal library data
 ;-------------------------------------------------------------------------------
 
-; Stores the loctaion of the offsets for the working variables
+CurrentSlot_ASM:
+	.db 0
+ResizeBytes:
+	.dl 0
 VarOffset0:
-	.dl 0,0,0,0,0
+	.dl 0
+VarOffset1:
+	.dl 0
+VarOffset2:
+	.dl 0
+VarOffset3:
+	.dl 0
+VarOffset4:
+	.dl 0
  
  .endLibrary

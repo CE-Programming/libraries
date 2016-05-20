@@ -80,19 +80,27 @@
  .function "gfx_Polygon_NoClip",_Polygon_NoClip
  .function "gfx_FillTriangle",_FillTriangle
  .function "gfx_FillTriangle_NoClip",_FillTriangle_NoClip
- 
+ .function "gfx_SetFontSize",_SetFontSize
+
  .beginDependencies
  .endDependencies
 
 ;-------------------------------------------------------------------------------
 ; Used throughout the library
 lcdSize                 equ lcdWidth*lcdHeight
-tmpWidth                equ 0E30C08h
-tmpHeight               equ 0E30C0Bh
-tmpSpritePtr            equ 0E30C0Eh
-tmpSafe                 equ 0E30C11h
 currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+_SetFontSize:
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	hl,
+	ld	a,e
+	ld
+	ret
 
 ;-------------------------------------------------------------------------------
 _AllocSprite:
@@ -1925,7 +1933,7 @@ _ClipDraw_ASM:
 	add	ix,sp
 	ld	hl,(ix+3)
 	ld	a,(hl)
-	ld	de,tmpWidth
+	ld	de,tmpWidth \.r
 	ld	(de),a					; save tmpWidth
 	ld	(tmpSpriteWidth),a \.r			; save tmpSpriteWidth
 	ld	iy,0
@@ -2422,6 +2430,10 @@ TextYPos_SMC = $+1
 	ld	bc,(TextData_ASM) \.r		; get text data array
 	add	hl,bc
 	ld	iy,0
+UseLargeFont_SMC =$+1
+	ld	a,0
+	or	a,a
+	jr	nz,_PrintLargeFont_ASM
 	ld	ixl,8
 _:	ld	c,(hl)				; c = 8 pixels
 	add	iy,de				; get draw location
@@ -2446,7 +2458,32 @@ _:	inc	de				; move to next pixel
 	pop	hl				; restore hl and stack pointer
 	pop	ix
 	ret
-
+	
+_PrintLargeFont_ASM:
+	ld	ixl,16
+_:	ld	c,(hl)				; c = 8 pixels
+	add	iy,de				; get draw location
+	lea	de,iy
+	ld	b,ixh
+_:	ld	a,(TextBGColor_SMC)
+	rlc	c
+	jr	nc,+_
+	ld	a,(TextFGColor_SMC)
+_:	cp	a,ixl				; check if transparent
+	jr	z,+_
+	ld	(de),a
+	inc	de
+	ld	(de),a
+_:	inc	de				; move to next pixel
+	djnz	---_
+	ld	de,lcdwidth
+	inc	hl
+	dec	ixl
+	jr	nz,----_
+	pop	hl				; restore hl and stack pointer
+	pop	ix
+	ret
+	
 ;-------------------------------------------------------------------------------
 _PrintUInt:
 ; Places an unsigned int at the current cursor position
@@ -2536,10 +2573,6 @@ _:	ld	a,(hl)
 	call	_GetCharWidth_ASM \.r
 	pop	hl
 	inc	hl
-	ld	a,(hl)
-	or	a,a
-	jr	z,+_
-	inc	bc
 	jr	-_
 _:	push	bc
 	pop	hl
@@ -2933,13 +2966,13 @@ _:	ld	(_LineType0_SMC),hl \.r
 	ld	ix,0
 	add	ix,sp
 	sbc	hl,hl
-	ld	(tmpWidth),hl		; set the for loop counter to 0 (tmpWidth is used as a temp variable)
+	ld	(tmpWidth),hl \.r		; set the for loop counter to 0 (tmpWidth is used as a temp variable)
 	ld	hl,(ix+9)
 	dec	hl
 	ld	(ix+9),hl		; decrement the number of points
 	jr	p_3
 p_1:
-	ld	hl,(tmpWidth)
+	ld	hl,(tmpWidth) \.r
 	add	hl,hl
 	inc	hl
 	inc	hl
@@ -2971,9 +3004,9 @@ p_1:
 _LineType0_SMC =$+1
 	call	0
 	ld	sp,ix
-	ld	hl,(tmpWidth)
+	ld	hl,(tmpWidth) \.r
 	inc	hl
-	ld	(tmpWidth),hl		; increment the counter
+	ld	(tmpWidth),hl \.r		; increment the counter
 p_3:	ld	bc,(ix+9)
 	or	a,a
 	sbc	hl,bc
@@ -3866,5 +3899,8 @@ _xmax:
 	.dl lcdWidth
 _ymax:
 	.dl lcdHeight
+
+tmpWidth:
+	.dl 0,0,0
 
  .endLibrary

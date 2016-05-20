@@ -32,7 +32,7 @@ void main(void) {
 	myProgram = ti_OpenVar(prgmName,"r",ti_Program);
     
 	/* Make sure we opened okay */
-	if (!myProgram) goto err;
+	if (!myProgram) {printText( 0,0, "couldn't open file"); goto err; }
 
 	data_ptr = ti_GetDataPtr( myProgram );
 	printText( 0, 0, ti_GetTokenString( &data_ptr, NULL, NULL ) );
