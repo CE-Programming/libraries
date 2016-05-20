@@ -2,7 +2,7 @@
 #include "..\..\..\..\include\ti84pce.inc"
 
  .libraryName		"GRAPHX"          ; Name of library
- .libraryVersion	1                 ; Version information (1-255)
+ .libraryVersion	2                 ; Version information (1-255)
  
 ;-------------------------------------------------------------------------------
 ; v1 functions
@@ -80,6 +80,7 @@
  .function "gfx_Polygon_NoClip",_Polygon_NoClip
  .function "gfx_FillTriangle",_FillTriangle
  .function "gfx_FillTriangle_NoClip",_FillTriangle_NoClip
+ .function "gfx_SetFontSize",_SetFontSize
 
  .beginDependencies
  .endDependencies
@@ -89,6 +90,17 @@
 lcdSize                 equ lcdWidth*lcdHeight
 currDrawBuffer          equ 0E30014h
 ;-------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------
+_SetFontSize:
+	pop	hl
+	pop	de
+	push	de
+	push	hl
+	ld	hl,
+	ld	a,e
+	ld
+	ret
 
 ;-------------------------------------------------------------------------------
 _AllocSprite:
@@ -2418,6 +2430,10 @@ TextYPos_SMC = $+1
 	ld	bc,(TextData_ASM) \.r		; get text data array
 	add	hl,bc
 	ld	iy,0
+UseLargeFont_SMC =$+1
+	ld	a,0
+	or	a,a
+	jr	nz,_PrintLargeFont_ASM
 	ld	ixl,8
 _:	ld	c,(hl)				; c = 8 pixels
 	add	iy,de				; get draw location
@@ -2432,6 +2448,31 @@ TextFGColor_SMC =$+1
 TextTransColor_SMC =$+1
 _:	cp	a,255				; check if transparent
 	jr	z,+_
+	ld	(de),a
+_:	inc	de				; move to next pixel
+	djnz	---_
+	ld	de,lcdwidth
+	inc	hl
+	dec	ixl
+	jr	nz,----_
+	pop	hl				; restore hl and stack pointer
+	pop	ix
+	ret
+	
+_PrintLargeFont_ASM:
+	ld	ixl,16
+_:	ld	c,(hl)				; c = 8 pixels
+	add	iy,de				; get draw location
+	lea	de,iy
+	ld	b,ixh
+_:	ld	a,(TextBGColor_SMC)
+	rlc	c
+	jr	nc,+_
+	ld	a,(TextFGColor_SMC)
+_:	cp	a,ixl				; check if transparent
+	jr	z,+_
+	ld	(de),a
+	inc	de
 	ld	(de),a
 _:	inc	de				; move to next pixel
 	djnz	---_
