@@ -101,7 +101,7 @@ int ti_Close(const ti_var_t slot);
  * If detection_string is NULL, return is NULL as well
  */
 char *ti_Detect(void **curr_search_posistion, const char *detection_string);
-char *ti_DetectVar(void **curr_search_posistion, const char *detection_string);
+char *ti_DetectVar(void **curr_search_posistion, const char *detection_string, uint8_t var_type);
 
 /**
  * Writes to the current variable pointer given:

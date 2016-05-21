@@ -191,7 +191,6 @@ void gfx_SetPalette(uint16_t *palette, uint24_t size, uint8_t offset);
  * Fills the screen with the given palette index
  */
 void gfx_FillScreen(uint8_t color);
-void gfx_FillScreenLines(uint8_t y_start, uint8_t color);
 
 /**
  * Sets the XY pixel measured from the top left origin of the screen to the
@@ -286,10 +285,10 @@ uint8_t gfx_GetDraw(void);
 void gfx_SwapDraw(void);
 
 /**
- * Copies the the data in the opposite (buffer or screen) to the screen or buffer
+ * Copies the input buffer to the opposite buffer
  * Arguments:
- *  gfx_screen: copies buffer to screen
- *  gfx_buffer: copies screen to buffer
+ *  gfx_screen: copies screen to buffer
+ *  gfx_buffer: copies buffer to screen
  */
 void gfx_Blit(uint8_t buffer);
 void gfx_BlitLines(uint8_t buffer, uint8_t y_loc, uint8_t num_lines);
