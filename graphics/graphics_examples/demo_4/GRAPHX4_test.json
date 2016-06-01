@@ -1,10 +1,10 @@
 {
   "rom": "84pce_515.rom",
   "transfer_files": [
-    "bin/GRAPHX0.8xp"
+    "bin/GRAPHX4.8xp"
   ],
   "target": {
-    "name": "GRAPHX0",
+    "name": "GRAPHX4",
     "isASM": true
   },
   "sequence": [
@@ -18,16 +18,16 @@
   ],
   "hashes": {
     "1": {
-      "description": "The background will be black (check a part before the text)",
+      "description": "The background will be white (check a part before the cube)",
       "start": "vram_start",
-      "size": "0x4000",
-      "expected_CRCs": [ "94640B85" ]
+      "size": "0x500",
+      "expected_CRCs": [ "5DAA1FBD" ]
     },
     "2": {
-      "description": "The background will be black (check a part after the text)",
-      "start": "0xD4EC00",
-      "size": "0x4000",
-      "expected_CRCs": [ "94640B85" ]
+      "description": "The background will be white (check a part after the cube)",
+      "start": "0xD52700",
+      "size": "0x500",
+      "expected_CRCs": [ "5DAA1FBD" ]
     },
     "3": {
       "description": "Back to the home screen (exit check)",

@@ -1,35 +1,28 @@
 {
   "rom": "84pce_515.rom",
   "transfer_files": [
-    "bin/GRAPHX0.8xp"
+    "bin/GRAPHX1.8xp"
   ],
   "target": {
-    "name": "GRAPHX0",
+    "name": "GRAPHX1",
     "isASM": true
   },
   "sequence": [
     "action|launch",
     "delay|300",
     "hash|1",
-    "hash|2",
     "key|enter",
     "delay|300",
-    "hash|3"
+    "hash|2"
   ],
   "hashes": {
     "1": {
-      "description": "The background will be black (check a part before the text)",
+      "description": "Make sure the sprites are displayed properly",
       "start": "vram_start",
-      "size": "0x4000",
-      "expected_CRCs": [ "94640B85" ]
+      "size": "vram_8_size",
+      "expected_CRCs": [ "CC5F9503" ]
     },
     "2": {
-      "description": "The background will be black (check a part after the text)",
-      "start": "0xD4EC00",
-      "size": "0x4000",
-      "expected_CRCs": [ "94640B85" ]
-    },
-    "3": {
       "description": "Back to the home screen (exit check)",
       "start": "vram_start",
       "size": "vram_16_size",
