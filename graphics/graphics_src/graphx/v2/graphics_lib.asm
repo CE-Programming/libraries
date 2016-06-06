@@ -237,10 +237,10 @@ _FillScreen:
 	ld	hl,3
 	add	hl,sp
 	ld	a,(hl)				; get the color index to use
-	ld	bc,lcdSize
-	ld	hl,(currDrawBuffer)
-	push	hl
-	pop	de
+	ld	bc,lcdSize-1
+	ld	de,(currDrawBuffer)
+	sbc	hl,hl
+	add	hl,de
 	inc	de
 	ld	(hl),a
 	ldir
