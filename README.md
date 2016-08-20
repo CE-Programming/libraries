@@ -7,6 +7,5 @@ See below for the download link.
 
 *Note to developers:* Because of versioning for these libraries, it is highly recommended you do not include these libraries with your programs. You can simply link the release in so that way users have an ability to download the latest version: https://github.com/CE-Programming/libraries/releases/latest
 
-To use this libraries in development, simply navigate to the `\dev` directory, and copy all the files and folders inside to `CEdev\lib\ce`.
 
-Once copied, you can simply `#include <lib/ce/libname.h>` to use the library's functions within your program.
+You can simply `#include <lib/ce/libname.h>` to use the library's functions within your program.
