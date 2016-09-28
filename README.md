@@ -1,7 +1,10 @@
-# User Installation
-Please visit this link: https://github.com/CE-Programming/libraries/releases/latest
+# CE C libraries
+Some commonly used C libraries for the TI-84+CE/TI-83PCE calculators.  
+_(This repository is kept for historical reasons and standalone releases only - the actual content has since moved to the toolchain one, see below)_
 
-# Developer Information
-These libraries can be used to perfrom many useful routines in C for the TI84+CE and similar models. Please check out the toolchain for more information:
+## User Installation
+Please visit this link to download the libraries: https://github.com/CE-Programming/libraries/releases/latest
 
-https://github.com/CE-Programming/toolchain/releases/latest
+## Developer Information
+These libraries can be used to perform many useful routines in C for the TI-84+CE and TI-83 Premium CE.  
+Please check out the toolchain for more information, where the source is: https://github.com/CE-Programming/toolchain/tree/master/CEdev/lib/src/libraries
