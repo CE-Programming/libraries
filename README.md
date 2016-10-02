@@ -8,3 +8,7 @@ Please visit this link to download the libraries: https://github.com/CE-Programm
 ## Developer Information
 These libraries can be used to perform many useful routines in C for the TI-84+CE and TI-83 Premium CE.  
 Please check out the toolchain for more information, where the source is: https://github.com/CE-Programming/toolchain/tree/master/CEdev/lib/src/libraries
+
+## Current Version
+
+Version 5.2
