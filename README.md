@@ -11,4 +11,4 @@ Please check out the toolchain for more information, where the source is: https:
 
 ## Current Version
 
-Version 5.2
+Version 5.3
