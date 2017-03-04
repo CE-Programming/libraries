@@ -10,5 +10,5 @@ These libraries can be used to perform many useful routines in C for the TI-84+C
 Please check out the toolchain for more information, where the source is: https://github.com/CE-Programming/toolchain/tree/master/CEdev/lib/src
 
 ## Current Version
-Version 6.95  
+Version 7.0 
 You can see the changelog in the libraries sections of the [toolchain changelog](https://github.com/CE-Programming/toolchain/blob/master/CHANGELOG.md#change-log).
