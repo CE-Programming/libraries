@@ -6,9 +6,9 @@ _(This repository is kept for historical reasons and standalone releases only - 
 Please visit this link to download the libraries: https://github.com/CE-Programming/libraries/releases/latest
 
 ## Developer Information
-These libraries can be used to perform many useful routines in C for the TI-84+CE and TI-83 Premium CE.  
-Please check out the toolchain for more information; the source is there as well: https://github.com/CE-Programming/toolchain/tree/master/CEdev/lib/src
+These libraries can be used to perform many useful routines in C for the TI-84 Plus CE and TI-83 Premium CE.  
+Please check out the toolchain for more information; the source is there as well: https://github.com/CE-Programming/toolchain/tree/master/src
 
 ### Current Version
 Version 7.4
-You can see the changelog in the libraries sections of the [toolchain changelog](https://github.com/CE-Programming/toolchain/blob/master/CHANGELOG.md#change-log).
+You can see the changelog in the libraries sections of the [toolchain changelog](https://github.com/CE-Programming/toolchain/blob/master/changelog.md).
