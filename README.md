@@ -10,5 +10,5 @@ These libraries can be used to perform many useful routines in C for the TI-84 P
 Please check out the toolchain for more information; the source is there as well: https://github.com/CE-Programming/toolchain/tree/master/src
 
 ### Current Version
-Version 7.4
+Version 7.5
 You can see the changelog in the libraries sections of the [toolchain changelog](https://github.com/CE-Programming/toolchain/blob/master/changelog.md).
