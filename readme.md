@@ -1,3 +1,5 @@
+# [Download CE Libraries Here](https://github.com/CE-Programming/libraries/releases/latest)
+
 # CE Libraries
 Some commonly used libraries for the TI-84+CE/TI-83PCE calculators.  
 
