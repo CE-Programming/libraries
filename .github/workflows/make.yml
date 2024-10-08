@@ -1,0 +1,45 @@
+name: Update Release
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [ci-clibs-nightly]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download CE Libraries Zip
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: CE-Programming/toolchain
+          fileName: 'clibs_separately_in_zip.zip'
+          tag: 'nightly'
+
+      - name: Download CE Libraries
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: CE-Programming/toolchain
+          fileName: 'clibs.8xg'
+          tag: 'nightly'
+
+      - name: Download Current CE Libraries
+        uses: robinraju/release-downloader@v1
+        with:
+          fileName: 'clibs.8xg'
+          out-file-path: 'current'
+          latest: true
+
+      - name: Check for difference
+        id: diff_check
+        run: diff clibs.8xg current/clibs.8xg &> /dev/null || (echo "update=true" >> $GITHUB_OUTPUT ; echo "updating")
+
+      - name: Update nightly release
+        if: ${{ steps.diff_check.outputs.update == 'true' }}
+        uses: pyTooling/Actions/releaser@main
+        with:
+          tag: nightly
+          rm: true
+          token: ${{secrets.GITHUB_TOKEN}}
+          files: |
+            clibs.8xg
+            clibs_separately_in_zip.zip
+
