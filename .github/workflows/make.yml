@@ -33,7 +33,6 @@ jobs:
         run: diff clibs.8xg current/clibs.8xg &> /dev/null || (echo "update=true" >> $GITHUB_OUTPUT ; echo "updating")
 
       - name: Update nightly release
-        if: ${{ steps.diff_check.outputs.update == 'true' }}
         uses: pyTooling/Actions/releaser@main
         with:
           tag: nightly
