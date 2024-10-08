@@ -36,7 +36,7 @@ jobs:
         if: ${{ steps.diff_check.outputs.update == 'true' }}
         uses: pyTooling/Actions/releaser@main
         with:
-          tag: nightly
+          tag: latest
           rm: true
           token: ${{secrets.GITHUB_TOKEN}}
           files: |
